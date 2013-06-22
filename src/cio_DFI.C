@@ -1,7 +1,8 @@
 /*
- * CIO - Cartesian Input / Output library
+ * CIOlib - Cartesian Input / Output library
  *
- * Copyright (c) RIKEN AICS, Japan. All right reserved. 2013
+ * Copyright (c) 2013 Advanced Institute for Computational Science, RIKEN.
+ * All rights reserved.
  *
  */
 
@@ -457,15 +458,15 @@ int cio_DFI::readUnit(string dfifile, cio_TextParser tpCntl, cio_Unit &unit)
   }
   unit.DiffPrs=dt;
 
-  //Temperatur
-  label = "/Unit/Temperatur";
+  //Temperature
+  label = "/Unit/Temperature";
   if ( !(tpCntl.GetValue(label, &str )) )
   {
     //printf("\tParsing error : fail to get '%s'\n",label.c_str());
     //return CIO_ERROR; 
-    unit.Temperatur="";
+    unit.Temperature = "";
   } else {
-    unit.Temperatur=str;
+    unit.Temperature = str;
   }
 
   //BaseTemp
@@ -686,9 +687,10 @@ int cio_DFI::readDomain(string dfifile, cio_TextParser tpCntl, cio_Domain &domai
   domain.GlobalDivision[2]=v[2];
 
   //ActiveSubdomain
-  label = "/Domain/ActiveSubdomain";
+  label = "/Domain/ActiveSubdomainFile";
   if ( !(tpCntl.GetValue(label, &str )) )
   {
+    // Permit without this description
     //printf("\tParsing error : fail to get '%s'\n",label.c_str());
     //return CIO_ERROR;
     str="";
@@ -1661,9 +1663,9 @@ void cio_DFI::SetUnitTemp(bool out_Temp, string Temp, double Btemp, double DiffT
 {
 
   DFI_Unit.out_Temperature = out_Temp;
-  DFI_Unit.Temperatur = Temp;
-  DFI_Unit.BaseTemp = Btemp;
-  DFI_Unit.DiffTemp = DiffTemp;
+  DFI_Unit.Temperature     = Temp;
+  DFI_Unit.BaseTemp        = Btemp;
+  DFI_Unit.DiffTemp        = DiffTemp;
 
 }
 
@@ -1700,7 +1702,7 @@ bool cio_DFI::dbwrite(int RankID)
   printf("  Pressure                    :%s\n",DFI_Unit.Pressure.c_str());
   printf("  P0                          :%e\n",DFI_Unit.P0);
   printf("  DiffPrs                     :%e\n",DFI_Unit.DiffPrs);
-  printf("  Temperatur                  :%s\n",DFI_Unit.Temperatur.c_str());
+  printf("  Temperature                 :%s\n",DFI_Unit.Temperature.c_str());
   printf("  BaseTemp                    :%e\n",DFI_Unit.BaseTemp);
   printf("  DiffTemp                    :%e\n",DFI_Unit.DiffTemp);
   printf("}\n");
@@ -1736,7 +1738,7 @@ bool cio_DFI::dbwrite(int RankID)
   printf("  GlobalDivision              :%d %d %d\n",DFI_Domain.GlobalDivision[0],
                                                      DFI_Domain.GlobalDivision[1],
                                                      DFI_Domain.GlobalDivision[2]); 
-  printf("  ActiveSubdomain             :%s\n",      DFI_Domain.ActiveSubdomain.c_str());
+  printf("  ActiveSubdomainFile         :%s\n",      DFI_Domain.ActiveSubdomain.c_str());
   printf("}\n");
   printf("\n");
 

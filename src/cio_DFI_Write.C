@@ -1,7 +1,8 @@
 /*
- * CIO - Cartesian Input / Output library
+ * CIOlib - Cartesian Input / Output library
  *
- * Copyright (c) RIKEN AICS, Japan. All right reserved. 2013
+ * Copyright (c) 2013 Advanced Institute for Computational Science, RIKEN.
+ * All rights reserved.
  *
  */
 
@@ -302,7 +303,7 @@ bool cio_DFI::Write_Unit(FILE* fp, const unsigned tab, const std::string prefix)
     Write_DiffPrs(fp, tab+1);
   }
   if( DFI_Unit.out_Temperature ) {
-    Write_Temperatur(fp, tab+1);
+    Write_Temperature(fp, tab+1);
     Write_BaseTemp(fp, tab+1);
     Write_DiffTemp(fp, tab+1);
   }
@@ -355,7 +356,7 @@ bool cio_DFI::Write_TimeSlice(FILE* fp, const unsigned tab, const unsigned step,
 void cio_DFI::Write_DirectoryPath(FILE* fp, const unsigned tab, const std::string dirpath)
 {
   Write_Tab(fp, tab);
-  fprintf(fp, "DirectoryPath = \"%s\"\n", dirpath.c_str());
+  fprintf(fp, "DirectoryPath      = \"%s\"\n", dirpath.c_str());
 }
 
 // #################################################################
@@ -371,7 +372,7 @@ void cio_DFI::Write_TimeSliceDir(FILE* fp, const unsigned tab, const std::string
 void cio_DFI::Write_BaseName(FILE* fp, const unsigned tab, const std::string prefix)
 {
   Write_Tab(fp, tab);
-  fprintf(fp, "Prefix = \"%s\"\n", prefix.c_str());
+  fprintf(fp, "Prefix             = \"%s\"\n", prefix.c_str());
 }
 
 // #################################################################
@@ -380,9 +381,9 @@ void cio_DFI::Write_FileFormat(FILE* fp, const unsigned tab)
 {
   Write_Tab(fp, tab);
   if( DFI_Finfo.FileFormat == E_CIO_FMT_SPH ) {
-    fprintf(fp, "FileFormat =\"sph\"\n");
+    fprintf(fp, "FileFormat         = \"sph\"\n");
   } else if( DFI_Finfo.FileFormat == E_CIO_FMT_BOV ) {
-    fprintf(fp, "FileFormat =\"bov\"\n");
+    fprintf(fp, "FileFormat         = \"bov\"\n");
   }
  
 }
@@ -392,7 +393,7 @@ void cio_DFI::Write_FileFormat(FILE* fp, const unsigned tab)
 void cio_DFI::Write_GuideCell(FILE* fp, const unsigned tab)
 {
   Write_Tab(fp, tab);
-  fprintf(fp, "GuideCell = %d\n", DFI_Finfo.GuideCell);
+  fprintf(fp, "GuideCell          = %d\n", DFI_Finfo.GuideCell);
 }
 
 // #################################################################
@@ -400,7 +401,7 @@ void cio_DFI::Write_GuideCell(FILE* fp, const unsigned tab)
 void cio_DFI::Write_DataType(FILE* fp, const unsigned tab)
 {
   Write_Tab(fp, tab);
-  fprintf(fp, "DataType =\"%s\"\n",DFI_Finfo.DataType.c_str());
+  fprintf(fp, "DataType           = \"%s\"\n",DFI_Finfo.DataType.c_str());
 }
 
 // #################################################################
@@ -408,7 +409,7 @@ void cio_DFI::Write_DataType(FILE* fp, const unsigned tab)
 void cio_DFI::Write_Endian(FILE* fp, const unsigned tab)
 {
   Write_Tab(fp, tab);
-  fprintf(fp, "Endian =\"%s\"\n",DFI_Finfo.Endian.c_str());
+  fprintf(fp, "Endian             = \"%s\"\n",DFI_Finfo.Endian.c_str());
 }
 
 // #################################################################
@@ -416,7 +417,7 @@ void cio_DFI::Write_Endian(FILE* fp, const unsigned tab)
 void cio_DFI::Write_ArrayShape(FILE* fp, const unsigned tab)
 {
   Write_Tab(fp, tab);
-  fprintf(fp, "ArrayShape =\"%s\"\n",DFI_Finfo.ArrayShape.c_str());
+  fprintf(fp, "ArrayShape         = \"%s\"\n",DFI_Finfo.ArrayShape.c_str());
 }
 
 // #################################################################
@@ -424,7 +425,7 @@ void cio_DFI::Write_ArrayShape(FILE* fp, const unsigned tab)
 void cio_DFI::Write_Component(FILE* fp, const unsigned tab)
 {
   Write_Tab(fp, tab);
-  fprintf(fp, "Component =%d\n",DFI_Finfo.Component);
+  fprintf(fp, "Component          = %d\n",DFI_Finfo.Component);
 }
 
 // #################################################################
@@ -432,7 +433,7 @@ void cio_DFI::Write_Component(FILE* fp, const unsigned tab)
 void cio_DFI::Write_Process(FILE* fp, const unsigned tab)
 {
   Write_Tab(fp, tab);
-  fprintf(fp, "Process =\"%s\"\n",DFI_Fpath.Process.c_str());
+  fprintf(fp, "Process = \"%s\"\n",DFI_Fpath.Process.c_str());
 }
 
 // #################################################################
@@ -440,7 +441,7 @@ void cio_DFI::Write_Process(FILE* fp, const unsigned tab)
 void cio_DFI::Write_Length(FILE* fp, const unsigned tab)
 {
   Write_Tab(fp, tab);
-  fprintf(fp, "Length =\"%s\"\n",DFI_Unit.Length.c_str());
+  fprintf(fp, "Length      = \"%s\"\n",DFI_Unit.Length.c_str());
 }
 
 // #################################################################
@@ -448,7 +449,7 @@ void cio_DFI::Write_Length(FILE* fp, const unsigned tab)
 void cio_DFI::Write_L0(FILE* fp, const unsigned tab)
 {
   Write_Tab(fp, tab);
-  fprintf(fp, "L0 =%e\n",DFI_Unit.L0);
+  fprintf(fp, "L0          = %e\n",DFI_Unit.L0);
 }
 
 // #################################################################
@@ -456,7 +457,7 @@ void cio_DFI::Write_L0(FILE* fp, const unsigned tab)
 void cio_DFI::Write_Velocity(FILE* fp, const unsigned tab)
 {
   Write_Tab(fp, tab);
-  fprintf(fp, "Velocity =\"%s\"\n",DFI_Unit.Velocity.c_str());
+  fprintf(fp, "Velocity    = \"%s\"\n",DFI_Unit.Velocity.c_str());
 }
 
 // #################################################################
@@ -464,7 +465,7 @@ void cio_DFI::Write_Velocity(FILE* fp, const unsigned tab)
 void cio_DFI::Write_V0(FILE* fp, const unsigned tab)
 {
   Write_Tab(fp, tab);
-  fprintf(fp, "V0 =%e\n",DFI_Unit.V0);
+  fprintf(fp, "V0          = %e\n",DFI_Unit.V0);
 }
 
 // #################################################################
@@ -472,7 +473,7 @@ void cio_DFI::Write_V0(FILE* fp, const unsigned tab)
 void cio_DFI::Write_Pressure(FILE* fp, const unsigned tab)
 {
   Write_Tab(fp, tab);
-  fprintf(fp, "Pressure =\"%s\"\n",DFI_Unit.Pressure.c_str());
+  fprintf(fp, "Pressure    = \"%s\"\n",DFI_Unit.Pressure.c_str());
 }
 
 // #################################################################
@@ -480,7 +481,7 @@ void cio_DFI::Write_Pressure(FILE* fp, const unsigned tab)
 void cio_DFI::Write_P0(FILE* fp, const unsigned tab)
 {
   Write_Tab(fp, tab);
-  fprintf(fp, "P0 =%e\n",DFI_Unit.P0);
+  fprintf(fp, "P0          = %e\n",DFI_Unit.P0);
 }
 
 // #################################################################
@@ -488,15 +489,15 @@ void cio_DFI::Write_P0(FILE* fp, const unsigned tab)
 void cio_DFI::Write_DiffPrs(FILE* fp, const unsigned tab)
 {
   Write_Tab(fp, tab);
-  fprintf(fp, "DiffPrs =%e\n",DFI_Unit.DiffPrs);
+  fprintf(fp, "DiffPrs     = %e\n",DFI_Unit.DiffPrs);
 }
 
 // #################################################################
-// DFIファイル:Temperaturを出力する
-void cio_DFI::Write_Temperatur(FILE* fp, const unsigned tab)
+// DFIファイル:Temperatureを出力する
+void cio_DFI::Write_Temperature(FILE* fp, const unsigned tab)
 {
   Write_Tab(fp, tab);
-  fprintf(fp, "Temperatur =\"%s\"\n",DFI_Unit.Temperatur.c_str());
+  fprintf(fp, "Temperature = \"%s\"\n",DFI_Unit.Temperature.c_str());
 }
 
 // #################################################################
@@ -504,7 +505,7 @@ void cio_DFI::Write_Temperatur(FILE* fp, const unsigned tab)
 void cio_DFI::Write_BaseTemp(FILE* fp, const unsigned tab)
 {
   Write_Tab(fp, tab);
-  fprintf(fp, "BaseTemp =%e\n",DFI_Unit.BaseTemp);
+  fprintf(fp, "BaseTemp    = %e\n",DFI_Unit.BaseTemp);
 }
 
 // #################################################################
@@ -512,15 +513,15 @@ void cio_DFI::Write_BaseTemp(FILE* fp, const unsigned tab)
 void cio_DFI::Write_DiffTemp(FILE* fp, const unsigned tab)
 {
   Write_Tab(fp, tab);
-  fprintf(fp, "DiffTemp =%e\n",DFI_Unit.DiffTemp);
+  fprintf(fp, "DiffTemp    = %e\n",DFI_Unit.DiffTemp);
 }
 
 // #################################################################
 // DFIファイル:Stepを出力する
-void cio_DFI::Write_Step(FILE* fp, const unsigned tab, int step)
+void cio_DFI::Write_Step(FILE* fp, const unsigned tab, const unsigned step)
 {
   Write_Tab(fp, tab);
-  fprintf(fp, "Step =%d\n",step);
+  fprintf(fp, "Step = %u\n", step);
 }
 
 // #################################################################
@@ -528,9 +529,9 @@ void cio_DFI::Write_Step(FILE* fp, const unsigned tab, int step)
 void cio_DFI::Write_Average(FILE* fp, const unsigned tab, const unsigned a_step, const double a_time)
 {
   Write_Tab(fp, tab);
-  fprintf(fp, "AveragedStep =%u\n",a_step);
+  fprintf(fp, "AveragedStep = %u\n",a_step);
   Write_Tab(fp, tab);
-  fprintf(fp, "AveragedTime =%e\n",a_time);
+  fprintf(fp, "AveragedTime = %e\n",a_time);
 }
 
 // #################################################################
@@ -720,9 +721,10 @@ bool cio_DFI::Write_Process_Rank(FILE* fp, const unsigned tab, vector<cio_Rank> 
 void cio_DFI::Write_Origin(FILE* fp, const unsigned tab)
 {
   Write_Tab(fp, tab);
-  fprintf(fp, "GlobalOrigin   = (%e, %e, %e)\n", DFI_Domain.GlobalOrigin[0], 
-                                                 DFI_Domain.GlobalOrigin[1],
-                                                 DFI_Domain.GlobalOrigin[2]);
+  fprintf(fp, "GlobalOrigin        = (%e, %e, %e)\n",
+          DFI_Domain.GlobalOrigin[0],
+          DFI_Domain.GlobalOrigin[1],
+          DFI_Domain.GlobalOrigin[2]);
 }
 
 // #################################################################
@@ -731,9 +733,10 @@ void cio_DFI::Write_Origin(FILE* fp, const unsigned tab, double org[3])
 {
   //Write_Tab(fp, tab);
   for(int n=0; n<tab; n++) fprintf(fp, "  ");
-  fprintf(fp, "GlobalOrigin   = (%e, %e, %e)\n", org[0], 
-                                                 org[1],
-                                                 org[2]);
+  fprintf(fp, "GlobalOrigin        = (%e, %e, %e)\n",
+          org[0],
+          org[1],
+          org[2]);
 }
 
 // #################################################################
@@ -741,9 +744,10 @@ void cio_DFI::Write_Origin(FILE* fp, const unsigned tab, double org[3])
 void cio_DFI::Write_Region(FILE* fp, const unsigned tab)
 {
   Write_Tab(fp, tab);
-  fprintf(fp, "GlobalRegion   = (%e, %e, %e)\n",DFI_Domain.GlobalRegion[0],
-                                                DFI_Domain.GlobalRegion[1],
-                                                DFI_Domain.GlobalRegion[2]);
+  fprintf(fp, "GlobalRegion        = (%e, %e, %e)\n",
+          DFI_Domain.GlobalRegion[0],
+          DFI_Domain.GlobalRegion[1],
+          DFI_Domain.GlobalRegion[2]);
 }
 
 // #################################################################
@@ -752,9 +756,10 @@ void cio_DFI::Write_Region(FILE* fp, const unsigned tab, double Region[3])
 {
   //Write_Tab(fp, tab);
   for(int n=0; n<tab; n++) fprintf(fp, "  ");
-  fprintf(fp, "GlobalRegion   = (%e, %e, %e)\n",Region[0],
-                                                Region[1],
-                                                Region[2]);
+  fprintf(fp, "GlobalRegion        = (%e, %e, %e)\n",
+          Region[0],
+          Region[1],
+          Region[2]);
 }
 
 // #################################################################
@@ -762,9 +767,10 @@ void cio_DFI::Write_Region(FILE* fp, const unsigned tab, double Region[3])
 void cio_DFI::Write_WholeSize(FILE* fp, const unsigned tab)
 {
   Write_Tab(fp, tab);
-  fprintf(fp, "GlobalVoxel    = (%d, %d, %d)\n", DFI_Domain.GlobalVoxel[0],
-                                                 DFI_Domain.GlobalVoxel[1],
-                                                 DFI_Domain.GlobalVoxel[2]);
+  fprintf(fp, "GlobalVoxel         = (%d, %d, %d)\n",
+          DFI_Domain.GlobalVoxel[0],
+          DFI_Domain.GlobalVoxel[1],
+          DFI_Domain.GlobalVoxel[2]);
 }
 
 // #################################################################
@@ -773,9 +779,10 @@ void cio_DFI::Write_WholeSize(FILE* fp, const unsigned tab, int GlobalVoxel[3])
 {
   //Write_Tab(fp, tab);
   for(int n=0; n<tab; n++) fprintf(fp, "  ");
-  fprintf(fp, "GlobalVoxel    = (%d, %d, %d)\n", GlobalVoxel[0],
-                                                 GlobalVoxel[1],
-                                                 GlobalVoxel[2]);
+  fprintf(fp, "GlobalVoxel         = (%d, %d, %d)\n",
+          GlobalVoxel[0],
+          GlobalVoxel[1],
+          GlobalVoxel[2]);
 }
 
 // #################################################################
@@ -783,9 +790,10 @@ void cio_DFI::Write_WholeSize(FILE* fp, const unsigned tab, int GlobalVoxel[3])
 void cio_DFI::Write_NumDivDomain(FILE* fp, const unsigned tab)
 {
   Write_Tab(fp, tab);
-  fprintf(fp, "GlobalDivision = (%d, %d, %d)\n", DFI_Domain.GlobalDivision[0],
-                                                 DFI_Domain.GlobalDivision[1],
-                                                 DFI_Domain.GlobalDivision[2]);
+  fprintf(fp, "GlobalDivision      = (%d, %d, %d)\n",
+          DFI_Domain.GlobalDivision[0],
+          DFI_Domain.GlobalDivision[1],
+          DFI_Domain.GlobalDivision[2]);
 }
 
 // #################################################################
@@ -794,9 +802,10 @@ void cio_DFI::Write_NumDivDomain(FILE* fp, const unsigned tab, int GlobalDivisio
 {
   //Write_Tab(fp, tab);
   for(int n=0; n<tab; n++) fprintf(fp, "  ");
-  fprintf(fp, "GlobalDivision = (%d, %d, %d)\n", GlobalDivision[0],
-                                                 GlobalDivision[1],
-                                                 GlobalDivision[2]);
+  fprintf(fp, "GlobalDivision      = (%d, %d, %d)\n",
+          GlobalDivision[0],
+          GlobalDivision[1],
+          GlobalDivision[2]);
 }
 
 // #################################################################
@@ -804,7 +813,7 @@ void cio_DFI::Write_NumDivDomain(FILE* fp, const unsigned tab, int GlobalDivisio
 void cio_DFI::Write_ActiveSubdomain_fname(FILE* fp, const unsigned tab)
 {
   for(int n=0; n<tab; n++) fprintf(fp, "  ");
-   fprintf(fp,"ActiveSubdomain =\"%s\"\n",DFI_Domain.ActiveSubdomain.c_str());
+   fprintf(fp,"ActiveSubdomainFile = \"%s\"\n",DFI_Domain.ActiveSubdomain.c_str());
 }
 
 // #################################################################
@@ -812,7 +821,7 @@ void cio_DFI::Write_ActiveSubdomain_fname(FILE* fp, const unsigned tab)
 void cio_DFI::Write_ActiveSubdomain_fname(FILE* fp, const unsigned tab, string ActiveSubdomain)
 {
   for(int n=0; n<tab; n++) fprintf(fp, "  ");
-   fprintf(fp,"ActiveSubdomain =\"%s\"\n",ActiveSubdomain.c_str());
+   fprintf(fp,"ActiveSubdomainFile = \"%s\"\n",ActiveSubdomain.c_str());
 }
 
 // #################################################################
@@ -1004,7 +1013,7 @@ bool cio_DFI::Write_OutFileInfo(FILE* fp, const unsigned tab, const std::string 
   if (fp)
   {
     Write_Tab(fp, tab+1);
-    fprintf(fp, "Step[@] = %d\n", step);
+    fprintf(fp, "Step[@] = %u\n", step);
   }
 
   return true;

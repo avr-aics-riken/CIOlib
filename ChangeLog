@@ -10,9 +10,21 @@ CIOlib Release note
 ===================
 
 -----------
+Version 1.2            10 June 2013
+   - コピーライトの様式を統一，ソースとヘッダに挿入
+   - キーワード変更　"ActiveSubDomain" >> "ActiveSubDomainFile"
+   - Version Infoの導入
+   - Temeratureの文字綴り修正
+   - ファイル出力の様式を整形（スペース，配置など）
+   - Bug fix :
+      > Write_Step(, int) >>Write_Step(, const unsigned)
+      > Write_OutFileInfo() %d > %u
+
+
+-----------
 Version 1.1            08 June 2013
-   - Change packaging and appearance
+   - 体裁とパッケージングを変更
 
 -----------
 Version 1.0            06 June 2013
-   - Initial release
+   - リリース

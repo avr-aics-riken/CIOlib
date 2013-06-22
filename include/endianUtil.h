@@ -1,12 +1,10 @@
-// #################################################################
-//
-// Combine sph files and output
-//
-// Copyright (c) 2012-2013  All right reserved.
-//
-// Institute of Industrial Science, The University of Tokyo, Japan.
-//
-// #################################################################
+/*
+ * CIOlib - Cartesian Input / Output library
+ *
+ * Copyright (c) 2013 Advanced Institute for Computational Science, RIKEN.
+ * All rights reserved.
+ *
+ */
 
 /**
  * @file include/endianUtil.h
@@ -20,13 +18,13 @@
 
 #include <stdio.h>
 #include <sys/types.h>
-// modify(Vsphere 1.6.0) start for vsphere_win at 2008/06/20 by @hira
+// modify(Vsphere 1.6.0) start for vsphere_win at 2008/06/20
 #ifndef _WIN32
 #include <unistd.h>           // for linux
 #else
 #include "sph_win32_util.h"   // for win32
 #endif
-// modify(Vsphere 1.6.0) end for vsphere_win at 2008/06/20 by @hira
+// modify(Vsphere 1.6.0) end for vsphere_win at 2008/06/20
 #include <iostream>
 #include <string>
 

@@ -1,9 +1,10 @@
 /*
- * CIO - Cartesian Input / Output library
+ * CIOlib - Cartesian Input / Output library
  *
- * Copyright (c) RIKEN AICS, Japan. All right reserved. 2013
+ * Copyright (c) 2013 Advanced Institute for Computational Science, RIKEN.
+ * All rights reserved.
  *
-*/
+ */
 
 /** 
  * @file   cio_DFI_BOV.C

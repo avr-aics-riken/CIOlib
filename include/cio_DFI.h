@@ -2,9 +2,10 @@
 #define _CIO_DFI_H_
 
 /*
- * CIO - Cartesian Input / Output library
+ * CIOlib - Cartesian Input / Output library
  *
- * Copyright (c) RIKEN AICS, Japan. All right reserved. 2013
+ * Copyright (c) 2013 Advanced Institute for Computational Science, RIKEN.
+ * All rights reserved.
  *
  */
 
@@ -141,21 +142,21 @@ public:
   /** index.dfi ファイルの Unit */
   struct cio_Unit  
   {
-    bool out_Length;                      ///<Length,L0 出力フラグ
-    string Length;                        ///<(NonDimensional, m, cm, mm)
-    double L0;                            ///<規格化に用いた長さスケール
+    bool out_Length;                   ///<Length,L0 出力フラグ
+    string Length;                     ///<(NonDimensional, m, cm, mm)
+    double L0;                         ///<規格化に用いた長さスケール
 
-    bool out_Velocity;                    ///<Velocity,V0 出力フラグ
-    string Velocity;                      ///<(NonDimensional, m/s)     
-    double V0;                            ///<代表速度(m/s)
+    bool out_Velocity;                 ///<Velocity,V0 出力フラグ
+    string Velocity;                   ///<(NonDimensional, m/s)
+    double V0;                         ///<代表速度(m/s)
 
-    bool out_Pressure;                    ///<Presuure,P0,DiffPrs出力フラグ
-    string Pressure;                      ///<(NonDimensional, Pa)      
+    bool out_Pressure;                 ///<Presuure,P0,DiffPrs出力フラグ
+    string Pressure;                   ///<(NonDimensional, Pa)
     double P0;                         ///<基準圧力(Pa)
     double DiffPrs;                    ///<圧力差(Pa)
 
-    bool out_Temperature;                 ///<Temperatur,BaseTemp,DiffTemp出力フラグ
-    string Temperatur;                    ///<(NonDimensional, C, K)    
+    bool out_Temperature;              ///<Temperature,BaseTemp,DiffTemp出力フラグ
+    string Temperature;                ///<(NonDimensional, C, K)
     double BaseTemp;                   ///<指定単力　　　　
     double DiffTemp;                   ///<指定単位　　　
 
@@ -175,7 +176,7 @@ public:
       DiffPrs     =0.0;
 
       out_Temperature=false;
-      Temperatur     ="";
+      Temperature    ="";
       BaseTemp       =0.0;
       DiffTemp       =0.0;
     }
@@ -183,7 +184,7 @@ public:
     cio_Unit(bool _out_Length, string _Length, double _L0,
          bool _out_Velocity, string _Velocity, double _V0,
          bool _out_Pressure, string _Pressure, double _P0, double _DiffPrs,
-         bool _out_Temperature, string _Temperatur, double _BaseTemp, double _DiffTemp) 
+         bool _out_Temperature, string _Temperature, double _BaseTemp, double _DiffTemp)
     {
 
       out_Length=_out_Length;
@@ -199,10 +200,10 @@ public:
       P0          =_P0;
       DiffPrs     =_DiffPrs;
 
-      out_Temperature=_out_Temperature;
-      Temperatur     =_Temperatur;
-      BaseTemp       =_BaseTemp;
-      DiffTemp       =_DiffTemp;
+      out_Temperature = _out_Temperature;
+      Temperature     = _Temperature;
+      BaseTemp        = _BaseTemp;
+      DiffTemp        = _DiffTemp;
     }
   };
 
@@ -1059,11 +1060,11 @@ public:
   void Write_DiffPrs(FILE* fp, const unsigned tab);
 
   /**
-   * @brief DFIファイル:Temperaturを出力する
+   * @brief DFIファイル:Temperatureを出力する
    * @param [in] fp     ファイルポインタ
    * @param [in] tab    インデント
    */
-  void Write_Temperatur(FILE* fp, const unsigned tab);
+  void Write_Temperature(FILE* fp, const unsigned tab);
 
   /**
    * @brief DFIファイル:BaseTempを出力する
@@ -1085,7 +1086,7 @@ public:
    * @param [in] tab    インデント
    * @param [in] step   step番号
    */
-  void Write_Step(FILE* fp, const unsigned tab, int step);
+  void Write_Step(FILE* fp, const unsigned tab, const unsigned step);
 
   /**
    * @brief DFIファイル:Timeを出力する
@@ -1097,7 +1098,7 @@ public:
   void Write_Time(FILE* fp, const unsigned tab, T time)
   {
     Write_Tab(fp, tab);
-    fprintf(fp, "Time =%e\n",time[0]);
+    fprintf(fp, "Time = %e\n",time[0]);
   };
 
   /**
@@ -1121,7 +1122,7 @@ public:
                   T comp)
   {
     Write_Tab(fp, tab);
-    fprintf(fp, "%s =%e\n",compname.c_str(),comp);
+    fprintf(fp, "%s = %e\n",compname.c_str(),comp);
   }
   /**
    * @brief DFIファイル:Domainを出力する
@@ -1393,6 +1394,16 @@ public:
    */
   bool dbwrite(int RankID);
 
+  
+  /** バージョンを出力する
+   */
+  static void VersionInfo(std::ostream &ofs)
+  {
+    ofs << std::endl
+    << " CIO - Cartesian I/O Library  Version " << CIO_VERSION_NO << std::endl
+    << std::endl;
+  }
+  
 };
 
 #endif // _cio_DFI_H_

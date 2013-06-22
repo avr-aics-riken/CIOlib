@@ -10,6 +10,11 @@ CIOlib　Release note
 ====================
 
 -----------
+Version 1.2            10 June 2013
+   - Change keyword from "ActiveSubDomain" to "ActiveSubDomainFile"
+   - Bug fix : see ChangeLog
+
+-----------
 Version 1.1            08 June 2013
    - Change packaging and appearance
 

@@ -1,9 +1,12 @@
-/* Staging
+/*
+ * CIOlib - Cartesian Input / Output library
  *
- * Copyright (c) RIKEN AICS, Japan. All right reserved. 2013
+ * Copyright (c) 2013 Advanced Institute for Computational Science, RIKEN.
+ * All rights reserved.
  *
  */
-/* Staging
+
+/*
  * @file ActiveSubDomain.h
  * @brif ActiveSubDomain Class Header
  * @author kero

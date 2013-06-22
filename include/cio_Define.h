@@ -2,9 +2,10 @@
 #define _CIO_DEFINE_H_
 
 /*
- * CIO - Cartesian Input / Output library
+ * CIOlib - Cartesian Input / Output library
  *
- * Copyright (c) RIKEN AICS, Japan. All right reserved. 2013
+ * Copyright (c) 2013 Advanced Institute for Computational Science, RIKEN.
+ * All rights reserved.
  *
  */
 
@@ -37,6 +38,8 @@
 
 #define D_CIO_IJNK "ijkn"
 #define D_CIO_NIJK "nijk"
+
+#define CIO_VERSION_NO  "1.2"
 
 typedef std::map<int,int> headT;
 
