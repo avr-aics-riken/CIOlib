@@ -1,16 +1,18 @@
-/* #################################################################
- *
+/*
  * CIOlib - Cartesian Input / Output library
  *
  * Copyright (c) 2013 Advanced Institute for Computational Science, RIKEN.
- * All right reserved.
- *
- * #################################################################
+ * All rights reserved.
  *
  */
 
 CIOlib　Release note
+====================
 
- --------------------------------------------------------------
-Version 1.0            06 June. 2013
+-----------
+Version 1.1            08 June 2013
+   - Change packaging and appearance
+
+-----------
+Version 1.0            06 June 2013
    - Initial release

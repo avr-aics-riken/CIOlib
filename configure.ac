@@ -3,7 +3,8 @@
 #
 # CIO - Cartesian Input / Output library
 #
-# Copyright (c) RIKEN AICS, Japan. All right reserved. 2013
+# Copyright (c) 2013 Advanced Institute for Computational Science, RIKEN. 
+# All rights reserved.
 #
 ################################################################
 ###
@@ -12,13 +13,13 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.57])
-AC_INIT([CIOlib],[1.0],[keno@riken.jp],[CIOlib])
+AC_INIT([CIOlib],[1.1],[keno@riken.jp],[CIOlib])
 AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR([src/cio_DFI.C])
 AM_CONFIG_HEADER([config.h])
 
 # revision No.
-CIO_REVISION="20130606_1200"
+CIO_REVISION="20130608_1200"
 AC_SUBST(CIO_REVISION)
 
 #

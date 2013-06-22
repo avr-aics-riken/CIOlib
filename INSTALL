@@ -1,13 +1,11 @@
-/* #################################################################
- *
+/*
  * CIOlib - Cartesian Input / Output library
  *
  * Copyright (c) 2013 Advanced Institute for Computational Science, RIKEN.
- * All right reserved.
- *
- * #################################################################
+ * All rights reserved.
  *
  */
+
 
 １. configureを用いてライブラリのインストールを行なう方法
 
@@ -26,14 +24,12 @@
 
     --with-mpi=MPI_PATH
       MPIライブラリがインストールされているディレクトリをMPI_PATHに指定
-      します．
-      ただし，コンパイラにmpic++等のmpi環境のラッパーコマンドを指定する
+      します．ただし，コンパイラにmpic++等のmpi環境のラッパーコマンドを指定する
       場合は, 本オプションを指定する必要はありません．
 
     --with-parser=TEXTPARSER_PATH
       TextParserライブラリがインストールされているパスをTEXTPARSER_PATH
-      に指定します．
-      --with-parserオプションは必ず指定してください．
+      に指定します．このオプションは必ず指定してください．
 
     CXX=CXX_COMPILER
       C++コンパイラをCXX_COMPILERに指定します．
