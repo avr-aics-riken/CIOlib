@@ -1,0 +1,66 @@
+/* #################################################################
+ *
+ * CIOlib - Cartesian Input / Output library
+ *
+ * Copyright (c) 2013 Advanced Institute for Computational Science, RIKEN.
+ * All right reserved.
+ *
+ * #################################################################
+ *
+ */
+
+１. configureを用いてライブラリのインストールを行なう方法
+
+  以下の手順でライブラリのインストールを行ないます．
+
+    > ./configure [OPTION]
+    > make
+    > make install
+
+  configure実行時のOPTIONは必要に応じて以下を指定してください．
+
+  OPTION:
+    --prefix=INSTALL_DIR
+      ライブラリをインストールするディレクトリをINSTALL_DIRに指定します．
+      デフォルトは/usr/local/CIOlibです．
+
+    --with-mpi=MPI_PATH
+      MPIライブラリがインストールされているディレクトリをMPI_PATHに指定
+      します．
+      ただし，コンパイラにmpic++等のmpi環境のラッパーコマンドを指定する
+      場合は, 本オプションを指定する必要はありません．
+
+    --with-parser=TEXTPARSER_PATH
+      TextParserライブラリがインストールされているパスをTEXTPARSER_PATH
+      に指定します．
+      --with-parserオプションは必ず指定してください．
+
+    CXX=CXX_COMPILER
+      C++コンパイラをCXX_COMPILERに指定します．
+
+    CXXFLAGS=CXX_OPTIONS
+      C++コンパイラでのコンパイル時に付加するオプションをCXX_OPTIONSに
+      指定します．
+
+  configureの例を以下に示します．
+
+    > ./configure --prefix=/usr/local/cio \
+                  --with-mpi=/usr/local/mpi \
+                  --with-parser=/usr/local/textparser \
+                  CXX=/opt/intel/parallel_studio_xe_2011/bin/icpc \
+                  CXXFLAGS=-O3 \
+
+  上記では以下の項目を設定しています．
+
+    ・--prefix=/usr/local/cio
+      インストールディレクトリは/usr/local/cio
+    ・--with-mpi=/usr/local/mpi
+      MPIがセットアップされているディレクトリは/usr/local/mpi
+    ・--with-parser
+      TextParserがセットアップされているディレクトリは/usr/local/textparser
+    ・CXX=/opt/intel/parallel_studio_xe_2011/bin/icpc
+      C++コンパイラは/opt/intel/parallel_studio_xe_2011/bin/icpcを使う
+    ・CXXFLAGS=-O3
+      C++のコンパイルオプションは"-O3"
+
+   （設定項目に空白を含む場合は""で囲ってください）
