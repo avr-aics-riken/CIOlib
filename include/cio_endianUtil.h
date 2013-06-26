@@ -6,25 +6,21 @@
  *
  */
 
-/**
- * @file include/endianUtil.h
- * エンディアンユーティリティマクロ・関数ファイル
- * @author     riken
- * @date       2010/10/01
+/** 
+ * @file   cio_endianUtil.h
+ * @brief  エンディアンユーティリティマクロ・関数ファイル
+ * @author kero    
  */
-
-#ifndef _ENDIAN_UTIL_H_
-#define _ENDIAN_UTIL_H_
+#ifndef _CIO_ENDIAN_UTIL_H_
+#define _CIO_ENDIAN_UTIL_H_
 
 #include <stdio.h>
 #include <sys/types.h>
-// modify(Vsphere 1.6.0) start for vsphere_win at 2008/06/20
 #ifndef _WIN32
 #include <unistd.h>           // for linux
 #else
-#include "sph_win32_util.h"   // for win32
+#include "cio_win32_util.h"   // for win32
 #endif
-// modify(Vsphere 1.6.0) end for vsphere_win at 2008/06/20
 #include <iostream>
 #include <string>
 
@@ -163,5 +159,5 @@
   #endif // DBSWAPVEC
 #endif // SUPER_UX
 
-#endif // _ENDIAN_UTIL_H_
+#endif // _CIO_ENDIAN_UTIL_H_
 

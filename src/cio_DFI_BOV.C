@@ -861,7 +861,7 @@ void cio_DFI_BOV::WriteData(int step, int gc, void* time,
   if( DFI_MPI.NumberOfRank > 1 ) mio=true;
 
   std::string outFile = Generate_FileName(m_RankID,step,mio);
-  if( MakeDirectory(DFI_Finfo.DirectoryPath, step) != 1 ) return;
+  if( MakeDirectory(DFI_Finfo.DirectoryPath) != 1 ) return;
 
   FILE* fp;
   if( (fp = fopen(outFile.c_str(),"wb")) == NULL ) {

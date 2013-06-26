@@ -65,6 +65,10 @@ void cio_DFI_SPH::ReadData(int step, int gc,
                            void *val, double &time,
                            const bool mode, unsigned &step_avr, double &time_avr)
 {
+
+  std::string dir = CIO::cioPath_DirName(m_indexDfiName);
+  //printf("dir : %s\n",dir.c_str());
+
   bool mio = false;
   
   if( RankInfo.size() > 1 ) mio = true;
@@ -88,9 +92,16 @@ void cio_DFI_SPH::ReadData(int step, int gc,
     for(int i=0; i<RList.size(); i++) {
       int n = RList[i];
       int ID= RankInfo[n].RankID;
-      std::string fname = Generate_FileName(ID,step,mio);
 
-      //printf("fname : %s\n",fname.c_str());
+      //std::string fname = Generate_FileName(ID,step,mio);
+      std::string fname;
+      if( CIO::cioPath_isAbsolute(DFI_Finfo.DirectoryPath) ){
+        fname = Generate_FileName(ID,step,mio);
+      } else {
+        std::string tmp = Generate_FileName(ID,step,mio);
+        //fname = dir + "/"+ Generate_FileName(ID,step,mio);
+        fname = CIO::cioPath_ConnectPath( dir, tmp );
+      }
 
       int sta[3],end[3];
       if( CheckReadArea(head, tail, gc, RankInfo[n].HeadIndex, RankInfo[n].TailIndex,
@@ -100,7 +111,7 @@ void cio_DFI_SPH::ReadData(int step, int gc,
         if( !read_S3D(fname.c_str(), step, DFI_Finfo.GuideCell, val, time, 
                       mode, step_avr, time_avr ) ) {
           val = NULL;
-          printf("**** error read s3d ****");
+          printf("**** error read %s\n",fname.c_str());
           return;
         }
 
@@ -109,8 +120,7 @@ void cio_DFI_SPH::ReadData(int step, int gc,
         if( !read_MxN(fname.c_str(), step, gc, head, tail, RankInfo[n].HeadIndex,
                     RankInfo[n].TailIndex, sta, end, val, time, n, mode, step_avr, time_avr) ) {
           val = NULL;
-          printf("**** error read mxn ID %d dfi_ID : %d fname : %s\n",m_RankID,n,
-                  fname.c_str());
+          printf("**** error read %s\n",fname.c_str());
           return;
         }
       }
@@ -123,9 +133,15 @@ void cio_DFI_SPH::ReadData(int step, int gc,
   }else if( readflag == CIO_E_GVX2_SAME ) { 
 
     for(int i=0; i<RList.size(); i++) {
-      std::string fname = Generate_FileName(RList[i],step,mio);
-
-      //printf("fname : %s\n",fname.c_str());
+      //std::string fname = Generate_FileName(RList[i],step,mio);
+      std::string fname;
+      if( CIO::cioPath_isAbsolute(DFI_Finfo.DirectoryPath) ){
+        fname = Generate_FileName(RList[i],step,mio);
+      } else {
+        std::string tmp = Generate_FileName(RList[i],step,mio);
+        //fname = dir + "/"+ Generate_FileName(ID,step,mio);
+        fname = CIO::cioPath_ConnectPath( dir, tmp );
+      }
 
       int sta[3],end[3],dfi_head[3],dfi_tail[3];
 
@@ -674,7 +690,7 @@ bool cio_DFI_SPH::read_Coarse(const char* fname, int step, int gc, int head[3], 
   if( !read_S3D(fname, step, dfi_gc, src, time, mode, step_avr, time_avr) ) {
     delete [] src;
     val = NULL;
-    printf("**** error read s3d ****");
+    printf("**** error read %s\n",fname);
     return false;
   }
 
@@ -765,7 +781,7 @@ bool cio_DFI_SPH::read_Coarse_MxN(const char* fname, int step, int gc, int head[
                 time,n_dfi,mode,step_avr,time_avr) ) { 
     delete [] src;
     val = NULL;
-    printf("**** error read Mxn ****");
+    printf("**** error read %s\n",fname);
     return false;
   }
 
@@ -838,16 +854,24 @@ void cio_DFI_SPH::WriteData(int step, int gc, void* time,
                            bool force)
 {
 
-  if( !force  && interval>0 && step%interval != 0 ) return; 
+  //if( !force  && interval>0 && step%interval != 0 ) return; 
 
   bool mio=false;
   if( DFI_MPI.NumberOfRank > 1 ) mio=true;
 
   //m_outSlice = true;
 
-  std::string outFile = Generate_FileName(m_RankID,step,mio);
+  std::string outFile;
+  if( CIO::cioPath_isAbsolute(DFI_Finfo.DirectoryPath) ){
+    outFile = Generate_FileName(m_RankID,step,mio);
+  } else {
+    outFile = m_directoryPath + "/"+ Generate_FileName(m_RankID,step,mio);
+  }
 
-  if( MakeDirectory(DFI_Finfo.DirectoryPath,step) != 1 ) return;
+  std::string dir = CIO::cioPath_DirName(outFile);
+
+  //if( MakeDirectory(DFI_Finfo.DirectoryPath) != 1 ) return;
+  if( MakeDirectory(dir) != 1 ) return;
 
   FILE* fp;
   if( (fp = fopen(outFile.c_str(),"wb")) == NULL ) {
@@ -937,7 +961,12 @@ void cio_DFI_SPH::WriteData(int step, int gc, void* time,
 
   fclose(fp);
 
-  WriteIndexDfiFile(m_indexDfiName,m_RankID,DFI_Finfo.Prefix,step,time,minmax,true,
+  cio_DFI::MakeDirectory(m_directoryPath);
+  std::string dfiname = CIO::cioPath_FileName(m_indexDfiName,".dfi");
+  std::string fname = CIO::cioPath_ConnectPath( m_directoryPath, dfiname );
+
+  //WriteIndexDfiFile(m_indexDfiName,m_RankID,DFI_Finfo.Prefix,step,time,minmax,true,
+  WriteIndexDfiFile(fname,m_RankID,DFI_Finfo.Prefix,step,time,minmax,true,
                     air_mode, step_avr, time_avr);
 }
 

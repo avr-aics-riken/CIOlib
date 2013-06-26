@@ -22,10 +22,21 @@
       ライブラリをインストールするディレクトリをINSTALL_DIRに指定します．
       デフォルトは/usr/local/CIOlibです．
 
-    --with-mpi=MPI_PATH
-      MPIライブラリがインストールされているディレクトリをMPI_PATHに指定
-      します．ただし，コンパイラにmpic++等のmpi環境のラッパーコマンドを指定する
-      場合は, 本オプションを指定する必要はありません．
+    --with-mpich=MPICH_PATH
+      MPICH ライブラリがインストールされている場合にはMPICH_PATHにインス
+      トール先を指定します．
+      --with-mpichオプションと--with-ompiオプションのいずれかを必ず指定
+      してください．同時に指定した場合，--with-mpichオプションが有効に
+      なります．ただし，コンパイラにmpic++等のmpi環境のラッパーコマンドを
+      指定する場合は, 本オプションを指定する必要はありません．
+
+    --with-ompi=OPENMPI_PATH
+      OpenMPIライブラリがインストールされている場合にはOPENMPI_PATHに
+      インストール先を指定します．
+      --with-mpichオプションと--with-ompiオプションのいずれかを必ず指定
+      してください．同時に指定した場合，--with-mpichオプションが有効に
+      なります．ただし，コンパイラにmpic++等のmpi環境のラッパーコマンドを
+      指定する場合は, 本オプションを指定する必要はありません．
 
     --with-parser=TEXTPARSER_PATH
       TextParserライブラリがインストールされているパスをTEXTPARSER_PATH
@@ -41,7 +52,7 @@
   configureの例を以下に示します．
 
     > ./configure --prefix=/usr/local/cio \
-                  --with-mpi=/usr/local/mpi \
+                  --with-mpich=/usr/local/mpich \
                   --with-parser=/usr/local/textparser \
                   CXX=/opt/intel/parallel_studio_xe_2011/bin/icpc \
                   CXXFLAGS=-O3 \
@@ -50,8 +61,8 @@
 
     ・--prefix=/usr/local/cio
       インストールディレクトリは/usr/local/cio
-    ・--with-mpi=/usr/local/mpi
-      MPIがセットアップされているディレクトリは/usr/local/mpi
+    ・--with-mpich=/usr/local/mpich
+      MPICHがセットアップされているディレクトリは/usr/local/mpich
     ・--with-parser
       TextParserがセットアップされているディレクトリは/usr/local/textparser
     ・CXX=/opt/intel/parallel_studio_xe_2011/bin/icpc

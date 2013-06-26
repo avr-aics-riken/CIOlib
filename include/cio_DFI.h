@@ -21,11 +21,12 @@
 #include <set>
 #include <map>
 
+#include "cio_PathUtil.h"
 #include "cio_TextParser.h"
 #include "cio_Define.h"
 #include "cio_ActiveSubDomain.h"
 
-#include "endianUtil.h"
+#include "cio_endianUtil.h"
 
 using namespace std;
 
@@ -70,11 +71,13 @@ public:
   };
 
   MPI_Comm m_comm;
-  string   m_indexDfiName;
-  int      m_dfi_mng;
-  bool     m_outSlice;
-  int      m_start_type;
-  int      m_RankID;
+  std::string m_directoryPath;
+  std::string m_indexDfiName;
+  std::string m_timeSliceDir;
+  bool        m_outSlice;
+  int         m_dfi_mng;
+  int         m_start_type;
+  int         m_RankID;
 
   /** index.dfi ファイルの FileInfo */
   struct cio_FileInfo
@@ -307,6 +310,7 @@ public:
 
   headT DFI_mapX,DFI_mapY,DFI_mapZ;
 
+
 public:
   /** コンストラクタ */
   cio_DFI();
@@ -345,6 +349,8 @@ public:
    * 活性サブドメイン配列が空のとき、全領域が活性サブドメインになるため
    * このチェック関数内で活性サブドメイン情報を生成する.
    * @param[in] nRank 並列プロセス数
+   * @param[in] div 領域分割数
+   * @param[out] subDomainInfo 活性ドメイン情報
    * @return   終了コード(CIO_SUCCESS=正常終了)
    */ 
    static cio_ErrorCode CheckData( int nRank, int div[3],
@@ -352,8 +358,10 @@ public:
 
   /**
    * ランクマップを生成（非活性を含む）
-   * @retval true  正常終了
-   * @retval false エラー
+   * @param[in] div 領域分割数
+   * @param[in] subDomainInfo 活性ドメイン情報
+   * @retval ランクマップ
+   * @retval NULL
    */
    static int* CreateRankMap(int div[3],std::vector<cio_ActiveSubDomain> subDomainInfo); 
 
@@ -497,6 +505,7 @@ public:
   if( dfi == NULL ) return NULL;
 
   dfi->m_indexDfiName = DfiName;
+  dfi->m_directoryPath = CIO::cioPath_DirName(DfiName);
   dfi->m_comm = comm;
   dfi->m_RankID = RankID;
 
@@ -519,15 +528,13 @@ public:
    * @param [in] path パス
    * @return error code　　　　　　　
    */ 
-  static int MakeDirectory(string path);
+  static int MakeDirectory(std::string path);
 
   /**
    * @brief ディレクトリパスの作成
-   * @param [in] path パス
-   * @param [in] step TimeSlice
    * @return error code　　　　　　　
    */ 
-  int MakeDirectory(string path, int step);
+  int MakeDirectoryPath();
 
   /**
    * @brief initialise dfi
@@ -820,6 +827,13 @@ public:
    * @return DFIファイル名
    */ 
   static std::string Generate_DFI_Name(const std::string prefix);
+
+  /**
+   * @brief Directoryパスを生成する
+   * @return パス名
+   */
+  std::string Generate_Directory_Path(); 
+
 
   /**
    * @brief DFIファイルを出力する
@@ -1403,6 +1417,9 @@ public:
     << " CIO - Cartesian I/O Library  Version " << CIO_VERSION_NO << std::endl
     << std::endl;
   }
+
+protected:
+  static int MakeDirectorySub( std::string path );
   
 };
 

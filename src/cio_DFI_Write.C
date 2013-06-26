@@ -103,23 +103,57 @@ bool cio_DFI::WriteProcDfiFile(MPI_Comm comm, string procFileName, int G_size[3]
 // 出力DFIファイル名を作成する
 std::string cio_DFI::Generate_DFI_Name(const std::string prefix)
 {
-  if ( prefix.empty() ) return NULL;
 
-#if 0
-  int len = prefix.size() + 5; // postfix(4) + 1(\0)
-  char* tmp = new char[len];
-  memset(tmp, 0, sizeof(char)*len);
+    // directory path
+    std::string dirName  = CIO::cioPath_DirName(prefix);
 
-  sprintf(tmp, "%s.%s", prefix.c_str(), "dfi");
+    // file extension
+    std::string dfiname = CIO::cioPath_FileName(prefix,".dfi");
 
-  std::string fname(tmp);
-  if ( tmp ) delete [] tmp;
-#else
-  std::string fname = prefix + ".dfi";
+    // filename
+    std::string fname = CIO::cioPath_ConnectPath( dirName, dfiname );
+
+#if 0 // for debug
+    printf("prefix    =%s\n", prefix.c_str() );
+    printf("  dirName =%s\n", dirName.c_str() );
+    printf("  dfiname =%s\n", dfiname.c_str() );
+    printf("  fname   =%s\n", fname.c_str() );
+    printf("\n");
 #endif
 
-  return fname;
+    return fname;
 }
+
+// #################################################################
+// Directoryパスを生成する関数
+std::string cio_DFI::Generate_Directory_Path()
+{
+
+    // dfiのパスとDirectoryPathを連結する関数
+    // ただし、絶対パスのときはdfiのパスは無視
+    // CIO::cioPath_isAbsoluteがtrueのとき絶対パス
+    // DirectoryPath + TimeSliceDir
+    std::string path = m_directoryPath;
+    if( m_outSlice )
+    {
+      path = CIO::cioPath_ConnectPath(path, m_timeSliceDir);
+    }
+
+    // absolute path
+    if( CIO::cioPath_isAbsolute(path) )
+    {
+      return path;
+    }
+
+    // relative path
+    std::string dfidir = CIO::cioPath_DirName(m_indexDfiName);
+    path = CIO::cioPath_ConnectPath(dfidir, path);
+    return path;
+
+}
+
+
+
 
 // #################################################################
 // DFIファイルを出力する

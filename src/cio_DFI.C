@@ -43,6 +43,10 @@ cio_DFI::~cio_DFI()
 cio_DFI* cio_DFI::ReadInit(MPI_Comm comm, string DfiName)
 {
 
+  std::string dirName = CIO::cioPath_DirName(DfiName);
+  //printf("dirName : %s\n",dirName.c_str());
+
+
   int RankID;
   MPI_Comm_rank( comm, &RankID );
 
@@ -101,7 +105,8 @@ cio_DFI* cio_DFI::ReadInit(MPI_Comm comm, string DfiName)
   tpCntl.remove();
 
   //proc file name set
-  string procfile = F_path.Process;
+  string dfiname = CIO::cioPath_FileName(F_path.Process,".dfi");
+  string procfile = CIO::cioPath_ConnectPath(dirName,dfiname);
 
   //proc.dfi read
   //TPインスタンス
@@ -1223,60 +1228,56 @@ std::string cio_DFI::Generate_FileName(int RankID, int step, const bool mio)
 
 // #################################################################
 // ディレクトリがなければ作成、既存なら何もしない
-int cio_DFI::MakeDirectory(string path)
+int cio_DFI::MakeDirectory(std::string path)
 {
-  // 標準ライブラリ呼び出し
-  // パーミッションはumaskで指定
-  umask(022);
-  int ret;
-
-  ret = mkdir(path.c_str(), 0777); // rwx
-
-  if ( 0 != ret )
-  {
-    // 既存以外のエラー
-    if ( EEXIST != errno )
+    int ret = MakeDirectorySub(path);
+    if( ret != 0 )
     {
-      printf( "\tError(errno)=[%s]\n", strerror(errno) );
-      return 0;
+       // 既存以外のエラー
+      if ( EEXIST != errno )
+      {
+        printf( "\tError(errno)=[%s]\n", strerror(errno) );
+        return 0;
+      }
     }
-  }
 
-  return 1;
+    // failed
+    return 1;       
 }
 
 // #################################################################
 // ディレクトリがなければ作成、既存なら何もしない
-int cio_DFI::MakeDirectory(string path, int step)
+int cio_DFI::MakeDirectoryPath()
 {
-  // 標準ライブラリ呼び出し
-  // パーミッションはumaskで指定
-  umask(022);
-  int ret;
+    // DirectoryPath with TimeSlice
+    std::string path = Generate_Directory_Path();
 
-  if( m_outSlice ) {
-    int len = DFI_Finfo.DirectoryPath.size() + 11;
-    char* tmp = new char[len];
-    memset(tmp, 0, sizeof(char)*len);
-    sprintf(tmp, "%s/%010d",DFI_Finfo.DirectoryPath.c_str(),step);
-    ret = mkdir(tmp, 0777); // rwx
-  } else { 
-    ret = mkdir(path.c_str(), 0777); // rwx
-  }
-
-  if ( 0 != ret )
-  {
-    // 既存以外のエラー
-    if ( EEXIST != errno )
-    {
-      printf( "\tError(errno)=[%s]\n", strerror(errno) );
-      return 0;
-    }
-  }
-
-  return 1;
+    return MakeDirectory(path);
 }
 
+// #################################################################
+int cio_DFI::MakeDirectorySub( std::string path )
+{
+
+    umask(022);
+
+    int ret = mkdir(path.c_str(), 0777);
+    if( ret != 0 )
+    {
+      if( errno == EEXIST ) return 0;
+
+      std::string parent = CIO::cioPath_DirName(path);
+      int ret2 = MakeDirectorySub( parent );
+      if( ret2 != 0 )
+      {
+        return ret2;
+      }
+      ret = MakeDirectorySub( path );
+    }
+
+    return ret;
+
+}
 // #################################################################
 // ActiveSubdomainファイルのエンディアンチェック
 cio_EMatchType cio_DFI::isMatchEndianSbdmMagick( int ident )

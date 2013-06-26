@@ -13,13 +13,13 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.57])
-AC_INIT([CIOlib],[1.2],[keno@riken.jp],[CIOlib])
+AC_INIT([CIOlib],[1.3],[keno@riken.jp],[CIOlib])
 AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR([src/cio_DFI.C])
 AM_CONFIG_HEADER([config.h])
 
 # revision No.
-CIO_REVISION="20130610_1330"
+CIO_REVISION="20130625_2000"
 AC_SUBST(CIO_REVISION)
 
 #
@@ -35,15 +35,38 @@ fi
 #
 # MPI environment
 #
+enable_mpi="none"
+
 AC_SUBST(MPI_DIR)
 AC_SUBST(MPI_CFLAGS)
-AC_ARG_WITH(mpi, [AC_HELP_STRING([--with-mpi=dir],[Specify MPI install directory])], , with_mpi=none)
-if test "$with_mpi" != "none" ; then
-  MPI_DIR=$with_mpi;
+AC_SUBST(MPI_LDFLAGS)
+AC_SUBST(MPI_LIBS)
+
+# mpich
+AC_ARG_WITH(mpich, [AC_HELP_STRING([--with-mpich=dir],[Specify MPICH install directory])], , with_mpich=none)
+if test "$with_mpich" != "none" ; then
+  MPI_DIR=$with_mpich;
   MPI_CFLAGS=-I$MPI_DIR/include
-else
-  echo "  Warning: MPI library not specified."
-  echo "           if compilation error about MPI occurs, set --with-mpi option"
+  MPI_LDFLAGS=-L$MPI_DIR/lib
+  MPI_LIBS=-lmpich
+  enable_mpi="mpich"
+fi
+
+# openmpi
+if test "$with_mpich" = "none" ; then
+  AC_ARG_WITH( ompi, [AC_HELP_STRING([--with-ompi=dir],[Specify OpenMPI install directory])], , with_ompi=none)
+  if test "$with_ompi" != "none" ; then
+    MPI_DIR=$with_ompi;
+    MPI_CFLAGS=-I$MPI_DIR/include
+    MPI_LDFLAGS=-L$MPI_DIR/lib
+    MPI_LIBS=-lmpi
+    enable_mpi="ompi"
+  fi
+fi
+
+if test "$enable_mpi" = "none" ; then
+  echo "  Warning: MPICH/OpenMPI library not specified."
+  echo "           if compilation error about MPI occurs, set --with-mpich or --with-ompi option"
 fi
 
 #
@@ -52,9 +75,14 @@ fi
 AC_ARG_WITH(parser, [AC_HELP_STRING([--with-parser=dir],[Specify TextParser install directory])], , with_parser=none)
 AC_SUBST(TP_DIR)
 AC_SUBST(TP_CFLAGS)
+AC_SUBST(TP_LDFLAGS)
+AC_SUBST(TP_LIBS)
 if test "$with_parser" != "none" ; then
   TP_DIR=$with_parser;
   TP_CFLAGS=-I$TP_DIR/include
+  TP_LDFLAGS=-L$TP_DIR/lib
+#  TP_LIBS=-lTextParser
+  TP_LIBS=$TP_DIR/lib/libTextParser.a
 else
   echo "  Error: TextParser library not specified."
   echo "         set --with-parser option"
