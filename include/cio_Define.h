@@ -39,7 +39,7 @@
 #define D_CIO_IJNK "ijkn"
 #define D_CIO_NIJK "nijk"
 
-#define CIO_VERSION_NO  "1.3"
+#define CIO_VERSION_NO  "1.3.1"
 
 typedef std::map<int,int> headT;
 

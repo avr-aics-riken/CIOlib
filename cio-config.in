@@ -46,8 +46,9 @@ while test $# -gt 0; do
     case "$1" in
     --version)
 cat <<EOF
+
 CIOlib - Cartesian Input / Output library @VERSION@ @CIO_REVISION@
-Copyright (c) RIKEN AICS, Japan. All right reserved. 2013
+Copyright (c) 2013 Advanced Institute for Computational Science, RIKEN.
 
 EOF
       exit 0

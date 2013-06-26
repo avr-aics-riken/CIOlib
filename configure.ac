@@ -1,25 +1,25 @@
 ###
-################################################################
+#########################################################################
 #
 # CIO - Cartesian Input / Output library
 #
 # Copyright (c) 2013 Advanced Institute for Computational Science, RIKEN. 
 # All rights reserved.
 #
-################################################################
+#########################################################################
 ###
 
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.57])
-AC_INIT([CIOlib],[1.3],[keno@riken.jp],[CIOlib])
+AC_INIT([CIOlib],[1.3.1],[keno@riken.jp],[CIOlib])
 AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR([src/cio_DFI.C])
 AM_CONFIG_HEADER([config.h])
 
 # revision No.
-CIO_REVISION="20130625_2000"
+CIO_REVISION="20130626_1600"
 AC_SUBST(CIO_REVISION)
 
 #
@@ -42,6 +42,7 @@ AC_SUBST(MPI_CFLAGS)
 AC_SUBST(MPI_LDFLAGS)
 AC_SUBST(MPI_LIBS)
 
+
 # mpich
 AC_ARG_WITH(mpich, [AC_HELP_STRING([--with-mpich=dir],[Specify MPICH install directory])], , with_mpich=none)
 if test "$with_mpich" != "none" ; then
@@ -51,6 +52,7 @@ if test "$with_mpich" != "none" ; then
   MPI_LIBS=-lmpich
   enable_mpi="mpich"
 fi
+
 
 # openmpi
 if test "$with_mpich" = "none" ; then
@@ -65,9 +67,10 @@ if test "$with_mpich" = "none" ; then
 fi
 
 if test "$enable_mpi" = "none" ; then
-  echo "  Warning: MPICH/OpenMPI library not specified."
-  echo "           if compilation error about MPI occurs, set --with-mpich or --with-ompi option"
+  echo "  Warning: Neither MPICH nor OpenMPI library is not specified."
+  echo "           If compilation error occurs about MPI, specify --with-mpich or --with-ompi option."
 fi
+
 
 #
 # TextParser environment
@@ -81,31 +84,36 @@ if test "$with_parser" != "none" ; then
   TP_DIR=$with_parser;
   TP_CFLAGS=-I$TP_DIR/include
   TP_LDFLAGS=-L$TP_DIR/lib
-#  TP_LIBS=-lTextParser
-  TP_LIBS=$TP_DIR/lib/libTextParser.a
+  TP_LIBS=$TP_DIR/lib/libTP.a
 else
-  echo "  Error: TextParser library not specified."
-  echo "         set --with-parser option"
+  echo "  Error: TextParser library is not specified."
+  echo "         Specify --with-parser option."
   exit 1
 fi
+
 
 #
 # CIO special flags
 #
 CIO_CFLAGS="-I$CIO_INST_DIR/include"
 AC_SUBST(CIO_CFLAGS)
+
 CIO_LDFLAGS="-L$CIO_INST_DIR/lib"
 AC_SUBST(CIO_LDFLAGS)
-CIO_LIBS="-lciolib"
+
+CIO_LIBS="-lCIO"
 AC_SUBST(CIO_LIBS)
+
 CIO_CXX="$CXX"
 AC_SUBST(CIO_CXX)
+
 
 #
 # MAKE_SUB_DIRS
 #
 AC_SUBST(MAKE_SUB_DIRS)
-MAKE_SUB_DIRS="src"
+MAKE_SUB_DIRS="src doc"
+
 
 #
 # Checks for programs.
@@ -113,10 +121,12 @@ MAKE_SUB_DIRS="src"
 AC_PROG_CXX
 AC_PROG_RANLIB
 
+
 #
 # Checks for header files.
 #
 AC_CHECK_HEADERS([stdlib.h unistd.h])
+
 
 #
 # Checks for typedefs, structures, and compiler characteristics.
@@ -125,6 +135,7 @@ AC_HEADER_STDBOOL
 AC_C_INLINE
 AC_TYPE_SIZE_T
 
+
 #
 # Checks for library functions.
 #
@@ -132,6 +143,7 @@ AC_CHECK_FUNCS([gethostname memset mkdir strcasecmp strerror])
 
 AC_CONFIG_FILES([Makefile \
                  src/Makefile \
+                 doc/Makefile \
                  cio-config \
                 ])
 

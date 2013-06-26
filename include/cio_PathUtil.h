@@ -1,4 +1,8 @@
 /*
+ * CIOlib - Cartesian Input / Output library
+ *
+ * Copyright (c) 2013 Advanced Institute for Computational Science, RIKEN.
+ * All rights reserved.
  *
  */
 
