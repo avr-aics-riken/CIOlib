@@ -47,7 +47,8 @@ while test $# -gt 0; do
     --version)
 cat <<EOF
 
-CIOlib - Cartesian Input / Output library @VERSION@ @CIO_REVISION@
+CIOlib - Cartesian Input / Output library  Ver. @VERSION@  (@CIO_REVISION@)
+
 Copyright (c) 2013 Advanced Institute for Computational Science, RIKEN.
 
 EOF

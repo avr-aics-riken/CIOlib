@@ -13,13 +13,13 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.57])
-AC_INIT([CIOlib],[1.3.1],[keno@riken.jp],[CIOlib])
+AC_INIT([CIOlib],[1.3.2],[keno@riken.jp],[CIOlib])
 AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR([src/cio_DFI.C])
 AM_CONFIG_HEADER([config.h])
 
 # revision No.
-CIO_REVISION="20130626_1600"
+CIO_REVISION="20130627_1500"
 AC_SUBST(CIO_REVISION)
 
 #
@@ -84,7 +84,7 @@ if test "$with_parser" != "none" ; then
   TP_DIR=$with_parser;
   TP_CFLAGS=-I$TP_DIR/include
   TP_LDFLAGS=-L$TP_DIR/lib
-  TP_LIBS=$TP_DIR/lib/libTP.a
+  TP_LIBS=-lTP
 else
   echo "  Error: TextParser library is not specified."
   echo "         Specify --with-parser option."
