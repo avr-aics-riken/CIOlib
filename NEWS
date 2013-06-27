@@ -15,8 +15,8 @@ RELEASE
 Version 1.3.3          2013-06-27
    - Change configure.ac
      - TP_CFLAGS=`$TP_DIR/bin/tp-config --cflags`
-     - TP_LIBS  =`$TP_DIR/bin/tp-config --libs`
-     - remove TP_LIBS  from configure.ac & cio-config.in
+     - TP_LDFLAGS=`$TP_DIR/bin/tp-config --libs`
+     - remove TP_LIBS from configure.ac & cio-config.in
 
 
 -----------
