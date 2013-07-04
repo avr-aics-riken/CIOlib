@@ -10,43 +10,10 @@
 RELEASE
 =======
 
-
------------
-Version 1.3.3          2013-06-27
-   - Change configure.ac
-     - TP_CFLAGS=`$TP_DIR/bin/tp-config --cflags`
-     - TP_LDFLAGS=`$TP_DIR/bin/tp-config --libs`
-     - remove TP_LIBS from configure.ac & cio-config.in
-
-
------------
-Version 1.3.2          2013-06-27
-   - Add description in INSTALL file.
-   - Correction of cio-config.in
-   - Change archive name to libCIO.a
-
-
------------
-Version 1.3.1          2013-06-26
-   - Change archive name of TextParser -lTP.
-
-
------------
-Version 1.3            2013-06-25
-   - Bug fix : see ChangeLog
-
-
------------
-Version 1.2            2013-07-10
-   - Change keyword from "ActiveSubDomain" to "ActiveSubDomainFile"
-   - Bug fix : see ChangeLog
-
-
------------
-Version 1.1            2013-06-08
-   - Change packaging and appearance
-
-
------------
-Version 1.0            2013-06-06
-   - Initial release
+Version 1.3.3     2013-06-27
+Version 1.3.2     2013-06-27
+Version 1.3.1     2013-06-26
+Version 1.3       2013-06-25
+Version 1.2       2013-07-10
+Version 1.1       2013-06-08
+Version 1.0       2013-06-06

@@ -7,8 +7,8 @@
  */
 
 
-CIO library
-===========
+OUTLINE
+=======
 
 This CIO library provides following functions for the Cartesian structured data.
 
@@ -19,7 +19,7 @@ This CIO library provides following functions for the Cartesian structured data.
   - Staging helper
 
 
-Ingredients
+INGREDIENTS
 ===========
 
 AUTHORS     Contributors
