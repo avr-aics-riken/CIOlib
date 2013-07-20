@@ -1414,7 +1414,7 @@ public:
   static void VersionInfo(std::ostream &ofs)
   {
     ofs << std::endl
-    << " CIO - Cartesian I/O Library  Version " << CIO_VERSION_NO << std::endl
+    << " CIO - Cartesian I/O Library  Version \t\t" << CIO_VERSION_NO << std::endl
     << std::endl;
   }
 

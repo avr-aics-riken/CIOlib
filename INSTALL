@@ -7,10 +7,12 @@
  */
 
 
-PREREQUISITE
-============
+SOFTWARE REQUIREMENT
+====================
+
 - MPI library
 - Text parsing library
+
 
 
 
