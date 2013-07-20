@@ -28,6 +28,7 @@ CIO_include_HEADERS = \
     $(top_builddir)/include/cio_DFI_BOV.h \
     $(top_builddir)/include/cio_DFI_SPH.h \
     $(top_builddir)/include/cio_Define.h \
+    $(top_builddir)/include/cio_Version.h \
     $(top_builddir)/include/cio_TextParser.h \
     $(top_builddir)/include/cio_PathUtil.h \
     $(top_builddir)/include/cio_endianUtil.h

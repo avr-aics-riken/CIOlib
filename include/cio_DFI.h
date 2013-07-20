@@ -20,6 +20,7 @@
 #include <typeinfo>
 #include <set>
 #include <map>
+#include <string>
 
 #include "cio_PathUtil.h"
 #include "cio_TextParser.h"
@@ -1403,19 +1404,19 @@ public:
   void SetUnitTemp(bool out_Temp, string Temp, double Btemp, double DiffTemp); 
 
   /**
-   * 
-   *
+   * @brief Debug wreite
+   * @param [in] RankID ランク番号
    */
   bool dbwrite(int RankID);
 
   
-  /** バージョンを出力する
+  /** 
+   * @brief バージョン番号文字列を返す
    */
-  static void VersionInfo(std::ostream &ofs)
+  static std::string getVersionInfo()
   {
-    ofs << std::endl
-    << " CIOlib - Cartesian I/O Library \t\tVersion " << CIO_VERSION_NO << std::endl
-    << std::endl;
+    std::string str(CIO_VERSION_NO);
+    return str;
   }
 
 protected:

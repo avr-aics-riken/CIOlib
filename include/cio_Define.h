@@ -17,6 +17,7 @@
 
 
 #include "mpi.h"
+#include "cio_Version.h"
 
 
 #define D_CIO_EXT_SPH "sph"
@@ -39,7 +40,6 @@
 #define D_CIO_IJNK "ijkn"
 #define D_CIO_NIJK "nijk"
 
-#define CIO_VERSION_NO  "1.3.1"
 
 typedef std::map<int,int> headT;
 

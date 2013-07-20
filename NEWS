@@ -10,48 +10,53 @@
 RELEASE
 =======
 
------------
-Version 1.3.3          2013-06-27
-   - Change configure.ac
-     - TP_CFLAGS=`$TP_DIR/bin/tp-config --cflags`
-     - TP_LDFLAGS=`$TP_DIR/bin/tp-config --libs`
-     - remove TP_LIBS from configure.ac & cio-config.in
+-------------
+Version 1.3.4   2013-07-20
+ - Change policy to display version info
+   - generate Version no from configure
+
+-------------
+Version 1.3.3   2013-06-27
+ - Change configure.ac
+   - TP_CFLAGS=`$TP_DIR/bin/tp-config --cflags`
+   - TP_LDFLAGS=`$TP_DIR/bin/tp-config --libs`
+   - remove TP_LIBS from configure.ac & cio-config.in
 
 
------------
-Version 1.3.2          2013-06-27
-   - Add description in INSTALL file.
-   - Correction of cio-config.in
-   - Change archive name to libCIO.a
+-------------
+Version 1.3.2   2013-06-27
+ - Add description in INSTALL file.
+ - Correction of cio-config.in
+ - Change archive name to libCIO.a
 
 
------------
-Version 1.3.1          2013-06-26
-   - TextParserのアーカイブ名の修正に対応
+-------------
+Version 1.3.1   2013-06-26
+ - TextParserのアーカイブ名の修正に対応
 
 
------------
-Version 1.3            2013-06-25
-   - dfiファイルの相対パス処理の修正
-   - refinment, MxNの読込み処理の再チェック
+-------------
+Version 1.3   2013-06-25
+ - dfiファイルの相対パス処理の修正
+ - refinment, MxNの読込み処理の再チェック
 
 
------------
-Version 1.2            2013-07-10
-   - コピーライトの様式を統一，ソースとヘッダに挿入
-   - キーワード変更　"ActiveSubDomain" >> "ActiveSubDomainFile"
-   - Version Infoの導入
-   - Temeratureの文字綴り修正
-   - ファイル出力の様式を整形（スペース，配置など）
-   - Bug fix :
-      > Write_Step(, int) >>Write_Step(, const unsigned)
-      > Write_OutFileInfo() %d > %u
+-------------
+Version 1.2   2013-07-10
+ - コピーライトの様式を統一，ソースとヘッダに挿入
+ - キーワード変更　"ActiveSubDomain" >> "ActiveSubDomainFile"
+ - Version Infoの導入
+ - Temeratureの文字綴り修正
+ - ファイル出力の様式を整形（スペース，配置など）
+ - Bug fix :
+    > Write_Step(, int) >>Write_Step(, const unsigned)
+    > Write_OutFileInfo() %d > %u
 
 
------------
-Version 1.1            2013-06-08
-   - 体裁とパッケージングを変更
+-------------
+Version 1.1   2013-06-08
+ - 体裁とパッケージングを変更
 
------------
-Version 1.0            2013-06-06
-   - リリース
+-------------
+Version 1.0   2013-06-06
+ - リリース
