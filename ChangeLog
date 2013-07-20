@@ -13,6 +13,8 @@ REVISION HISTORY
 ------------------
 2013-07-20
 
+ r16 update ChangeLog [ver 1.3.4]
+
  r15 update src/Makefile.am and include EXTRA_DIST = Makefile_spec
 
  r14 VersionInfo() >> getVersionInfo()
@@ -32,7 +34,7 @@ REVISION HISTORY
 ------------------
 2013-06-27
 
- r9 update ChangeLog & NEWS
+ r9 update ChangeLog & NEWS [ver 1.3.3]
 
  r8 v 1.3.3 configure.ac    
 
