@@ -1,0 +1,55 @@
+#! /bin/sh
+
+#########################################################################
+#
+# CIOlib - Cartesian Input / Output library
+#
+# Copyright (c) 2013 Advanced Institute for Computational Science, RIKEN.
+# All rights reserved.
+#
+#########################################################################
+
+# Copy 'cio_Version.h' to include directory.
+# If you don't have the file, do configure on other environment and copy generated one.
+#
+# $ make -f Makefile_spec
+#
+# BG/P
+
+AR = ar rv
+RANLIB = ranlib
+MPICXX = mpixlcxx_r
+MPI_DIR = 
+TP_DIR=/hogehoge/TextParser-1.2
+
+TARGET = libCIO.a
+
+SRCS = cio_ActiveSubDomain.C \
+       cio_DFI.C \
+       cio_DFI_BOV.C \
+       cio_DFI_SPH.C \
+       cio_DFI_Write.C \
+       cio_TextParser.C
+
+FSRCS =
+
+.SUFFIXES: .o .c .cpp .f90
+
+OBJS=$(SRCS:.cpp=.o)
+
+CXXFLAGS = -O3 -qarch=450d -qtune=450 \
+           -I$(MPI_DIR) \
+           -I../include \
+           -I$(TP_DIR)/include
+
+FFLAGS = -I../include
+
+$(TARGET):$(OBJS)
+	$(AR) $(TARGET) $(OBJS)
+	$(RANLIB) $(TARGET)
+
+.cpp.o:
+	$(MPICXX) $(CXXFLAGS) -o $@ -c $< 
+
+clean:
+	rm *.o $(TARGET)

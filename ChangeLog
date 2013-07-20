@@ -13,6 +13,8 @@ REVISION HISTORY
 ------------------
 2013-07-20
 
+ r15 update src/Makefile.am and include EXTRA_DIST = Makefile_spec
+
  r14 VersionInfo() >> getVersionInfo()
    - add cio_Version.h.in
 

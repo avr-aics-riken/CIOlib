@@ -33,3 +33,4 @@ CIO_include_HEADERS = \
     $(top_builddir)/include/cio_PathUtil.h \
     $(top_builddir)/include/cio_endianUtil.h
 
+EXTRA_DIST = Makefile_spec
