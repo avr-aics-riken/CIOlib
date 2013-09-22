@@ -15,155 +15,13 @@
 #include "cio_DFI.h"
 
 // #################################################################
-// Index DFIファイルの出力のコントロール
-bool cio_DFI::WriteIndexDfiFile(string DfiName, int RankID, const std::string prefix, 
-     const unsigned step, void* time, void* minmax, const bool mio,
-     const bool avr_mode, const unsigned step_avr,const double time_avr)
+// Index DFIファイルの出力
+CIO::E_CIO_ERRORCODE
+cio_DFI::WriteIndexDfiFile(const std::string dfi_name)
 {
 
-  if ( prefix.empty() || RankID != 0 ) return NULL;
-
-
-  if ( mio )
-  {
-    //dfi_name = Generate_DFI_Name(prefix);
-
-    if( DfiName.empty() )
-    {
-      return false;
-    }
-
-    if( !Write_Index_File(DfiName, prefix, step, time, m_dfi_mng, minmax, mio,
-                          avr_mode, step_avr, time_avr) )
-    {
-      return false;
-    }
-  }
-
- // printf("WriteIndexDfiFile step : %d  m_dfi_mng : %d\n",step ,m_dfi_mng);
-
-  return true;
-
-}
-
-// #################################################################
-// Proc DFIファイルの出力のコントロール(static)
-/*
-bool cio_DFI::WriteProcDfiFile(MPI_Comm comm, string procFileName, int G_size[3],
-                               int division[3], int head[3], int tail[3], REAL_TYPE org[3],
-                               REAL_TYPE pch[3], string hostname, bool out_host)
-{
-
-  if( procFileName.empty() ) return false;
-
-  int RankID;
-  MPI_Comm_rank( comm, &RankID );
-
-  cio_MPI out_mpi;
-  int nrank;
-  MPI_Comm_size( comm, &nrank );
-  out_mpi.NumberOfRank = nrank;
-  out_mpi.NumberOfGroup = 1;
-
-  cio_Domain out_domain;
-  vector<cio_Rank> out_RankInfo;
-  cio_Rank out_Rank;
-
-  cio_Create_Domain(comm, G_size, division, head, tail, out_domain, out_RankInfo, out_Rank);
-  for(int i=0; i<3; i++) {
-    out_domain.GlobalOrigin[i] = org[i];
-    out_domain.GlobalRegion[i] = pch[i]*G_size[i];
-  }
-
-  if( out_host ) {
-  int LEN=256;
-  char *recbuf = new char[out_RankInfo.size()*LEN];
-  char  sedbuf[LEN];
-  sprintf(sedbuf,"%s",hostname.c_str());
-  MPI_Gather(sedbuf,LEN,MPI_CHAR,recbuf,LEN,MPI_CHAR,0,MPI_COMM_WORLD);
-
-    for( int i=0; i<out_RankInfo.size(); i++ ) {
-     char* hn =&(recbuf[i*LEN]);
-     out_RankInfo[i].HostName=(string(hn));
-    }
-  }
-
-  if(RankID != 0) return NULL;
-
-  if( !Write_Proc_File(procFileName,out_domain,out_mpi,out_RankInfo) )
-  {
-    return false;
-  }
-
-  return true;
-
-}
-*/
-// #################################################################
-// 出力DFIファイル名を作成する
-std::string cio_DFI::Generate_DFI_Name(const std::string prefix)
-{
-
-    // directory path
-    std::string dirName  = CIO::cioPath_DirName(prefix);
-
-    // file extension
-    std::string dfiname = CIO::cioPath_FileName(prefix,".dfi");
-
-    // filename
-    std::string fname = CIO::cioPath_ConnectPath( dirName, dfiname );
-
-#if 0 // for debug
-    printf("prefix    =%s\n", prefix.c_str() );
-    printf("  dirName =%s\n", dirName.c_str() );
-    printf("  dfiname =%s\n", dfiname.c_str() );
-    printf("  fname   =%s\n", fname.c_str() );
-    printf("\n");
-#endif
-
-    return fname;
-}
-
-// #################################################################
-// Directoryパスを生成する関数
-std::string cio_DFI::Generate_Directory_Path()
-{
-
-    // dfiのパスとDirectoryPathを連結する関数
-    // ただし、絶対パスのときはdfiのパスは無視
-    // CIO::cioPath_isAbsoluteがtrueのとき絶対パス
-    // DirectoryPath + TimeSliceDir
-    std::string path = m_directoryPath;
-    if( m_outSlice )
-    {
-      path = CIO::cioPath_ConnectPath(path, m_timeSliceDir);
-    }
-
-    // absolute path
-    if( CIO::cioPath_isAbsolute(path) )
-    {
-      return path;
-    }
-
-    // relative path
-    std::string dfidir = CIO::cioPath_DirName(m_indexDfiName);
-    path = CIO::cioPath_ConnectPath(dfidir, path);
-    return path;
-
-}
-
-
-
-
-// #################################################################
-// DFIファイルを出力する
-bool cio_DFI::Write_Index_File(const std::string dfi_name, const std::string prefix, 
-     const unsigned step, void* time, int& dfi_mng, void *minmax, const bool mio,
-     const bool avr_mode, const unsigned step_avr,const double time_avr)
-{
-
-  if ( dfi_name.empty() ) return false;
-  if ( prefix.empty() ) return false;
+  if ( dfi_name.empty() ) return CIO::E_CIO_ERROR_WRITE_INDEXFILENAME_EMPTY;
+  if ( DFI_Finfo.Prefix.empty() ) return CIO::E_CIO_ERROR_WRITE_PREFIX_EMPTY;
 
   FILE* fp = NULL;
 
@@ -175,880 +33,282 @@ bool cio_DFI::Write_Index_File(const std::string dfi_name, const std::string pre
     fclose(fp);
   }
 
-
-  if ( (dfi_mng == 0) || !flag  ) // カウントゼロ=セッションの開始、または既存ファイルが存在しない
+  if( !(fp = fopen(dfi_name.c_str(), "w")) )
   {
-    if( !(fp = fopen(dfi_name.c_str(), "w")) )
-    {
-      fprintf(stderr, "Can't open file.(%s)\n", dfi_name.c_str());
-      return false;
-    }
-
-    if (fp) fprintf(fp, "FileInfo {\n");
-    if (fp) fprintf(fp, "\n");
-
-    if( !Write_FileInfo(fp, 0, prefix) )
-    {
-      if (fp) fclose(fp);
-      return false;
-    }
-
-    if (fp) fprintf(fp, "\n");
-    if (fp) fprintf(fp, "}\n");
-    if (fp) fprintf(fp, "\n");
-
-    if (fp) fprintf(fp, "FilePath {\n");
-    if (fp) fprintf(fp, "\n");
-    if (fp) Write_Process(fp, 1);
-    if (fp) fprintf(fp, "\n");
-    if (fp) fprintf(fp, "}\n");
-    if (fp) fprintf(fp, "\n");
-
-    if (fp) fprintf(fp, "Unit {\n");
-    if (fp) fprintf(fp, "\n");
-
-    if( !Write_Unit(fp, 0, prefix) )
-    {
-      if (fp) fclose(fp);
-      return false;
-    }
-    if (fp) fprintf(fp, "\n");
-    if (fp) fprintf(fp, "}\n");
-    if (fp) fprintf(fp, "\n");
-
-    if (fp) fprintf(fp, "TimeSlice {\n");
-    if (fp) fprintf(fp, "\n");
-    //if ( !Write_OutFileInfo(fp, 1, prefix, step, mio) )
-    E_CIO_DTYPE Dtype = get_cio_Datatype(DFI_Finfo.DataType);
-    if ( Dtype != E_CIO_FLOAT64 ) {
-      if ( !Write_TimeSlice(fp, 1, step, (float *)time, (float *)minmax,
-                            avr_mode, step_avr, time_avr) )
-      {
-        if (fp) fclose(fp);
-        return false;
-      }
-    } else if( Dtype == E_CIO_FLOAT64 ) {
-      if ( !Write_TimeSlice(fp, 1, step, (double *)time, (double *)minmax,
-                            avr_mode, step_avr, time_avr) )
-      {
-        if (fp) fclose(fp);
-        return false;
-      }
-    }
-
-    if (fp) fprintf(fp, "}\n\n");
-    if (fp) fclose(fp);
-
+    fprintf(stderr, "Can't open file.(%s)\n", dfi_name.c_str());
+    return CIO::E_CIO_ERROR_WRITE_INDEXFILE_OPENERROR;
   }
-  else // 既存ファイルが存在する、あるいはセッションが始まり既に書き込み済み >> 追記
+
+  //FileInfo {} の出力
+  if( DFI_Finfo.Write(fp, 0) != CIO::E_CIO_SUCCESS )
   {
-
-    // ファイルの内容をバッファ
-    fp = fopen(dfi_name.c_str(), "r");
-
-    std::string str;
-    while( !feof(fp) ){
-      int c = fgetc(fp);
-      if( !feof(fp) ) str += c;
-    }
     fclose(fp);
+    return CIO::E_CIO_ERROR_WRITE_FILEINFO;
+  }
 
-    register int i = str.size() - 1;
-    while( --i > 0 ) {
-      if( str[i] == '\n' ) { str[i+1] = '\0'; break; }
+  //FilePath {} の出力
+  if( DFI_Fpath.Write(fp, 1) != CIO::E_CIO_SUCCESS )
+  {
+    fclose(fp);
+    return CIO::E_CIO_ERROR_WRITE_FILEPATH;
+  }
+
+
+  //Unit {} の出力
+  if( DFI_Unit.Write(fp, 0) != CIO::E_CIO_SUCCESS ) 
+  {
+    fclose(fp);
+    return CIO::E_CIO_ERROR_WRITE_UNIT;
+  }
+
+  //TimeSlice {} の出力
+  if ( DFI_TimeSlice.Write(fp, 1) != CIO::E_CIO_SUCCESS ) 
+  {
+    fclose(fp);
+    return CIO::E_CIO_ERROR_WRITE_TIMESLICE;
+  }
+
+  return CIO::E_CIO_SUCCESS;
+
+}
+
+// #################################################################
+// proc DFIファイルの出力コントロール (float 版)
+CIO::E_CIO_ERRORCODE
+cio_DFI::WriteProcDfiFile(const MPI_Comm comm,
+                          bool out_host,
+                          float* org)
+{
+
+  //orign の再設定
+  double d_org[3];
+  if( org != NULL ) {
+    for(int i=0; i<3; i++) {
+      d_org[i]=(double)org[i];
+    }
+  } else {
+    for(int i=0; i<3; i++) {
+      d_org[i]=DFI_Domain.GlobalOrigin[i];
+    }
+  }
+
+  return WriteProcDfiFile(comm, out_host, d_org);
+
+}
+// #################################################################
+// proc DFIファイルの出力コントロール (double 版)
+CIO::E_CIO_ERRORCODE
+cio_DFI::WriteProcDfiFile(const MPI_Comm comm,
+                          bool out_host,
+                          double* org)
+{
+
+  //procファイル名の生成
+  std::string procFileName = CIO::cioPath_DirName(m_indexDfiName)+"/"+CIO::cioPath_FileName(DFI_Fpath.ProcDFIFile,".dfi");
+
+  if( procFileName.empty() ) return CIO::E_CIO_ERROR_WRITE_PROCFILENAME_EMPTY;
+
+  int RankID;
+  MPI_Comm_rank( comm, &RankID );
+
+  int nrank;
+  MPI_Comm_size( comm, &nrank );
+
+  cio_MPI out_mpi;
+  out_mpi.NumberOfRank = nrank;
+  out_mpi.NumberOfGroup = 1;
+
+  cio_Domain out_domain;
+  cio_Process out_Process;
+
+  //出力するProcess情報の生成
+  cio_Create_dfiProcessInfo(comm, out_Process);
+
+  //orign の設定
+  if( org!=NULL ) {
+    for(int i=0; i<3; i++) {
+      out_domain.GlobalOrigin[i] = org[i];
+    }
+  } else {
+    for(int i=0; i<3; i++) {
+      out_domain.GlobalOrigin[i] = DFI_Domain.GlobalOrigin[i];
+    }
+  }
+
+  //Domain の設定
+  for(int i=0; i<3; i++) {
+    out_domain.GlobalVoxel[i]    = DFI_Domain.GlobalVoxel[i];
+    out_domain.GlobalDivision[i] = DFI_Domain.GlobalDivision[i];
+    out_domain.GlobalRegion[i]   = DFI_Domain.GlobalRegion[i];
+  }
+
+  //ホスト名出力指示ありの時、各ランクのホスト名を集める
+  if( out_host ) {
+    const int LEN=256;
+    char *recbuf = new char[out_Process.RankList.size()*LEN];
+    char  sedbuf[LEN];
+    //sprintf(sedbuf,"%s",hostname.c_str());
+    sprintf(sedbuf,"%s",DFI_Process.RankList[RankID].HostName.c_str());
+    MPI_Gather(sedbuf,LEN,MPI_CHAR,recbuf,LEN,MPI_CHAR,0,MPI_COMM_WORLD);
+
+    for( int i=0; i<out_Process.RankList.size(); i++ ) {
+     char* hn =&(recbuf[i*LEN]);
+     out_Process.RankList[i].HostName=(std::string(hn));
     }
 
-    while( --i > 0 ) {
-      if( str[i] == '\n' ) { str[i+1] = '\0'; break; }
-    }
+    if( recbuf ) delete [] recbuf;
+  }
 
-    // 新規ファイルを生成し、バッファを書きだしたあとにファイル情報を追記
-    if( !(fp = fopen(dfi_name.c_str(), "w")) )
+  //proc.dfの出力
+  if( RankID == 0 ) {
+
+    FILE* fp = NULL;
+    if( !(fp = fopen(procFileName.c_str(), "w")) )
     {
-      fprintf(stderr, "Can't open file.(%s)\n", dfi_name.c_str());
-      return false;
+      fprintf(stderr, "Can't open file.(%s)\n", procFileName.c_str());
+      return CIO::E_CIO_ERROR_WRITE_PROCFILE_OPENERROR;
     }
 
-    if ( fp && fwrite(str.c_str(), sizeof(char), strlen(str.c_str()), fp) != strlen(str.c_str()) )
+    //Domain {} の出力
+    if( out_domain.Write(fp, 0) != CIO::E_CIO_SUCCESS )
     {
       if (fp) fclose(fp);
-      return false;
+      return CIO::E_CIO_ERROR_WRITE_DOMAIN;
     }
 
-    //if ( !Write_OutFileInfo(fp, 1, prefix, step, mio) )
-    E_CIO_DTYPE Dtype = get_cio_Datatype(DFI_Finfo.DataType);
-    if( Dtype != E_CIO_FLOAT64 ) {
-      if ( !Write_TimeSlice(fp, 1, step, (float *)time, (float *)minmax,
-                            avr_mode, step_avr, time_avr) )
-      {
-        if (fp) fclose(fp);
-        return false;
-      }
-    } else if ( Dtype == E_CIO_FLOAT64 ) {
-      if ( !Write_TimeSlice(fp, 1, step, (double *)time, (double *)minmax,
-                            avr_mode, step_avr, time_avr) )
-      {
-        if (fp) fclose(fp);
-        return false;
-      }
+    //MPI {} の出力
+    if( out_mpi.Write(fp, 0) != CIO::E_CIO_SUCCESS )
+    {
+      fclose(fp);
+      return CIO::E_CIO_ERROR_WRITE_MPI;
     }
-    //if (fp) Write_Tab(fp, 1);
-    if (fp) fprintf(fp, "}\n\n");
-    if (fp) fclose(fp);
 
-  }
-
-  dfi_mng++;    
-
-  return true;
-
-}
-// #################################################################
-// DFIファイル:FileInfo要素を出力する
-bool cio_DFI::Write_FileInfo(FILE* fp, const unsigned tab, const std::string prefix)
-{
-  Write_DirectoryPath(fp, tab+1, DFI_Finfo.DirectoryPath);
-  Write_TimeSliceDir(fp, tab+1, DFI_Finfo.TimeSliceDir);
-  Write_BaseName(fp, tab+1, prefix);
-  Write_FileFormat(fp, tab+1);
-  Write_GuideCell(fp, tab+1);
-  Write_DataType(fp, tab+1);
-  Write_Endian(fp, tab+1);
-  Write_ArrayShape(fp, tab+1);
-  Write_Component(fp, tab+1);
-  return true;
-}
-
-// #################################################################
-// DFIファイル:Unit要素を出力する
-bool cio_DFI::Write_Unit(FILE* fp, const unsigned tab, const std::string prefix)
-{
-  if( DFI_Unit.out_Length ) {
-    Write_Length(fp, tab+1);
-    Write_L0(fp, tab+1);
-  }
-  if( DFI_Unit.out_Velocity ) {
-    Write_Velocity(fp, tab+1);
-    Write_V0(fp, tab+1);
-  }
-  if( DFI_Unit.out_Pressure ) {
-    Write_Pressure(fp, tab+1);
-    Write_P0(fp, tab+1);
-    Write_DiffPrs(fp, tab+1);
-  }
-  if( DFI_Unit.out_Temperature ) {
-    Write_Temperature(fp, tab+1);
-    Write_BaseTemp(fp, tab+1);
-    Write_DiffTemp(fp, tab+1);
-  }
-  return true;
-}
-
-// #################################################################
-// DFIファイル:TimeSlice要素を出力する
-/*
-bool cio_DFI::Write_TimeSlice(FILE* fp, const unsigned tab, const unsigned step, T* time,
-                              REAL_TYPE* minmax)
-{
-
-  REAL_TYPE comp1,comp2;
-  string compname;
-
-  comp1=0.0;
-  comp2=100.0;
-
-  Write_Tab(fp, tab);
-  fprintf(fp, "Slice[@] {\n");
-
-  Write_Step(fp,tab+1,step);
-
-  Write_Time(fp,tab+1,time);
-
-  if( DFI_Finfo.Component ) {
-    Write_Tab(fp, tab+1);
-    fprintf(fp, "MinMax[@] {\n");
-    //MinMax
-    //for(int i=0; i<DFI_Finfo.Component; i++){
-    for(int i=0; i<1; i++){
-      compname="Min";
-      Write_Comp(fp,tab+2,compname,minmax[i*2]);
-      compname="Max";
-      Write_Comp(fp,tab+2,compname,minmax[i*2+1]);
+    //Process {} の出力
+    if( out_Process.Write(fp, 0) != CIO::E_CIO_SUCCESS )
+    {
+      fclose(fp);
+      return CIO::E_CIO_ERROR_WRITE_PROCESS;
     }
-    Write_Tab(fp, tab+1);
-    fprintf(fp, "}\n");
+
+    fclose(fp);
   }
 
-  Write_Tab(fp, tab);
-  fprintf(fp, "}\n");
+  return CIO::E_CIO_SUCCESS;
 
-  return true;
-}
-*/
-// #################################################################
-// DFIファイル:BaseName要素を出力する
-void cio_DFI::Write_DirectoryPath(FILE* fp, const unsigned tab, const std::string dirpath)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "DirectoryPath      = \"%s\"\n", dirpath.c_str());
 }
 
 // #################################################################
-// DFIファイル:TimeSliceDirectory要素を出力する
-void cio_DFI::Write_TimeSliceDir(FILE* fp, const unsigned tab, const std::string timeslicedir)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "TimeSliceDirectory = \"%s\"\n", timeslicedir.c_str());
-}
-
-// #################################################################
-// DFIファイル:BaseName要素を出力する
-void cio_DFI::Write_BaseName(FILE* fp, const unsigned tab, const std::string prefix)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "Prefix             = \"%s\"\n", prefix.c_str());
-}
-
-// #################################################################
-// DFIファイル:ファイルフォーマット要素を出力する
-void cio_DFI::Write_FileFormat(FILE* fp, const unsigned tab)
-{
-  Write_Tab(fp, tab);
-  if( DFI_Finfo.FileFormat == E_CIO_FMT_SPH ) {
-    fprintf(fp, "FileFormat         = \"sph\"\n");
-  } else if( DFI_Finfo.FileFormat == E_CIO_FMT_BOV ) {
-    fprintf(fp, "FileFormat         = \"bov\"\n");
-  }
- 
-}
-
-// #################################################################
-// DFIファイル:ガイドセル要素を出力する
-void cio_DFI::Write_GuideCell(FILE* fp, const unsigned tab)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "GuideCell          = %d\n", DFI_Finfo.GuideCell);
-}
-
-// #################################################################
-// DFIファイル:データタイプを出力する
-void cio_DFI::Write_DataType(FILE* fp, const unsigned tab)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "DataType           = \"%s\"\n",DFI_Finfo.DataType.c_str());
-}
-
-// #################################################################
-// DFIファイル:Endianを出力する
-void cio_DFI::Write_Endian(FILE* fp, const unsigned tab)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "Endian             = \"%s\"\n",DFI_Finfo.Endian.c_str());
-}
-
-// #################################################################
-// DFIファイル:ArrayShapeを出力する
-void cio_DFI::Write_ArrayShape(FILE* fp, const unsigned tab)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "ArrayShape         = \"%s\"\n",DFI_Finfo.ArrayShape.c_str());
-}
-
-// #################################################################
-// DFIファイル:Componentを出力する
-void cio_DFI::Write_Component(FILE* fp, const unsigned tab)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "Component          = %d\n",DFI_Finfo.Component);
-}
-
-// #################################################################
-// DFIファイル:processを出力する
-void cio_DFI::Write_Process(FILE* fp, const unsigned tab)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "Process = \"%s\"\n",DFI_Fpath.Process.c_str());
-}
-
-// #################################################################
-// DFIファイル:Lengthを出力する
-void cio_DFI::Write_Length(FILE* fp, const unsigned tab)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "Length      = \"%s\"\n",DFI_Unit.Length.c_str());
-}
-
-// #################################################################
-// DFIファイル:L0を出力する
-void cio_DFI::Write_L0(FILE* fp, const unsigned tab)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "L0          = %e\n",DFI_Unit.L0);
-}
-
-// #################################################################
-// DFIファイル:Velocityhを出力する
-void cio_DFI::Write_Velocity(FILE* fp, const unsigned tab)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "Velocity    = \"%s\"\n",DFI_Unit.Velocity.c_str());
-}
-
-// #################################################################
-// DFIファイル:V0を出力する
-void cio_DFI::Write_V0(FILE* fp, const unsigned tab)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "V0          = %e\n",DFI_Unit.V0);
-}
-
-// #################################################################
-// DFIファイル:Pressureを出力する
-void cio_DFI::Write_Pressure(FILE* fp, const unsigned tab)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "Pressure    = \"%s\"\n",DFI_Unit.Pressure.c_str());
-}
-
-// #################################################################
-// DFIファイル:P0を出力する
-void cio_DFI::Write_P0(FILE* fp, const unsigned tab)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "P0          = %e\n",DFI_Unit.P0);
-}
-
-// #################################################################
-// DFIファイル:DiffPrsを出力する
-void cio_DFI::Write_DiffPrs(FILE* fp, const unsigned tab)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "DiffPrs     = %e\n",DFI_Unit.DiffPrs);
-}
-
-// #################################################################
-// DFIファイル:Temperatureを出力する
-void cio_DFI::Write_Temperature(FILE* fp, const unsigned tab)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "Temperature = \"%s\"\n",DFI_Unit.Temperature.c_str());
-}
-
-// #################################################################
-// DFIファイル:BaseTempを出力する
-void cio_DFI::Write_BaseTemp(FILE* fp, const unsigned tab)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "BaseTemp    = %e\n",DFI_Unit.BaseTemp);
-}
-
-// #################################################################
-// DFIファイル:DiffTempを出力する
-void cio_DFI::Write_DiffTemp(FILE* fp, const unsigned tab)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "DiffTemp    = %e\n",DFI_Unit.DiffTemp);
-}
-
-// #################################################################
-// DFIファイル:Stepを出力する
-void cio_DFI::Write_Step(FILE* fp, const unsigned tab, const unsigned step)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "Step = %u\n", step);
-}
-
-// #################################################################
-// DFIファイル:Averageを出力する
-void cio_DFI::Write_Average(FILE* fp, const unsigned tab, const unsigned a_step, const double a_time)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "AveragedStep = %u\n",a_step);
-  Write_Tab(fp, tab);
-  fprintf(fp, "AveragedTime = %e\n",a_time);
-}
-
-// #################################################################
-// DFIファイル:Timeを出力する
-/*
-void cio_DFI::Write_Time(FILE* fp, const unsigned tab, T* time)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "Time =%e\n",time);
-}
-*/
-// #################################################################
-// DFIファイル:MinMax等を出力する
-/*
-void cio_DFI::Write_Comp(FILE* fp, const unsigned tab, const std::string compname, REAL_TYPE comp)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "%s =%e\n",compname.c_str(),comp);
-}
-*/
-// #################################################################
-// DFIファイルを出力する
-bool cio_DFI::Write_Proc_File(const std::string dfi_name)
+// fileld data 出力
+CIO::E_CIO_ERRORCODE
+cio_DFI::WriteData(const unsigned step,
+                   const int gc,
+                   double time,
+                   cio_Array* val,
+                   double* minmax,
+                   const bool avr_mode,
+                   const unsigned step_avr,
+                   double time_avr,
+                   bool force)
 {
 
-  FILE* fp = NULL;
-  if( !(fp = fopen(dfi_name.c_str(), "w")) )
-  {
-    fprintf(stderr, "Can't open file.(%s)\n", dfi_name.c_str());
-    return false;
+  //インターバルチェック
+  if( !m_intervalMngr.isTriggered(step, time, force ) ) return CIO::E_CIO_SUCCESS;
+
+  bool mio=false;
+  if( DFI_MPI.NumberOfRank > 1 ) mio=true;
+  std::string outFile;
+  if( CIO::cioPath_isAbsolute(DFI_Finfo.DirectoryPath) ){
+    outFile = Generate_FieldFileName(m_RankID,step,mio);
+  } else {
+    outFile = m_directoryPath + "/"+ Generate_FieldFileName(m_RankID,step,mio);
   }
 
-  if (fp) fprintf(fp, "Domain {\n");
-  if (fp) fprintf(fp, "\n");
-  if( !Write_Domain(fp, 0) )
-  {
-    if (fp) fclose(fp);
-    return false;
-  }
-  if (fp) fprintf(fp, "\n");
-  if (fp) fprintf(fp, "}\n");
-  if (fp) fprintf(fp, "\n");
+  std::string dir = CIO::cioPath_DirName(outFile);
 
-  if (fp) fprintf(fp, "MPI {\n");
-  if (fp) fprintf(fp, "\n");
-  if( !Write_MPI(fp, 0) )
-  {
-    if (fp) fclose(fp);
-    return false;
-  }
-  if (fp) fprintf(fp, "\n");
-  if (fp) fprintf(fp, "}\n");
-  if (fp) fprintf(fp, "\n");
+  if( MakeDirectory(dir) != 1 ) return CIO::E_CIO_ERROR_MAKEDIRECTORY;
 
-  if (fp) fprintf(fp, "Process {\n");
-  if (fp) fprintf(fp, "\n");
-  if( !Write_Process_Rank(fp, 0) )
-  {
-    if (fp) fclose(fp);
-    return false;
-  }
-  if (fp) fprintf(fp, "\n");
-  if (fp) fprintf(fp, "}\n");
-
-  if (fp) fclose(fp);
-  return true;
-}
-
-
-// #################################################################
-// DFIファイルを出力する(static)
-bool cio_DFI::Write_Proc_File(const std::string dfi_name, cio_Domain out_domain,
-                              cio_MPI out_mpi, vector<cio_Rank> out_RankInfo)
-{
-
-  FILE* fp = NULL;
-  if( !(fp = fopen(dfi_name.c_str(), "w")) )
-  {
-    fprintf(stderr, "Can't open file.(%s)\n", dfi_name.c_str());
-    return false;
-  }
-  if (fp) fprintf(fp, "Domain {\n");
-  if (fp) fprintf(fp, "\n");
-  if( !Write_Domain(fp, 0, out_domain) )
-  {
-    if (fp) fclose(fp);
-    return false;
-  }
-  if (fp) fprintf(fp, "\n");
-  if (fp) fprintf(fp, "}\n");
-  if (fp) fprintf(fp, "\n");
-
-  if (fp) fprintf(fp, "MPI {\n");
-  if (fp) fprintf(fp, "\n");
-  if( !Write_MPI(fp, 0, out_mpi) )
-  {
-    if (fp) fclose(fp);
-    return false;
-  }
-  if (fp) fprintf(fp, "\n");
-  if (fp) fprintf(fp, "}\n");
-  if (fp) fprintf(fp, "\n");
-
-  if (fp) fprintf(fp, "Process {\n");
-  if (fp) fprintf(fp, "\n");
-  if( !Write_Process_Rank(fp, 0, out_RankInfo) )
-  {
-    if (fp) fclose(fp);
-    return false;
-  }
-  if (fp) fprintf(fp, "\n");
-  if (fp) fprintf(fp, "}\n");
-
-  if (fp) fclose(fp);
-  return true;
-}
-
-// #################################################################
-// DFIファイル:Domain要素を出力する
-bool cio_DFI::Write_Domain(FILE* fp, const unsigned tab)
-{
-  Write_Origin(fp, tab+1);
-  Write_Region(fp, tab+1);
-  Write_WholeSize(fp, tab+1);
-  Write_NumDivDomain(fp, tab+1);
-  Write_ActiveSubdomain_fname(fp, tab+1);
-  return true;
-}
-
-// #################################################################
-// DFIファイル:Domain要素を出力する (static)
-bool cio_DFI::Write_Domain(FILE* fp, const unsigned tab, cio_Domain out_domain)
-{
-  Write_Origin(fp, tab+1, out_domain.GlobalOrigin);
-  Write_Region(fp, tab+1, out_domain.GlobalRegion);
-  Write_WholeSize(fp, tab+1, out_domain.GlobalVoxel);
-  Write_NumDivDomain(fp, tab+1, out_domain.GlobalDivision);
-  Write_ActiveSubdomain_fname(fp, tab+1, out_domain.ActiveSubdomain);
-  return true;
-}
-
-// #################################################################
-// DFIファイル:MPI要素を出力する
-bool cio_DFI::Write_MPI(FILE* fp, const unsigned tab)
-{
-  Write_NodeNum(fp, tab+1);
-  return true;
-}
-
-// #################################################################
-// DFIファイル:MPI要素を出力する(static)
-bool cio_DFI::Write_MPI(FILE* fp, const unsigned tab, cio_MPI out_mpi)
-{
-  Write_NodeNum(fp, tab+1, out_mpi.NumberOfRank);
-  return true;
-}
-
-
-// #################################################################
-// DFIファイル:Process要素を出力する
-bool cio_DFI::Write_Process_Rank(FILE* fp, const unsigned tab)
-{
-
-  for(int i=0; i<RankInfo.size(); i++) {
-    if( !Write_Rank(fp, tab+1, i) ) return false;
+  cio_Array *outArray = val;
+  if( gc != DFI_Finfo.GuideCell ) {
+    //出力用バッファのインスタンス
+    outArray = cio_Array::instanceArray
+               ( DFI_Finfo.DataType
+               , DFI_Finfo.ArrayShape
+               , DFI_Process.RankList[m_RankID].VoxelSize
+               , DFI_Finfo.GuideCell
+               , DFI_Finfo.Component); 
+    //配列のコピー val -> outArray
+    int ret = val->copyArray(outArray);
   }
 
-  return true;
-}
+  //フィールデータの出力
+  CIO::E_CIO_ERRORCODE err = CIO::E_CIO_SUCCESS;
+  err = WriteFieldData(outFile, step, time, outArray, avr_mode, step_avr, time_avr);
 
-// #################################################################
-// DFIファイル:Process要素を出力する(static)
-bool cio_DFI::Write_Process_Rank(FILE* fp, const unsigned tab, vector<cio_Rank> out_RankInfo)
-{
-
-  for(int i=0; i<out_RankInfo.size(); i++) {
-    if( !Write_Rank(fp, tab+1,out_RankInfo[i] ) ) return false;
+  //出力バッファのメモリ解放
+  if( val != outArray ) {
+    delete outArray;
   }
 
-  return true;
-}
+  if( err != CIO::E_CIO_SUCCESS ) return err;
 
+  //index dfi ファイルのディレクトリ作成
+  cio_DFI::MakeDirectory(m_directoryPath);
+  std::string dfiname = CIO::cioPath_FileName(m_indexDfiName,".dfi");
+  std::string fname = CIO::cioPath_ConnectPath( m_directoryPath, dfiname );
 
+  //Slice へのセット
+  DFI_TimeSlice.AddSlice(step, time, minmax, DFI_Finfo.Component, avr_mode,
+                         step_avr, time_avr);
 
-// #################################################################
-// DFIファイル:Origin要素を出力する
-void cio_DFI::Write_Origin(FILE* fp, const unsigned tab)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "GlobalOrigin        = (%e, %e, %e)\n",
-          DFI_Domain.GlobalOrigin[0],
-          DFI_Domain.GlobalOrigin[1],
-          DFI_Domain.GlobalOrigin[2]);
-}
-
-// #################################################################
-// DFIファイル:Origin要素を出力する (static)
-void cio_DFI::Write_Origin(FILE* fp, const unsigned tab, double org[3])
-{
-  //Write_Tab(fp, tab);
-  for(int n=0; n<tab; n++) fprintf(fp, "  ");
-  fprintf(fp, "GlobalOrigin        = (%e, %e, %e)\n",
-          org[0],
-          org[1],
-          org[2]);
-}
-
-// #################################################################
-// DFIファイル:Resion要素を出力する
-void cio_DFI::Write_Region(FILE* fp, const unsigned tab)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "GlobalRegion        = (%e, %e, %e)\n",
-          DFI_Domain.GlobalRegion[0],
-          DFI_Domain.GlobalRegion[1],
-          DFI_Domain.GlobalRegion[2]);
-}
-
-// #################################################################
-// DFIファイル:Resion要素を出力する (static)
-void cio_DFI::Write_Region(FILE* fp, const unsigned tab, double Region[3])
-{
-  //Write_Tab(fp, tab);
-  for(int n=0; n<tab; n++) fprintf(fp, "  ");
-  fprintf(fp, "GlobalRegion        = (%e, %e, %e)\n",
-          Region[0],
-          Region[1],
-          Region[2]);
-}
-
-// #################################################################
-// DFIファイル:全体ボクセルサイズ要素を出力する
-void cio_DFI::Write_WholeSize(FILE* fp, const unsigned tab)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "GlobalVoxel         = (%d, %d, %d)\n",
-          DFI_Domain.GlobalVoxel[0],
-          DFI_Domain.GlobalVoxel[1],
-          DFI_Domain.GlobalVoxel[2]);
-}
-
-// #################################################################
-// DFIファイル:全体ボクセルサイズ要素を出力する(static)
-void cio_DFI::Write_WholeSize(FILE* fp, const unsigned tab, int GlobalVoxel[3])
-{
-  //Write_Tab(fp, tab);
-  for(int n=0; n<tab; n++) fprintf(fp, "  ");
-  fprintf(fp, "GlobalVoxel         = (%d, %d, %d)\n",
-          GlobalVoxel[0],
-          GlobalVoxel[1],
-          GlobalVoxel[2]);
-}
-
-// #################################################################
-// DFIファイル:I,J,K分割数要素を出力する
-void cio_DFI::Write_NumDivDomain(FILE* fp, const unsigned tab)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "GlobalDivision      = (%d, %d, %d)\n",
-          DFI_Domain.GlobalDivision[0],
-          DFI_Domain.GlobalDivision[1],
-          DFI_Domain.GlobalDivision[2]);
-}
-
-// #################################################################
-// DFIファイル:I,J,K分割数要素を出力する(static)
-void cio_DFI::Write_NumDivDomain(FILE* fp, const unsigned tab, int GlobalDivision[3])
-{
-  //Write_Tab(fp, tab);
-  for(int n=0; n<tab; n++) fprintf(fp, "  ");
-  fprintf(fp, "GlobalDivision      = (%d, %d, %d)\n",
-          GlobalDivision[0],
-          GlobalDivision[1],
-          GlobalDivision[2]);
-}
-
-// #################################################################
-// DFIファイル:ActiveSubdomainを出力する
-void cio_DFI::Write_ActiveSubdomain_fname(FILE* fp, const unsigned tab)
-{
-  for(int n=0; n<tab; n++) fprintf(fp, "  ");
-   fprintf(fp,"ActiveSubdomainFile = \"%s\"\n",DFI_Domain.ActiveSubdomain.c_str());
-}
-
-// #################################################################
-// DFIファイル:ActiveSubdomainを出力する(static)
-void cio_DFI::Write_ActiveSubdomain_fname(FILE* fp, const unsigned tab, string ActiveSubdomain)
-{
-  for(int n=0; n<tab; n++) fprintf(fp, "  ");
-   fprintf(fp,"ActiveSubdomainFile = \"%s\"\n",ActiveSubdomain.c_str());
-}
-
-// #################################################################
-// DFIファイル:ノード数要素を出力する
-void cio_DFI::Write_NodeNum(FILE* fp, const unsigned tab)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "NumberOfRank   = %d\n", DFI_MPI.NumberOfRank);
-
-  Write_Tab(fp, tab);
-  fprintf(fp, "NumberOfGroup  = %d\n", 1);
-}
-
-// #################################################################
-// DFIファイル:ノード数要素を出力する
-void cio_DFI::Write_NodeNum(FILE* fp, const unsigned tab, int NumberOfRank)
-{
-  //Write_Tab(fp, tab);
-  for(int n=0; n<tab; n++) fprintf(fp, "  ");
-  fprintf(fp, "NumberOfRank   = %d\n", NumberOfRank);
-
-  //Write_Tab(fp, tab);
-  for(int n=0; n<tab; n++) fprintf(fp, "  ");
-  fprintf(fp, "NumberOfGroup  = %d\n", 1);
-}
-
-// #################################################################
-// DFIファイル:Rank情報要素を出力する
-bool cio_DFI::Write_Rank(FILE* fp, const unsigned tab, const int n)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "Rank[@] {\n");
-  fprintf(fp, "\n");
-
-  Write_ID(fp,tab+1,n);
-  Write_Hostname(fp,tab+1,n);
-  Write_L_VoxelSize(fp,tab+1,n);
-  Write_HeadIndex(fp,tab+1,n);
-  Write_TailIndex(fp,tab+1,n);
-
-  fprintf(fp, "\n");
-  Write_Tab(fp, tab);
-  fprintf(fp, "}\n");
-
-  return true;
-}
-
-// #################################################################
-// DFIファイル:Rank情報要素を出力する (static)
-bool cio_DFI::Write_Rank(FILE* fp, const unsigned tab, cio_Rank rank)
-{
-  //Write_Tab(fp, tab);
-  for(int n=0; n<tab; n++) fprintf(fp, "  ");
-  fprintf(fp, "Rank[@] {\n");
-  fprintf(fp, "\n");
-
-  Write_RankID(fp,tab+1,rank.RankID);
-  Write_Hostname(fp,tab+1,rank.HostName);
-  Write_L_VoxelSize(fp,tab+1,rank.VoxelSize);
-  Write_HeadIndex(fp,tab+1,rank.HeadIndex);
-  Write_TailIndex(fp,tab+1,rank.TailIndex);
-
-  fprintf(fp, "\n");
-  //Write_Tab(fp, tab);
-  for(int n=0; n<tab; n++) fprintf(fp, "  ");
-  fprintf(fp, "}\n");
-
-  return true;
-}
-
-
-// #################################################################
-// DFIファイル:ノード番号要素を出力する
-void cio_DFI::Write_ID(FILE* fp, const unsigned tab, const int n)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "ID        = %d\n", n);
-}
-
-// #################################################################
-// DFIファイル:ノード番号要素を出力する
-void cio_DFI::Write_RankID(FILE* fp, const unsigned tab, const int n)
-{
-  //Write_Tab(fp, tab);
-  for(int i=0; i<tab; i++) fprintf(fp, "  ");
-  fprintf(fp, "ID        = %d\n", n);
-}
-
-// #################################################################
-// DFIファイル:ノード番号要素を出力する
-void cio_DFI::Write_Hostname(FILE* fp, const unsigned tab, const int n)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "HostName  = \"%s\"\n", RankInfo[n].HostName.c_str());
-}
-
-// #################################################################
-// DFIファイル:ノード番号要素を出力する(static)
-void cio_DFI::Write_Hostname(FILE* fp, const unsigned tab, string HostName)
-{
-  //Write_Tab(fp, tab);
-  for(int n=0; n<tab; n++) fprintf(fp, "  ");
-  fprintf(fp, "HostName  = \"%s\"\n", HostName.c_str());
-}
-
-// #################################################################
-// DFIファイル:ノードのボクセルサイズ要素を出力する
-void cio_DFI::Write_L_VoxelSize(FILE* fp, const unsigned tab, const int n)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "VoxelSize = (%d, %d, %d)\n", RankInfo[n].VoxelSize[0],
-                                            RankInfo[n].VoxelSize[1],
-                                            RankInfo[n].VoxelSize[2]);
-}
-
-// #################################################################
-// DFIファイル:ノードのボクセルサイズ要素を出力する(static)
-void cio_DFI::Write_L_VoxelSize(FILE* fp, const unsigned tab, int VoxelSize[3])
-{
-  //Write_Tab(fp, tab);
-  for(int n=0; n<tab; n++) fprintf(fp, "  ");
-  fprintf(fp, "VoxelSize = (%d, %d, %d)\n", VoxelSize[0],
-                                            VoxelSize[1],
-                                            VoxelSize[2]);
-}
-
-
-// #################################################################
-// DFIファイル:ノードのheadIndex要素を出力する
-void cio_DFI::Write_HeadIndex(FILE* fp, const unsigned tab, const int n)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "HeadIndex = (%d, %d, %d)\n", RankInfo[n].HeadIndex[0],
-                                            RankInfo[n].HeadIndex[1],
-                                            RankInfo[n].HeadIndex[2]);
-}
-
-// #################################################################
-// DFIファイル:ノードのheadIndex要素を出力する
-void cio_DFI::Write_HeadIndex(FILE* fp, const unsigned tab, int HeadIndex[3])
-{
-  //Write_Tab(fp, tab);
-  for(int n=0; n<tab; n++) fprintf(fp, "  ");
-  fprintf(fp, "HeadIndex = (%d, %d, %d)\n", HeadIndex[0],
-                                            HeadIndex[1],
-                                            HeadIndex[2]);
-}
-
-// #################################################################
-// DFIファイル:ノードのTailIndex要素を出力する
-void cio_DFI::Write_TailIndex(FILE* fp, const unsigned tab, const int n)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "TailIndex = (%d, %d, %d)\n", RankInfo[n].TailIndex[0],
-                                            RankInfo[n].TailIndex[1],
-                                            RankInfo[n].TailIndex[2]);
-}
-
-// #################################################################
-// DFIファイル:ノードのTailIndex要素を出力する
-void cio_DFI::Write_TailIndex(FILE* fp, const unsigned tab, int TailIndex[3])
-{
-  //Write_Tab(fp, tab);
-  for(int n=0; n<tab; n++) fprintf(fp, "  ");
-  fprintf(fp, "TailIndex = (%d, %d, %d)\n", TailIndex[0],
-                                            TailIndex[1],
-                                            TailIndex[2]);
-}
-
-// #################################################################
-// DFIファイル:ノード番号要素を出力する
-void cio_DFI::Write_MyID(FILE* fp, const unsigned tab, const int n)
-{
-  Write_Tab(fp, tab);
-  fprintf(fp, "ID = %d\n", RankInfo[n].RankID);
-}
-
-// #################################################################
-// Tab(space２つ)を出力する
-void cio_DFI::Write_Tab(FILE* fp, const unsigned tab)
-{
-  for(int n=0; n<tab; n++) fprintf(fp, "  ");
-}
-
-// #################################################################
-// DFIファイル:出力ファイル情報要素を出力する
-bool cio_DFI::Write_OutFileInfo(FILE* fp, const unsigned tab, const std::string prefix, const unsigned step, const bool mio)
-{
-  if (fp)
-  {
-    Write_Tab(fp, tab+1);
-    fprintf(fp, "Step[@] = %u\n", step);
+  //index dfi のファイル出力
+  if( m_RankID == 0 ) {
+    err = WriteIndexDfiFile(fname);
   }
 
-  return true;
+  return err;
 }
+
+// #################################################################
+// フィールドデータ出力
+CIO::E_CIO_ERRORCODE
+cio_DFI::WriteFieldData(std::string fname,
+                        const unsigned step,
+                        double time,
+                        cio_Array *val,
+                        const bool avr_mode,
+                        const unsigned step_avr,
+                        const double time_avr)
+{
+
+  FILE* fp;
+  if( (fp = fopen(fname.c_str(),"wb")) == NULL ) {
+    fprintf(stderr,"Can't open file.(%s)\n",fname.c_str());
+    return CIO::E_CIO_ERROR_OPEN_FIELDDATA;
+  }
+
+  //ヘッダー出力
+  if( write_HeaderRecord(fp, step, time, m_RankID) != CIO::E_CIO_SUCCESS ) {
+    fclose(fp);
+    return CIO::E_CIO_ERROR_WRITE_FIELD_HEADER_RECORD;
+  }
+
+  //データ出力
+  if( write_DataRecord(fp, val, DFI_Finfo.GuideCell, m_RankID) != CIO::E_CIO_SUCCESS) {
+    fclose(fp);
+    return CIO::E_CIO_ERROR_WRITE_FIELD_DATA_RECORD;
+  }
+
+  //average 出力
+  if( !avr_mode ) {
+    if( write_averaged(fp, step_avr, time_avr) != CIO::E_CIO_SUCCESS ) {
+      fclose(fp);
+      return CIO::E_CIO_ERROR_WRITE_FIELD_AVERAGED_RECORD;
+    }
+  }
+
+  fclose(fp);
+
+  return CIO::E_CIO_SUCCESS;
+
+}
+

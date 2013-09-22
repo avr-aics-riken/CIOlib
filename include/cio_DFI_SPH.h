@@ -17,246 +17,149 @@
 
 #include "cio_DFI.h"
 
-using namespace std;
-
-
 class cio_DFI_SPH : public cio_DFI {
 
-public:
+protected:
+
   /** data dims(scalar or vector) */
   typedef enum {_DATA_UNKNOWN=0, _SCALAR, _VECTOR} DataDims;
 
   /** data type(float or double) */
   typedef enum {_REAL_UNKNOWN=0, _FLOAT, _DOUBLE} RealType;
 
+public:
+
   /** コンストラクタ */
   cio_DFI_SPH();
 
-  cio_DFI_SPH(cio_FileInfo F_Info, cio_FilePath F_Path, cio_Unit unit, cio_Domain domain, cio_MPI mpi,
-              vector<cio_Slice> TSlice, vector<cio_Rank> RInfo)
+  /** 
+   * @brief コンストラクタ 
+   * @param [in] F_Info  FileInfo
+   * @param [in] F_Path  FilePath
+   * @param [in] unit    Unit
+   * @param [in] domain  Domain
+   * @param [in] mpi     MPI
+   * @param [in] TSlice  TimeSlice
+   * @param [in] process Process
+   */
+  cio_DFI_SPH(const cio_FileInfo F_Info, 
+              const cio_FilePath F_Path, 
+              const cio_Unit unit, 
+              const cio_Domain domain, 
+              const cio_MPI mpi,
+              const cio_TimeSlice TSlice, 
+              const cio_Process process)
   {
-    DFI_Finfo  = F_Info; 
-    DFI_Fpath  = F_Path;
-    DFI_Unit   = unit;
-    DFI_Domain = domain;
-    DFI_MPI    = mpi;
-    TimeSlice  = TSlice;
-    RankInfo   = RInfo;
+    DFI_Finfo      = F_Info; 
+    DFI_Fpath      = F_Path;
+    DFI_Unit       = unit;
+    DFI_Domain     = domain;
+    DFI_MPI        = mpi;
+    DFI_TimeSlice  = TSlice;
+    DFI_Process    = process;
   };
   
   /**　デストラクタ */
   ~cio_DFI_SPH();
 
-  /**
-   * @brief read sph data
-   * @param[in]  step         読込むstep番号
-   * @param[in]  gc           仮想セル数
-   * @param[in]  Gvoxel[3]    グローバルボクセルサイズ　
-   * @param[in]  Gdivision[3] 領域分割数
-   * @param[in]  head[3]      計算領域の開始位置
-   * @param[in]  tail[3]      計算領域の終了位置
-   * @param[out] val          フィールドデータポインタ
-   */ 
-  void ReadData(int step, int gc, 
-                int Gvoxel[3], int Gdivision[3], int head[3], int tail[3],
-                void *val, double &time,
-                const bool mode, unsigned &step_avr, double &time_avr);
+public:
 
-  void *ReadData(int step, int gc, 
-                int Gvoxel[3], int Gdivision[3], int head[3], int tail[3],
-                double &time,
-                const bool mode, unsigned &step_avr, double &time_avr);
-  /**
-   * @brief write sph data
-   * @param [in]  step     出力step番号
-   * @param [in]  gc       仮想セル数
-   * @param [in]  time     出力step番号
-   * @param [in]  val      フィールドデータポインタ
-   * @param [in]  interval 出力間隔
-   * @param [in]  force    強制出力指示
-   */ 
-  void WriteData(int step, int gc, void* time,
-                void *val, void *minmax, int interval, 
-                const bool mode, const unsigned step_avr, const double time_avr,
-                bool force);
+protected:
 
   /**
    * @brief sphファイルのヘッダーレコード読込み
+   * @param[in]  fp          ファイルポインタ
+   * @param[in]  matchEndian エンディアンチェックフラグ true:合致
+   * @param[in]  step        ステップ番号
+   * @param[in]  head        dfiのHeadIndex
+   * @param[in]  tail        dfiのTailIndex
+   * @param[in]  gc          dfiのガイドセル数
+   * @param[out] voxsize[3]  voxsize
+   * @param[out] time        時刻
+   * @return error code
+   */
+  CIO::E_CIO_ERRORCODE
+  read_HeaderRecord(FILE* fp, 
+                    bool matchEndian,
+                    unsigned step,
+                    const int head[3],
+                    const int tail[3],
+                    int gc, 
+                    int voxsize[3],
+                    double &time);
+
+  /**
+   * @brief フィールドデータファイルのデータレコード読込み
    * @param[in]  fp         ファイルポインタ
-   * @param[in]  Etype      Endian Type
-   * @param[in]  step       ステップ番号
-   * @param[out] voxsize[3] voxsize
-   * @return true:出力成功 false:出力失敗
-   */
-  bool read_Head(FILE* fp, int Etype, int step, int voxsize[3] ,
-                 double &time, RealType &real_type);
-
-  /**
-   * @brief sph S3D ファイルの読込み 
-   * @param[in]  fname sphファイル名
-   * @param[in]  step  読込むstep番号
-   * @param[in]  gc    仮想セル数
-   * @param[out] val   フィールドデータポインタ
-   * @return true:出力成功 false:出力失敗
-   */
-  bool read_S3D(const char* fname,
-                int         step,
-                int         gc,
-                void*       val,
-                double&     time,
-                const bool mode,
-                unsigned &step_avr,
-                double &time_avr
-                );
-
-  /**
-   * @brief sph V3D ファイルの読込み 
-   * @param[in]  fname sphファイル名
-   * @param[in]  step  読込むstep番号
-   * @param[in]  sz    サイズ
-   * @param[in]  gc    仮想セル数
-   * @param[out] val   フィールドデータポインタ
-   * @return true:出力成功 false:出力失敗
-   */
-/*
-  bool read_V3D(const char* fname,
-                int         step,
-                int*        sz,
-                int         gc,
-                REAL_TYPE*  val
-                );
-*/
-  /**
-   * @brief 密データの読込みコピー（同一粒子）
-   * @param[in]  fname  sphファイル名
-   * @param[in]  step   読込むstep番号
-   * @param[in]  gc     仮想セル数
-   * @param[in]  head   自領域の起点
-   * @param[in]  tail   自領域の終点
-   * @param[in]  R_head 読み込む領域の起点
-   * @param[in]  R_tail 読み込む領域の終点
-   * @param[in]  sta[3] start   
-   * @param[in]  end[3] end     
-   * @param[out] val    フィールドデータポインタ
-   * @return true:出力成功 false:出力失敗
+   * @param[in]  matchEtype true:Endian一致
+   * @param[in]  buf        読込み用バッファ
+   * @param[in]  head       読込みバッファHeadIndex
+   * @param[in]  nz         z方向のボクセルサイズ（実セル＋ガイドセル＊２）
+   * @param[out] src        読み込んだデータを格納した配列のポインタ
+   * @return error code
    */ 
-  bool read_MxN(const char* fname,
-                int         step,
-                int         gc,
-                int         head[3],
-                int         tail[3],
-                int         R_head[3],
-                int         R_tail[3],
-                int         sta[3],
-                int         end[3],
-                void*       val,
-                double&     time,
-                int         n,
-                const bool mode,
-                unsigned &step_avr,
-                double &time_avr
-                );
-
-  template<class T>
-  void setval(T* val, int p1, T* val2, int p2)
-  {
-     val[p1] = val2[p2];
-  };
+  CIO::E_CIO_ERRORCODE
+  read_Datarecord(FILE* fp,
+                  bool matchEndian,
+                  cio_Array* buf,
+                  int head[3],
+                  int nz,
+                  cio_Array* &src);
 
   /**
-   * @brief 粗い粒子、１対１の読込みコピー&補間
-   * @param[in]  fname     sphファイル名
-   * @param[in]  step      読込むstep番号
-   * @param[in]  gc        仮想セル数（自）
-   * @param[in]  head      開始インデックス（自）
-   * @param[in]  tail      終了インデックス（自）
-   * @param[in]  R_head    開始インデックス（dfi）
-   * @param[in]  R_tail    終了インデックス（dif）
-   * @param[in]  Voxelsize ボクセルサイズ（dif）
-   * @param[in]  dfi_gc    仮想セル数（dfi）
-   * @param[in]  ncomp     コンポーネント数
-   * @param[in]  sta[3]    start
-   * @param[in]  end[3]    end
-   * @param[out] val       フィールドデータポインタ
-   * @return true:出力成功 false:出力失敗
-   */ 
-  bool read_Coarse(const char* fname,
-                int         step,
-                int         gc,
-                int         head[3],
-                int         tail[3],
-                int         G_Voxelsize[3],
-                int         R_head[3],
-                int         R_tail[3],
-                int         Voxelsize[3],
-                int         dfi_gc,
-                int         ncomp,
-                int         sta[3],
-                int         end[3],
-                void*       val,
-                double&     time,
-                const bool mode,
-                unsigned &step_avr,
-                double &time_avr
-                );
+   * @brief sphファイルのAverageデータレコードの読込み
+   * @param[in]  fp         ファイルポインタ
+   * @param[in]  matchEtype true:Endian一致
+   * @param[in]  step       読込みstep番号
+   * @param[out] avr_step   平均ステップ   
+   * @param[out] avr_time   平均タイム
+   * @return error code
+   */
+  CIO::E_CIO_ERRORCODE
+  read_averaged(FILE* fp,
+                bool matchEndian,
+                unsigned step, 
+                unsigned &avr_step,
+                double &avr_time); 
 
-  /**
-   * @brief 粗い粒子、１対多の読込みコピー&補間
-   * @param[in]  fname     sphファイル名
-   * @param[in]  step      読込むstep番号
-   * @param[in]  gc        仮想セル数（自）
-   * @param[in]  head      開始インデックス（自）
-   * @param[in]  tail      終了インデックス（自）
-   * @param[in]  R_head    開始インデックス（dfi）
-   * @param[in]  R_tail    終了インデックス（dif）
-   * @param[in]  Voxelsize ボクセルサイズ（dif）
-   * @param[in]  dfi_gc    仮想セル数（dfi）
-   * @param[in]  ncomp     コンポーネント数
-   * @param[in]  sta[3]    start
-   * @param[in]  end[3]    end
-   * @param[out] val       フィールドデータポインタ
-   * @return true:出力成功 false:出力失敗
-   */ 
-  bool read_Coarse_MxN(const char* fname,
-                int         step,
-                int         gc,
-                int         head[3],
-                int         tail[3],
-                int         G_Voxelsize[3],
-                int         R_head[3],
-                int         R_tail[3],
-                int         Voxelsize[3],
-                int         dfi_gc,
-                int         ncomp,
-                int         sta[3],
-                int         end[3],
-                void*       val,
-                double&     time,
-                int         n,
-                const bool mode,
-                unsigned &step_avr,
-                double &time_avr
-                );
   /**
    * @brief SPHヘッダファイルの出力
    * @param[in] fp     ファイルポインタ
    * @param[in] step   ステップ番号
    * @param[in] time   時刻
    * @param[in] RankID ランク番号
-   * @return true:出力成功 false:出力失敗
+   * @return error code
    */
-  //bool write_head(FILE* fp, int step, REAL_TYPE time, int gc, int RankID); 
-  bool write_head(FILE* fp, int step, void* time, int RankID); 
+  CIO::E_CIO_ERRORCODE
+  write_HeaderRecord(FILE* fp, 
+                     const unsigned step, 
+                     const double time, 
+                     const int RankID); 
 
   /**
-   * @brief SPHデータ出力
+   * @brief SPHデータレコードの出力
    * @param[in]  fp ファイルポインタ
    * @param[in]  val データポインタ
+   * @param[in]  gc ガイドセル
    * @param[in]  RankID ランク番号
-   * @return true:出力成功 false:出力失敗
+   * @return error code
    */
-  bool write_data(FILE* fp, void* val, int gc, int RankID); 
+  CIO::E_CIO_ERRORCODE
+  write_DataRecord(FILE* fp, 
+                   cio_Array* val, 
+                   const int gc, 
+                   const int RankID); 
 
+  /**
+   * @brief Averageレコードの出力
+   * @param[in] step_avr     平均ステップ番号
+   * @param[in] time_avr     平均時刻
+   * @return error code
+   */
+  CIO::E_CIO_ERRORCODE
+  write_averaged(FILE* fp,
+                 const unsigned step_avr,
+                 const double time_avr); 
 };
 
 #endif // _cio_DFI_SPH_H_

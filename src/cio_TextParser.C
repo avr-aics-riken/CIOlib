@@ -18,15 +18,15 @@
 
 // #################################################################
 // ラベルの有無をチェック
-bool cio_TextParser::chkLabel(const string label)
+bool cio_TextParser::chkLabel(const std::string label)
 {
   int ierror;
-  string value;
+  std::string value;
   
   if( !tp ) return false;
   
   // ラベルがあるかチェック
-  vector<string> labels;
+  vector<std::string> labels;
   
   ierror=tp->getAllLabels(labels);
   
@@ -59,11 +59,11 @@ bool cio_TextParser::chkLabel(const string label)
 
 // #################################################################
 // ノードの有無をチェック
-bool cio_TextParser::chkNode(const string label)
+bool cio_TextParser::chkNode(const std::string label)
 {
   int ierror;
-  string node;
-  vector<string> labels;
+  std::string node;
+  vector<std::string> labels;
   int len=label.length();
   
   if( !tp ) return false;
@@ -101,11 +101,11 @@ bool cio_TextParser::chkNode(const string label)
 
 // #################################################################
 // ノード以下のラベルの数を数える
-int cio_TextParser::countLabels(const string label)
+int cio_TextParser::countLabels(const std::string label)
 {
   int ierror;
-  string node,str,chkstr="";
-  vector<string> labels;
+  std::string node,str,chkstr="";
+  vector<std::string> labels;
   int len=label.length();
   int flag=0;
   int inode=0;
@@ -156,7 +156,7 @@ void cio_TextParser::getTPinstance()
 
 // #################################################################
 // ノード以下のnnode番目の文字列を取得する
-bool cio_TextParser::GetNodeStr(const string label, const int nnode, string *ct)
+bool cio_TextParser::GetNodeStr(const std::string label, const int nnode, std::string *ct)
 {
   if ( !tp ) return -1;
   
@@ -166,10 +166,10 @@ bool cio_TextParser::GetNodeStr(const string label, const int nnode, string *ct)
   int inode=0;
   int next=0;
   
-  string node;
-  string str;
-  string chkstr="";
-  vector<string> labels;
+  std::string node;
+  std::string str;
+  std::string chkstr="";
+  vector<std::string> labels;
 
   
   // Nodeがあるかチェック
@@ -216,10 +216,10 @@ bool cio_TextParser::GetNodeStr(const string label, const int nnode, string *ct)
 
 // #################################################################
 // TextParser入力ファイルからベクトル値を取得する（整数型）
-bool cio_TextParser::GetVector(const string label, int *vec, const int nvec)
+bool cio_TextParser::GetVector(const std::string label, int *vec, const int nvec)
 {
   int ierr = TP_NO_ERROR;
-  string value;
+  std::string value;
 
   if( !tp ) return false;
 
@@ -237,7 +237,7 @@ bool cio_TextParser::GetVector(const string label, int *vec, const int nvec)
   if( type != TP_VECTOR_NUMERIC ) return false;
 
   // split
-  vector<string> vec_value;
+  vector<std::string> vec_value;
   if( (ierr = tp->splitVector(value, vec_value)) != TP_NO_ERROR ) return false;
 
   // check number of vector element
@@ -256,11 +256,10 @@ bool cio_TextParser::GetVector(const string label, int *vec, const int nvec)
 
 // #################################################################
 // TextParser入力ファイルからベクトル値を取得する（実数型）
-//bool cio_TextParser::GetVector(const string label, REAL_TYPE *vec, const int nvec)
-bool cio_TextParser::GetVector(const string label, double *vec, const int nvec)
+bool cio_TextParser::GetVector(const std::string label, double *vec, const int nvec)
 {
   int ierr = TP_NO_ERROR;
-  string value;
+  std::string value;
 
   if( !tp ) return false;
 
@@ -281,7 +280,7 @@ bool cio_TextParser::GetVector(const string label, double *vec, const int nvec)
   if( type != TP_VECTOR_NUMERIC ) return false;
 
   // split
-  vector<string> vec_value;
+  vector<std::string> vec_value;
   if( (ierr = tp->splitVector(value, vec_value)) != TP_NO_ERROR ) return false;
 
   // check number of vector element
@@ -300,10 +299,10 @@ bool cio_TextParser::GetVector(const string label, double *vec, const int nvec)
 
 // #################################################################
 // TextParser入力ファイルからベクトル値を取得する（文字列型）
-bool cio_TextParser::GetVector(string label, string *vec, const int nvec)
+bool cio_TextParser::GetVector(std::string label, std::string *vec, const int nvec)
 {
   int ierr = TP_NO_ERROR;
-  string value;
+  std::string value;
 
   if( !tp ) return false;
 
@@ -321,7 +320,7 @@ bool cio_TextParser::GetVector(string label, string *vec, const int nvec)
   if( type != TP_VECTOR_NUMERIC ) return false;
 
   // split
-  vector<string> vec_value;
+  vector<std::string> vec_value;
   if( (ierr = tp->splitVector(value, vec_value)) != TP_NO_ERROR ) return false;
 
   // check number of vector element
@@ -339,10 +338,10 @@ bool cio_TextParser::GetVector(string label, string *vec, const int nvec)
 
 // #################################################################
 // TextParser入力ファイルから変数を取得する（整数型）
-bool cio_TextParser::GetValue(const string label, int *ct)
+bool cio_TextParser::GetValue(const std::string label, int *ct)
 {
   int ierror;
-  string value;
+  std::string value;
   
   if( !tp ) return false;
 
@@ -388,12 +387,11 @@ bool cio_TextParser::GetValue(const string label, int *ct)
 
 // #################################################################
 // TextParser入力ファイルから変数を取得する（実数型）
-//bool cio_TextParser::GetValue(const string label, REAL_TYPE *ct)
-bool cio_TextParser::GetValue(const string label, double *ct)
+bool cio_TextParser::GetValue(const std::string label, double *ct)
 {
   int ierror;
-  string value;
-  string node;
+  std::string value;
+  std::string node;
 
   if( !tp ) return false;
   
@@ -440,10 +438,10 @@ bool cio_TextParser::GetValue(const string label, double *ct)
 
 // #################################################################
 // TextParser入力ファイルから変数を取得する（文字列型）
-bool cio_TextParser::GetValue(const string label, string *ct)
+bool cio_TextParser::GetValue(const std::string label, std::string *ct)
 {
   int ierror;
-  string value;
+  std::string value;
   
   if ( !tp ) return false;
   
@@ -488,7 +486,7 @@ bool cio_TextParser::GetValue(const string label, string *ct)
 
 // #################################################################
 // TextParserオブジェクトに入力ファイルをセットする
-int cio_TextParser::readTPfile(const string filename)
+int cio_TextParser::readTPfile(const std::string filename)
 {
   int ierr = TP_NO_ERROR;
   if( !tp ) return TP_ERROR;

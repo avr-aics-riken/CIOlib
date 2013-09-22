@@ -22,30 +22,10 @@
 #include <map>
 #include "string.h"
 
-//#include "cpm_ParaManager.h"
-
 #include "cio_Define.h"
 #include "TextParser.h"
 
 using namespace std;
-
-/*
-class MediumTableInfo {
-public:
-  int type;
-  string label;
-  map<string, REAL_TYPE> m_fval;
-
-public:
-  MediumTableInfo() 
-  {
-    type = -1;
-  }
-  
-  ~MediumTableInfo() {}
-  
-};
-*/
 
 class cio_TextParser {
 
@@ -66,7 +46,7 @@ public:
    * @param [out] vec   ベクトル格納配列ポインタ
    * @param [in]  nvec  ベクトルサイズ
    */
-	bool GetVector(const string label, int *vec, const int nvec);
+  bool GetVector(const std::string label, int *vec, const int nvec);
   
   
   /**
@@ -75,8 +55,7 @@ public:
    * @param [out] vec    ベクトル格納配列ポインタ
    * @param [in]  nvec   ベクトルサイズ
    */
-	//bool GetVector(const string label, REAL_TYPE *vec, const int nvec);
-	bool GetVector(const string label, double *vec, const int nvec);
+  bool GetVector(const std::string label, double *vec, const int nvec);
 
   
   /**
@@ -85,7 +64,7 @@ public:
    * @param [out] vec    ベクトル格納配列ポインタ
    * @param [in]  nvec   ベクトルサイズ
    */
-	bool GetVector(const string label, string *vec, const int nvec);
+  bool GetVector(const std::string label, std::string *vec, const int nvec);
   
   
   /**
@@ -93,7 +72,7 @@ public:
    * @param [in]  label 取得する変数のラベル（絶対パス）
    * @param [out] ct    変数格納ポインタ
    */
-	bool GetValue(const string label, int *ct);
+  bool GetValue(const std::string label, int *ct);
   
   
   /**
@@ -101,8 +80,7 @@ public:
    * @param [in]  label 取得する変数のラベル（絶対パス）
    * @param [out] ct    変数格納ポインタ
    */
-	//bool GetValue(const string label, REAL_TYPE *ct);
-	bool GetValue(const string label, double *ct);
+  bool GetValue(const std::string label, double *ct);
   
   
   /**
@@ -110,21 +88,21 @@ public:
    * @param [in]  label 取得する変数のラベル（絶対パス）
    * @param [out] ct    変数格納ポインタ
    */
-	bool GetValue(const string label, string *ct);
+  bool GetValue(const std::string label, std::string *ct);
 
 	
   /**
    * @brief ラベルの有無をチェック
    * @param [in] label チェックするラベル（絶対パス）
    */
-	bool chkLabel(const string label);
+  bool chkLabel(const std::string label);
   
   
   /**
    * @brief ノードの有無をチェック
    * @param [in] label チェックするノード（絶対パス）
    */
-	bool chkNode(const string label);
+  bool chkNode(const std::string label);
   
   
   /**
@@ -133,7 +111,7 @@ public:
    * @param [in]  nnode 取得する文字列が現れる順番
    * @param [out] ct    取得した文字列
    */
-	bool GetNodeStr(const string label, const int nnode, string *ct);
+  bool GetNodeStr(const std::string label, const int nnode, std::string *ct);
   
   
   /**
@@ -141,7 +119,7 @@ public:
    * @param [in] label ラベルを数えるノードの絶対パス
    * @retval ラベルの数（エラー、もしくはない場合は-1を返す）
    */
-  int countLabels(const string label);
+  int countLabels(const std::string label);
   
   /**
    * @brief TextParserLibraryのインスタンス生成
@@ -155,7 +133,7 @@ public:
    * @param [in] filename 入力ファイル名
    * @retval エラーコード
    */
-	int readTPfile(const string filename);
+  int readTPfile(const std::string filename);
   
   
   /** テキストパーサーの内容を破棄 */

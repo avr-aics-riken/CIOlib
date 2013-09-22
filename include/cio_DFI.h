@@ -22,295 +22,49 @@
 #include <map>
 #include <string>
 
+#include "cio_Define.h"
+#include "cio_Version.h"
+
+#include "cio_Interval_Mngr.h"
+
 #include "cio_PathUtil.h"
 #include "cio_TextParser.h"
-#include "cio_Define.h"
 #include "cio_ActiveSubDomain.h"
-
 #include "cio_endianUtil.h"
+#include "cio_TypeArray.h"
 
-using namespace std;
+#include "cio_FileInfo.h"
+#include "cio_FilePath.h"
+#include "cio_Unit.h"
+#include "cio_TimeSlice.h"
+#include "cio_Domain.h"
+#include "cio_MPI.h"
+#include "cio_Process.h"
 
 /** CIO main class */
 class cio_DFI {
 
-
 public:
 
-  enum E_CIO_FORMAT
-  {
-    E_CIO_FMT_UNKNOWN = -1,
-    E_CIO_FMT_SPH,
-    E_CIO_FMT_BOV
-  };
+protected :
+  MPI_Comm          m_comm;          ///< MPI コミュニケータ
+  std::string       m_directoryPath; ///< index dfi ファイルのディレクトリパス
+  std::string       m_indexDfiName;  ///< index dfi ファイル名
+  CIO::E_CIO_READTYPE m_read_type;   ///< 読込みタイプ
 
-  enum E_CIO_ONOFF
-  {
-    E_CIO_OFF = 0,
-    E_CIO_ON
-  };
+  int               m_RankID;        ///< ランク番号
 
-  enum E_CIO_DTYPE
-  {
-    E_CIO_DUMMY=0,
-    E_CIO_INT8,
-    E_CIO_INT16,
-    E_CIO_INT32,
-    E_CIO_INT64,
-    E_CIO_UINT8,
-    E_CIO_UINT16,
-    E_CIO_UINT32,
-    E_CIO_UINT64,
-    E_CIO_FLOAT32,
-    E_CIO_FLOAT64
-  };
+  cio_FileInfo      DFI_Finfo;       ///< FileInfo class
+  cio_FilePath      DFI_Fpath;       ///< FilePath class
+  cio_Unit          DFI_Unit;        ///< Unit class
+  cio_Domain        DFI_Domain;      ///< Domain class
+  cio_MPI           DFI_MPI;         ///< MPI class
+  cio_TimeSlice     DFI_TimeSlice;   ///< TimeSlice class
+  cio_Process       DFI_Process;     ///< Process class
 
-  enum E_CIO_ARRAYSHAPE
-  {
-    E_CIO_IJKN=0,
-    E_CIO_NIJK
-  };
+  vector<int>m_readRankList;         ///< 読込みランクリスト
 
-  MPI_Comm m_comm;
-  std::string m_directoryPath;
-  std::string m_indexDfiName;
-  std::string m_timeSliceDir;
-  bool        m_outSlice;
-  int         m_dfi_mng;
-  int         m_start_type;
-  int         m_RankID;
-
-  /** index.dfi ファイルの FileInfo */
-  struct cio_FileInfo
-  {
-    string DirectoryPath;                 ///<ディレクトリパス
-    string TimeSliceDir;                  ///<TimeSlice on or off
-    string Prefix;                        ///<ファイル接頭文字
-    E_CIO_FORMAT FileFormat;              ///<ファイルフォーマット "bov","sph",,,
-    int    GuideCell;                     ///<仮想セルの数
-    string DataType;                      ///<配列のデータタイプ "float",,,,
-    string Endian;                        ///<エンディアンタイプ "big","little"
-    string ArrayShape;                    ///<配列形状
-    int    Component;                     ///<成分数
-
-    cio_FileInfo() 
-    {
-      DirectoryPath="";
-      TimeSliceDir ="";
-      Prefix       ="";
-      FileFormat   = E_CIO_FMT_UNKNOWN;
-      GuideCell    =0;
-      DataType     ="";
-      Endian       ="";
-      ArrayShape   ="";
-      Component    =0;
-    }
-
-    cio_FileInfo(string _DirectoryPath, string _TimeSliceDir, string _Prefix, 
-             E_CIO_FORMAT _FileFormat,
-             int _GuideCell, string _DataType, string _Endian, 
-             string _ArrayShape, int _Component)
-    {
-      DirectoryPath=_DirectoryPath;
-      Prefix       =_Prefix;
-      TimeSliceDir =_TimeSliceDir;
-      FileFormat   =_FileFormat;
-      GuideCell    =_GuideCell;
-      DataType     =_DataType;
-      Endian       =_Endian;
-      ArrayShape   =_ArrayShape;
-      Component    =_Component;
-    }   
-
-  };
-
-
-  /** index.dfi ファイルの FilePath */
-  struct cio_FilePath
-  {
-    string Process;                       ///<proc.dfi ファイル名
-
-    cio_FilePath()
-    {
-      Process="";
-    }
-
-    cio_FilePath(string _Process)
-    {
-      Process=_Process;
-    }
-
-  };
-
-
-  /** index.dfi ファイルの Unit */
-  struct cio_Unit  
-  {
-    bool out_Length;                   ///<Length,L0 出力フラグ
-    string Length;                     ///<(NonDimensional, m, cm, mm)
-    double L0;                         ///<規格化に用いた長さスケール
-
-    bool out_Velocity;                 ///<Velocity,V0 出力フラグ
-    string Velocity;                   ///<(NonDimensional, m/s)
-    double V0;                         ///<代表速度(m/s)
-
-    bool out_Pressure;                 ///<Presuure,P0,DiffPrs出力フラグ
-    string Pressure;                   ///<(NonDimensional, Pa)
-    double P0;                         ///<基準圧力(Pa)
-    double DiffPrs;                    ///<圧力差(Pa)
-
-    bool out_Temperature;              ///<Temperature,BaseTemp,DiffTemp出力フラグ
-    string Temperature;                ///<(NonDimensional, C, K)
-    double BaseTemp;                   ///<指定単力　　　　
-    double DiffTemp;                   ///<指定単位　　　
-
-    cio_Unit()
-    {
-      out_Length=false;
-      Length    ="";
-      L0        =0.0;
-
-      out_Velocity=false;
-      Velocity    ="";
-      V0          =0.0;
-
-      out_Pressure=false;
-      Pressure    ="";
-      P0          =0.0;
-      DiffPrs     =0.0;
-
-      out_Temperature=false;
-      Temperature    ="";
-      BaseTemp       =0.0;
-      DiffTemp       =0.0;
-    }
-
-    cio_Unit(bool _out_Length, string _Length, double _L0,
-         bool _out_Velocity, string _Velocity, double _V0,
-         bool _out_Pressure, string _Pressure, double _P0, double _DiffPrs,
-         bool _out_Temperature, string _Temperature, double _BaseTemp, double _DiffTemp)
-    {
-
-      out_Length=_out_Length;
-      Length    =_Length;
-      L0        =_L0;
-
-      out_Velocity=_out_Velocity;
-      Velocity    =_Velocity;
-      V0          =_V0;
-
-      out_Pressure=_out_Pressure;
-      Pressure    =_Pressure;
-      P0          =_P0;
-      DiffPrs     =_DiffPrs;
-
-      out_Temperature = _out_Temperature;
-      Temperature     = _Temperature;
-      BaseTemp        = _BaseTemp;
-      DiffTemp        = _DiffTemp;
-    }
-  };
-
-  /** index.dfi ファイルの Slice */
-  struct cio_Slice
-  {
-    int    step;                          ///<ステップ番号
-    double time;                          ///<時刻
-    int    AveragedStep;
-    double AveragedTime;
-    vector<double> Min;                   ///<最小値
-    vector<double> Max;                   ///<最大値
-  };
-  
-  /** proc.dfi ファイルの Domain */
-  struct cio_Domain
-  {
-    double GlobalOrigin[3];             ///<計算空間の起点座標
-    double GlobalRegion[3];             ///<計算空間の各軸方向の長さ
-    int GlobalVoxel[3];                    ///<計算領域全体のボクセル数
-    int GlobalDivision[3];                 ///<計算領域の分割数
-    string ActiveSubdomain;                ///<ActiveSubdomainファイル名
-
-    cio_Domain()
-    {
-      for(int i=0; i<3; i++) GlobalOrigin[i]=0.0;
-      for(int i=0; i<3; i++) GlobalRegion[i]=0.0;
-      for(int i=0; i<3; i++) GlobalVoxel[i]=0;
-      for(int i=0; i<3; i++) GlobalDivision[i]=0;
-      ActiveSubdomain="";
-    }
-
-    cio_Domain(double* _GlobalOrigin, double* _GlobalRegion, int* _GlobalVoxel, 
-           int* _GlobalDivision)
-    {
-      GlobalOrigin[0]=_GlobalOrigin[0];
-      GlobalOrigin[1]=_GlobalOrigin[1];
-      GlobalOrigin[2]=_GlobalOrigin[2];
-
-      GlobalRegion[0]=_GlobalRegion[0];
-      GlobalRegion[1]=_GlobalRegion[1];
-      GlobalRegion[2]=_GlobalRegion[2];
-
-      GlobalVoxel[0]=_GlobalVoxel[0];
-      GlobalVoxel[1]=_GlobalVoxel[1];
-      GlobalVoxel[2]=_GlobalVoxel[2];
-
-      GlobalDivision[0]=_GlobalDivision[0];
-      GlobalDivision[1]=_GlobalDivision[1];
-      GlobalDivision[2]=_GlobalDivision[2];
-    }
-
-  };
-
-  /** proc.dfi ファイルの MPI */
-  struct cio_MPI
-  {
-    int NumberOfRank;                      ///<プロセス数
-    int NumberOfGroup;                     ///<グループ数
-
-    cio_MPI()
-    {
-       NumberOfRank=0;
-       NumberOfGroup=1;
-    }
-
-    cio_MPI(int _NumberOfRank)
-    {
-       NumberOfRank=_NumberOfRank;
-    }
-
-  };
-
-  /** proc.dfi ファイルの Process */
-  struct cio_Rank
-  {
-    int RankID;                           ///<ランク番号
-    string HostName;                      ///<ホスト名 
-    int VoxelSize[3];                     ///<ボクセルサイズ
-    int HeadIndex[3];                     ///<始点インデックス
-    int TailIndex[3];                     ///<終点インデックス
-  };
-
-  cio_FileInfo DFI_Finfo;
-  cio_FilePath DFI_Fpath;
-  cio_Unit     DFI_Unit;
-  cio_Domain   DFI_Domain;
-  cio_MPI      DFI_MPI;
-  vector<cio_Slice> TimeSlice;
-  vector<cio_Rank> RankInfo;
-
-  std::vector<cio_ActiveSubDomain> CIO_subDomainInfo; ///< CIO 活性サブドメイン情報
-  int *CIO_rankMap;
-  int (*CIO_HeadTail)[6];
-
-  std::vector<cio_ActiveSubDomain> DFI_subDomainInfo; ///< DFI 活性サブドメイン情報
-  int *DFI_rankMap;
-  int (*DFI_HeadTail)[6];
-
-  std::set<int>DFI_headX,DFI_headY,DFI_headZ;
-
-  headT DFI_mapX,DFI_mapY,DFI_mapZ;
-
+  cio_Interval_Mngr m_intervalMngr;  ///< インターバルマネージャー
 
 public:
   /** コンストラクタ */
@@ -323,89 +77,79 @@ public:
    * @brief read インスタンス
    * @param [in] comm    MPIコミュニケータ
    * @param [in] dfifile DFIファイル名
+   * @param [in] G_Voxel 計算空間全体のボクセルサイズ
+   * @param [in] G_Div   計算空間の領域分割数
    * @return インスタンスされたクラスのポインタ
    */
-  static cio_DFI* ReadInit(MPI_Comm comm, string dfifile); 
+  static cio_DFI*
+  ReadInit(const MPI_Comm comm, 
+           const std::string dfifile,
+           const int G_Voxel[3],
+           const int G_Div[3],
+           CIO::E_CIO_ERRORCODE &ret); 
 
   /**
-   * ActiveSubdomainファイルのエンディアンをチェック
-   * @param[in]  ident               ActiveSubdomainファイルのIdentifier
-   * @retval     CIO_Match   一致
-   * @retval     CIO_UnMatch 不一致
-   * @retval     CIO_UnKnown フォーマットが異なる
-   */
-  static cio_EMatchType isMatchEndianSbdmMagick( int ident ); 
-
-  /**
-   * ActiveSubdomainファイルの読み込み(static関数)
-   * @param[in]  subDomainFile ActiveSubdomainファイル名
-   * @param[out] subDomainInfo 活性ドメイン情報
-   * @param[out] div           ActiveSubdiomainファイル中の領域分割数
-   * @return   終了コード(CIO_SUCCESS=正常終了)
-   */
-  static cio_ErrorCode ReadActiveSubdomainFile( std::string subDomainFile,
-         std::vector<cio_ActiveSubDomain>& subDomainInfo, int div[3] );
-
-  /**
-   * 活性サブドメイン配列が空のとき、全領域が活性サブドメインになるため
-   * このチェック関数内で活性サブドメイン情報を生成する.
-   * @param[in] nRank 並列プロセス数
-   * @param[in] div 領域分割数
-   * @param[out] subDomainInfo 活性ドメイン情報
-   * @return   終了コード(CIO_SUCCESS=正常終了)
+   * @brief 出力DFIファイル名を作成する
+   * @param [in] prefix ファイル接頭文字
+   * @return DFIファイル名
    */ 
-   static cio_ErrorCode CheckData( int nRank, int div[3],
-             std::vector<cio_ActiveSubDomain>& subDomainInfo );
+  static std::string
+  Generate_DFI_Name(const std::string prefix);
 
   /**
-   * ランクマップを生成（非活性を含む）
-   * @param[in] div 領域分割数
-   * @param[in] subDomainInfo 活性ドメイン情報
-   * @retval ランクマップ
-   * @retval NULL
-   */
-   static int* CreateRankMap(int div[3],std::vector<cio_ActiveSubDomain> subDomainInfo); 
-
-  /**
-   *
-   */
-   static int* CreateActiveRankMap(vector<cio_Rank> &RankInfo, int (*HeadTail)[6], 
-                                   headT mapX, headT mapY,headT mapZ);
-
-  /**
-   * head&tail情報の登録
-   * @retval true  正常終了
-   * @retval false エラー
-   */
-   static bool SetHeadTail( vector<cio_Rank> RankInfo, int (*HeadTail)[6] ,
-                               std::set<int>&headx, std::set<int>&heady, std::set<int>&headz );
-  
-  /**
-   * head&tail情報の作成
-   * @retval true  正常終了
-   * @retval false エラー
-   */
-   static bool CreateHeadTail( int div[3], int* rankMap, 
-                               int gvox[3] ,int (*HeadTail)[6],
-                               vector<cio_Rank> &RankInfo, cio_Rank rank);
-
-  /**
-   *
-   */
-   static bool CreateHeadMap( std::set<int>head, headT &map); 
- 
-  /**
-   * @brief write インスタンス
+   * @brief write インスタンス float型
    * @param [in] comm          MPIコミュニケータ
    * @param [in] DfiName       DFIファイル名
-   * @param [in] DirectoryPath フィールドデータのディレクトリ
-   * @param [in] Prefix        ベースファイル名
-   * @param [in] FileFormat    ファイルフォーマット
-   * @param [in] GuideCell     出力仮想セル数　　　
+   * @param [in] Path          フィールドデータのディレクトリ
+   * @param [in] prefix        ベースファイル名
+   * @param [in] format        ファイルフォーマット
+   * @param [in] GCell         出力仮想セル数　　　
    * @param [in] DataType      データタイプ　　　　
    * @param [in] ArrayShape    配列形状　　　　　　
-   * @param [in] Component     成分数　　　　　　　
-   * @param [in] Process       proc.dfiファイル名
+   * @param [in] nComp         成分数　　　　　　　
+   * @param [in] proc_fname    proc.dfiファイル名
+   * @param [in] G_size[3]     グローバルボクセルサイズ　
+   * @param [in] pitch[3]      ピッチ　　　　　　　　　　
+   * @param [in] G_origin[3]   原点座標値　　　　　　　　
+   * @param [in] division[3]   領域分割数　　　　　　　　
+   * @param [in] head[3]       計算領域の開始位置　　　　
+   * @param [in] tail[3]       計算領域の終了位置　　　　
+   * @param [in] hostname      ホスト名
+   * @param [in] TSliceOnOff   TimeSliceフラグ
+   * @return インスタンスされたクラスのポインタ
+   */
+  static cio_DFI*
+  WriteInit(const MPI_Comm comm,
+            const std::string DfiName,
+            const std::string Path,
+            const std::string prefix,
+            const CIO::E_CIO_FORMAT format,
+            const int GCell,
+            const CIO::E_CIO_DTYPE DataType,
+            const CIO::E_CIO_ARRAYSHAPE ArrayShape,
+            const int nComp,
+            const std::string proc_fname,
+            const int G_size[3],
+            const float pitch[3],
+            const float G_origin[3],
+            const int division[3],
+            const int head[3],
+            const int tail[3],
+            const std::string hostname,
+            const CIO::E_CIO_ONOFF TSliceOnOff);
+
+  /**
+   * @brief write インスタンス double型
+   * @param [in] comm          MPIコミュニケータ
+   * @param [in] DfiName       DFIファイル名
+   * @param [in] Path          フィールドデータのディレクトリ
+   * @param [in] prefix        ベースファイル名
+   * @param [in] format        ファイルフォーマット
+   * @param [in] GCell         出力仮想セル数　　　
+   * @param [in] DataType      データタイプ　　　　
+   * @param [in] ArrayShape    配列形状　　　　　　
+   * @param [in] nComp         成分数　　　　　　　
+   * @param [in] proc_fname    proc.dfiファイル名
    * @param [in] G_size[3]     グローバルボクセルサイズ　
    * @param [in] pitch[3]      ピッチ　　　　　　　　　　
    * @param [in] G_origin[3]   原点座標値　　　　　　　　
@@ -413,1015 +157,691 @@ public:
    * @param [in] head[3]       計算領域の開始位置　　　　
    * @param [in] tail[3]       計算領域の終了位置　　　　
    * @param [in] hostname      ホスト名　　　　　　　　　
+   * @param [in] TSliceOnOff   TimeSliceフラグ
    * @return インスタンスされたクラスのポインタ
    */
-  template<class T>
-  static cio_DFI* WriteInit(MPI_Comm comm, string DfiName, string Path, string prefix,
-                            E_CIO_FORMAT format, int GCell, E_CIO_DTYPE DataType, 
-                            E_CIO_ARRAYSHAPE ArrayShape,
-                            int Comp, string process, int G_size[3], T pitch[3],
-                            T G_origin[3], int division[3], int head[3], int tail[3],
-                            string hostname, E_CIO_ONOFF TSliceOnOff)
-  {
-
-  cio_DFI *dfi = NULL;
-
-  int RankID;
-  MPI_Comm_rank( comm, &RankID );
-
-  int nrank;
-  MPI_Comm_size( comm, &nrank );
-
-  cio_FileInfo out_F_info;
-  out_F_info.DirectoryPath = Path;
-  if( TSliceOnOff == E_CIO_ON ) {
-    out_F_info.TimeSliceDir  = D_CIO_ON;
-  } else {
-    out_F_info.TimeSliceDir  = D_CIO_OFF;
-  }
-  out_F_info.Prefix        = prefix;
-  out_F_info.FileFormat    = format;
-  out_F_info.GuideCell     = GCell;
-  if     ( DataType == E_CIO_INT8    ) out_F_info.DataType = D_CIO_INT8;
-  else if( DataType == E_CIO_INT16   ) out_F_info.DataType = D_CIO_INT16;
-  else if( DataType == E_CIO_INT32   ) out_F_info.DataType = D_CIO_INT32;
-  else if( DataType == E_CIO_INT64   ) out_F_info.DataType = D_CIO_INT64;
-  else if( DataType == E_CIO_UINT8   ) out_F_info.DataType = D_CIO_UINT8;
-  else if( DataType == E_CIO_UINT16  ) out_F_info.DataType = D_CIO_UINT16;
-  else if( DataType == E_CIO_UINT32  ) out_F_info.DataType = D_CIO_UINT32;
-  else if( DataType == E_CIO_UINT64  ) out_F_info.DataType = D_CIO_UINT64;
-  else if( DataType == E_CIO_FLOAT32 ) out_F_info.DataType = D_CIO_FLOAT32;
-  else if( DataType == E_CIO_FLOAT64 ) out_F_info.DataType = D_CIO_FLOAT64;
-  if(      ArrayShape == E_CIO_IJKN ) out_F_info.ArrayShape = D_CIO_IJNK;
-  else if( ArrayShape == E_CIO_NIJK ) out_F_info.ArrayShape = D_CIO_NIJK;
-  out_F_info.Component     = Comp;
-
-  int idumy = 1;
-  char* cdumy = (char*)(&idumy);
-  if( cdumy[0] == 0x01 ) out_F_info.Endian = "little";
-  if( cdumy[0] == 0x00 ) out_F_info.Endian = "big";
-
-  cio_FilePath out_F_path;
-  out_F_path.Process = process;
-
-  cio_Unit out_unit;
-
-  cio_MPI out_mpi;
-  out_mpi.NumberOfRank = nrank;
-  out_mpi.NumberOfGroup = 1;
-
-  cio_Domain out_domain;
-  vector<cio_Rank> out_RankInfo;
-  cio_Rank out_Rank;
-
-  for(int i=0; i<nrank; i++ ) {
-     out_RankInfo.push_back(out_Rank);
-  }      
-
-  out_RankInfo[RankID].RankID=RankID;
-  for(int i=0; i<3; i++) {
-    out_RankInfo[RankID].HeadIndex[i]=head[i];
-    out_RankInfo[RankID].TailIndex[i]=tail[i];
-    out_RankInfo[RankID].VoxelSize[i]=tail[i]-head[i]+1;
-  }
-
-  //cio_Create_Domain(comm, G_size, division, head, tail, out_domain, out_RankInfo, out_Rank);
-
-  for(int i=0; i<3; i++) {
-    out_domain.GlobalVoxel[i]  = G_size[i];
-    out_domain.GlobalDivision[i] = division[i];
-    out_domain.GlobalOrigin[i] = (double)G_origin[i];
-    out_domain.GlobalRegion[i] = pitch[i]*G_size[i];
-  }
-
-  vector<cio_Slice> out_TSlice;
-
-  char tmpname[512];
-  memset(tmpname,0x00,sizeof(char)*512);
-  if( gethostname(tmpname, 512) != 0 ) printf("*** error gethostname() \n");
-
-  dfi = get_dfi(out_F_info, out_F_path, out_unit, out_domain, out_mpi,
-                          out_TSlice, out_RankInfo);
-
-  if( dfi == NULL ) return NULL;
-
-  dfi->m_indexDfiName = DfiName;
-  dfi->m_directoryPath = CIO::cioPath_DirName(DfiName);
-  dfi->m_comm = comm;
-  dfi->m_RankID = RankID;
-
-  return dfi;
-
-  };
-
+  static cio_DFI* 
+  WriteInit(const MPI_Comm comm,
+            const std::string DfiName,
+            const std::string Path,
+            const std::string prefix,
+            const CIO::E_CIO_FORMAT format,
+            const int GCell,
+            const CIO::E_CIO_DTYPE DataType,
+            const CIO::E_CIO_ARRAYSHAPE ArrayShape,
+            const int nComp,
+            const std::string proc_fname,
+            const int G_size[3],
+            const double pitch[3],
+            const double G_origin[3],
+            const int division[3],
+            const int head[3],
+            const int tail[3],
+            const std::string hostname,
+            const CIO::E_CIO_ONOFF TSliceOnOff);
 
   /**
-   * @brief field data  ファイル名の作成
-   * @param [in] RankID ランク番号
-   * @param [in] step   読込みステップ番号
-   * @param [in] mio    並列判定フラグ（逐次or並列の判定用）
-   * @return 生成されたファイル名　　　　　　　
+   * @brief read field data record (template function)
+   * @details 読み込んだデータのポインタを戻り値として返す
+   * @param [in] step          入力ステップ番号
+   * @param [in] gc            仮想セル数　　　
+   * @param [in] Gvoxel[3]     グローバルボクセルサイズ　
+   * @param [in] Gdivision[3]  領域分割数　　　　　　　　
+   * @param [in] head[3]       計算領域の開始位置　　　　
+   * @param [in] tail[3]       計算領域の終了位置　　　　
+   * @param [out] time         読み込んだ時間
+   * @param [in]  mode         平均ステップ＆時間読込みフラグ　false : 読込み
+   *                                                           true  : 読み込まない
+   * @param [out] step_avr     平均ステップ
+   * @param [out] time_avr     平均時間
+   * @param [out] errcode      終了コード 1:正常、1以外：エラー  
+   * @return 読みんだフィールドデータのポンタ
    */
-  std::string Generate_FileName(int RankID,int step, const bool mio);
+  template<class T, class TimeT, class TimeAvrT> T*
+  ReadData(CIO::E_CIO_ERRORCODE &ret,
+           const unsigned step, 
+           const int gc, 
+           const int Gvoxel[3], 
+           const int Gdivision[3], 
+           const int head[3], 
+           const int tail[3],
+           TimeT &time,
+           const bool mode, 
+           unsigned &step_avr, 
+           TimeAvrT &time_avr);
+  /**
+   * @brief read field data record (template function)
+   * @details 引数で渡された配列ポインタにデータを読込む
+   * @param [out] val           読み込んだデータポインタ　
+   * @param [in]  step          入力ステップ番号
+   * @param [in]  gc            仮想セル数　　　
+   * @param [in]  Gvoxel[3]     グローバルボクセルサイズ　
+   * @param [in]  Gdivision[3]  領域分割数　　　　　　　　
+   * @param [in]  head[3]       計算領域の開始位置　　　　
+   * @param [in]  tail[3]       計算領域の終了位置　　　　
+   * @param [out] time          読み込んだ時間
+   * @param [in]  mode          平均ステップ＆時間読込みフラグ　false : 読込み
+   *                                                           true  : 読み込まない
+   * @param [out] step_avr      平均ステップ
+   * @param [out] time_avr      平均時間
+   * @return 終了コード 1:正常 1以外:エラー
+   */
+  template<class T, class TimeT, class TimeAvrT>
+  CIO::E_CIO_ERRORCODE 
+  ReadData(T *val,
+           const unsigned step,
+           const int gc,
+           const int Gvoxel[3],
+           const int Gdivision[3],
+           const int head[3],
+           const int tail[3],
+           TimeT &time,
+           const bool mode,
+           unsigned &step_avr,
+           TimeAvrT &time_avr);
 
   /**
-   * @brief ディレクトリパスの作成
-   * @param [in] path パス
-   * @return error code　　　　　　　
+   * @brief read field data record 
+   * @detailes template ReadData関数で型に応じた配列を確保した後、呼び出される
+   * @param [out] val           読み込み先の配列をポインタで渡す　
+   * @param [in]  step          読み込むステップ番号
+   * @param [in]  gc            仮想セル数　　　
+   * @param [in]  Gvoxel[3]     グローバルボクセルサイズ　
+   * @param [in]  Gdivision[3]  領域分割数　　　　　　　　
+   * @param [in]  head[3]       計算領域の開始位置　　　　
+   * @param [in]  tail[3]       計算領域の終了位置　　　　
+   * @param [out] time          読み込んだ時間
+   * @param [in]  mode          平均ステップ＆時間読込みフラグ　false : 読込み
+   *                                                           true  : 読み込まない
+   * @param [out] step_avr      平均ステップ
+   * @param [out] time_avr      平均時間
+   * @return 終了コード 1:正常 1以外:エラー
+   */
+  CIO::E_CIO_ERRORCODE 
+  ReadData(cio_Array *val,
+           const unsigned step,
+           const int gc,
+           const int Gvoxel[3],
+           const int Gdivision[3],
+           const int head[3],
+           const int tail[3],
+           double &time,
+           const bool mode,
+           unsigned &step_avr,
+           double &time_avr);
+
+  /**
+   * @brief write field data record (template function)
+   * @details スカラーのとき、minmax[0]=min 
+   *                          minmax[1]=max
+   *          ベクトルのとき、minmax[0]   =成分1のminX
+   *                          minmax[1]   =成分1のmaxX
+   *                               . 
+   *                               .
+   *                          minmax[2n-2]=成分nのminX
+   *                          minmax[2n-1]=成分nのmaxX
+   *                          minmax[2n  ]=合成値のmin
+   *                          minmax[2n+1]=合成値のmax
+   * @param [in] step     出力ステップ番号
+   * @param [in] time     出力時刻　　　　
+   * @param [in] sz       valの実ボクセルサイズ
+   * @param [in] nComp    valの成分数（1or3)
+   * @param [in] gc       valの仮想セル数　　　
+   * @param [in] val      出力データポインタ
+   * @param [in] minmax   フィールデータのMinMax
+   * @param [in] force    強制出力指示
+   * @param [in] avr_mode 平均ステップ＆時間出力　false : 出力
+   *                                              true  : 出力しない
+   * @param [in] step_avr 平均ステップ
+   * @param [in] time_avr 平均時間
    */ 
-  static int MakeDirectory(std::string path);
+  template<class T, class TimeT, class TimeAvrT>
+  CIO::E_CIO_ERRORCODE
+  WriteData(const unsigned step, 
+            TimeT time,
+            const int sz[3], 
+            const int nComp,
+            const int gc, 
+            T* val, 
+            T* minmax=NULL, 
+            bool force=true,
+            bool avr_mode=true, 
+            unsigned step_avr=0, 
+            TimeAvrT time_avr=0.0);
 
   /**
-   * @brief ディレクトリパスの作成
-   * @return error code　　　　　　　
+   * @brief write field data record
+   * @details template WriteData関数で方に応じた配列を確保した後、呼び出される 
+   * @param [in] step     出力ステップ番号
+   * @param [in] gc       仮想セル数　　　
+   * @param [in] tiem     出力時刻　　　　
+   * @param [in] val      出力データポインタ
+   * @param [in] minmax   フィールデータのMinMax
+   * @param [in] avr_mode 平均ステップ＆時間出力　false : 出力
+   *                                              true  : 出力しない
+   * @param [in] step_avr 平均ステップ
+   * @param [in] time_avr 平均時間
+   * @param [in] force    強制出力指示
    */ 
-  int MakeDirectoryPath();
+  CIO::E_CIO_ERRORCODE
+  WriteData(const unsigned step, 
+            const int gc, 
+            double time, 
+            cio_Array* val, 
+            double* minmax, 
+            const bool avr_mode, 
+            const unsigned step_avr, 
+            double time_avr,
+            bool force);
 
   /**
-   * @brief initialise dfi
-   */ 
-  void InitDFI();
-
-  /**
-   * @brief read FileInfo(inde.dfi)
-   * @param [in]   dfifile index.dfiファイル名
-   * @param [in]   tpCntl  cio_TextParserクラス 
-   * @param [out]  finfo   読込んだcio_FileInfo 
-   * @return error code
+   * @brief proc DFIファイル出力コントロール (float)
+   * @param [in] comm      MPIコミュニケータ
+   * @param [in] out_host  ホスト名出力フラグ　　　　
+   * @param [in] org[3]    原点座標値
+   * @details orgがNULLのときは、WriteInitで渡した、G_originを出力
+   * @return true:出力成功 false:出力失敗
    */
-  static int readFileInfo(string dfifile, cio_TextParser tpCntl, cio_FileInfo &finfo);
+  CIO::E_CIO_ERRORCODE
+  WriteProcDfiFile(const MPI_Comm comm, 
+                   bool out_host=false,
+                   float* org=NULL);
 
   /**
-   * @brief read FilePath(inde.dfi)
-   * @param [in]   dfifile index.dfiファイル名
-   * @param [in]   tpCntl  cio_TextParserクラス 
-   * @param [out]  fpath   読込んだFilePath 
-   * @return error code
+   * @brief proc DFIファイル出力コントロール (double 版)
+   * @param [in] comm          MPIコミュニケータ
+   * @param [in] out_host      ホスト名出力フラグ　　　　
+   * @param [in] org[3]        原点座標値
+   * @details orgがNULLのときは、WriteInitで渡した、G_originを出力
+   * @return true:出力成功 false:出力失敗
+   * @return true:出力成功 false:出力失敗
    */
-  static int readFilePath(string dfifile, cio_TextParser tpCntl, cio_FilePath &fpath);
+  CIO::E_CIO_ERRORCODE
+  WriteProcDfiFile(const MPI_Comm comm, 
+                   bool out_host=false,
+                   double* org=NULL);
 
   /**
-   * @brief read Unit(inde.dfi)
-   * @param [in]   dfifile index.dfiファイル名
-   * @param [in]   tpCntl  cio_TextParserクラス 
-   * @param [out]  unit    読込んだUnit 
-   * @return error code
+   * @brief 配列形状を文字列で返す
+   * @return 配列形状（文字列)
    */
-  static int readUnit(string dfifile, cio_TextParser tpCntl, cio_Unit &unit);
+  std::string 
+  GetArrayShapeString();
 
   /**
-   * @brief read Slice(inde.dfi)
-   * @param [in]      dfifile   index.dfiファイル名
-   * @param [in]      tpCntl    cio_TextParserクラス 
-   * @param [out]     TimeSlice 読込んだSliceを格納した領域 
-   * @param [out,out] slice     TimeSlice読込み用領域 
-   * @return error code
+   * @brief 配列形状を返す
+   * @return 配列形状（e_num番号)
    */
-  static int readSlice(string dfifile, cio_TextParser tpCntl, vector<cio_Slice> &TimeSlice, cio_Slice  slice);
-
-  /**
-   * @brief read Domain(proc.dfi)
-   * @param [in]   dfifile proc.dfiファイル名
-   * @param [in]   tpCntl  cio_TextParserクラス 
-   * @param [out]  domain  読込んだDomain
-   * @return error code
-   */
-  static int readDomain(string dfifile, cio_TextParser tpCntl, cio_Domain &domain);
-
-  /**
-   * @brief read MPI(proc.dfi)
-   * @param [in]   dfifile proc.dfiファイル名
-   * @param [in]   tpCntl  cio_TextParserクラス 
-   * @param [out]  mpi     読込んだMPI
-   * @return error code
-   */
-  static int readMPI(string dfifile, cio_TextParser tpCntl, cio_Domain domain, cio_MPI &mpi);
-
-  /**
-   * @brief read Rank(proc.dfi)
-   * @param [in]   dfifile proc.dfiファイル名
-   * @param [in]   tpCntl  cio_TextParserクラス 
-   * @param [out]  rank    読込んだProcess
-   * @return error code
-   */
-  static int readRank(string dfifile, cio_TextParser tpCntl, vector<cio_Rank> &RankInfo, cio_Rank rank);
-
-  /**
-   * @brief get ArrayShape （配列形状の取り出し関数）
-   * @return 配列形状
-   */
-  std::string getArrayShape();
+  CIO::E_CIO_ARRAYSHAPE 
+  GetArrayShape();
 
   /**
    * @brief get DataType （データタイプの取り出し関数）
-   * @return データタイプ
+   * @return データタイプ（文字列)
    */
-  std::string getDataType();
+  std::string 
+  GetDataTypeString();
 
   /**
-   * @brief get Component （成分数の取り出し関数）
+   * @brief get DataType （データタイプの取り出し関数）
+   * @return データタイプ(e_num番号)
+   */
+  CIO::E_CIO_DTYPE 
+  GetDataType();
+
+  /**
+   * @brief get Number of Component （成分数の取り出し関数）
    * @return 成分数
    */
-  int getComponent();
+  int 
+  GetNumComponent();
 
   /**
-   * @brief get E_CIO_DTYPE （データタイプの取り出し関数） 
-   * @param[in] datatype dfiから取得したデータタイプ
-   * @return データタイプ番号
+   * @brief データタイプを文字列からe_num番号に変換 
+   * @param [in] datatype dfiから取得したデータタイプ
+   * @return データタイプ(E_CIO_DTYPE)
    */
-  E_CIO_DTYPE get_cio_Datatype(string datatype); 
+  static CIO::E_CIO_DTYPE 
+  ConvDatatypeS2E(const std::string datatype); 
 
   /**
-   *
-   *
+   * @brief データタイプをe_num番号から文字列に変換 
+   * @param [in] Dtype データタイプ
+   * @return データタイプ(string)
    */
-  int get_cio_Datasize(E_CIO_DTYPE Dtype); 
-  /**
-   * @brief Create Domain & Process 
-   * @param [in] comm          MPIコミュニケータ
-   * @param [in] G_voxel[3]    グローバルボクセルサイズ　
-   * @param [in] G_division[3] 領域分割数　　　　　　　　
-   * @param [in] head[3]       計算領域の開始位置　　　　
-   * @param [in] tail[3]       計算領域の終了位置　　　　
-   * @param [out]G_domain      Domain情報(構造体)　　　　
-   * @param [out]G_RankInfo    Process情報(vector)　　　
-   * @param [in] G_Rank        Process情報(構造体)　　　
-   */
-  static void cio_Create_Domain(MPI_Comm comm,
-                                int G_voxel[3], int G_division[3],
-                                int head[3], int tail[3],
-                                cio_Domain &G_domain, vector<cio_Rank> &G_RankInfo, 
-                                cio_Rank G_Rank);
-
+  static std::string 
+  ConvDatatypeE2S(const CIO::E_CIO_DTYPE Dtype); 
 
   /**
-   *
-   *
+   * @brief DFI DomainのGlobalVoxelの取り出し
+   * @return GlobalVoxelのポインタ
    */
-  static cio_DFI* get_dfi(cio_FileInfo F_Info, cio_FilePath F_Path, cio_Unit unit, 
-                          cio_Domain domain,
-                          cio_MPI mpi,vector<cio_Slice> TSlice, vector<cio_Rank> RInfo);  
-  /**
-   * @brief read field data record
-   * @param [in] step 入力ステップ番号
-   * @param [in] gc   仮想セル数　　　
-   * @param [in] Gvoxel[3]    グローバルボクセルサイズ　
-   * @param [in] Gdivision[3] 領域分割数　　　　　　　　
-   * @param [in] head[3]       計算領域の開始位置　　　　
-   * @param [in] tail[3]       計算領域の終了位置　　　　
-   * @param [out]val           読み込んだデータポインタ　
-   *
-   */
-  virtual void ReadData(int step, int gc, 
-                        int Gvoxel[3], int Gdivision[3], int head[3], int tail[3],
-                        void *val, double &time ,
-                        const bool mode, unsigned &step_avr, double &time_avr) = 0; 
-
-  virtual void* ReadData(int step, int gc, 
-                        int Gvoxel[3], int Gdivision[3], int head[3], int tail[3],
-                        double &time,
-                        const bool mode, unsigned &step_avr, double &time_avr ) = 0;
+  int* 
+  GetDFIGlobalVoxel(); 
 
   /**
-   * @brief 粗密データ判定
-   * @param [in] Gvoxel     計算空間全体のボクセルサイズ（自）
-   * @param [in] DFI_Gvoxel 計算空間全体のボクセルサイズ（DFI）
-   * @return CIO_E_GV_SAME:密 CIO_E_GVX2_SAME:粗 CIO_E_OTHER:その他
+   * @brief DFI DomainのGlobalDivisionの取り出し
+   * @return GlobalDivisionのポインタ
    */
-  cio_EGlobalVoxel CheckGlobalVoxel(int Gvoxel[3], int DFI_Gvoxel[3]); 
+  int* 
+  GetDFIGlobalDivision(); 
 
   /**
-   * @brief 粗密ファイルのMxN判定
-   * @param [in] rankList 読込みに必要なランク番号リスト
-   * @param [in] head[3]  計算領域の開始位置　　　　
-   * @param [in] tail[3]  計算領域の終了位置　　　　
-   * @param [in] gc       仮想セル数(自)　　　
-   * @param [in] dfi_gc   仮想セル数(DFI)　　　
-   * @return  true:密 false:粗
+   * @brief Uuitをセットする
+   * @param [in] Name       追加する単位系("Length","Velocity",,,,)
+   * @param [in] Unit       単位ラベル("M","CM","MM","M/S",,,)
+   * @param [in] BaseName   代表値名("L0","V0",,,,)
+   * @param [in] BaseValue  代表値値
+   * @param [in] DiffName   差があるときの名前("DiffPrs","DiffTemp",,,)
+   * @param [in] DiffValue  差の値
    */
-  bool CheckMxN(vector<int> &rankList, int head[3], int tail[3], int gc, int dfi_gc);
+  void 
+  AddUnit(const std::string Name,
+          const std::string Unit,
+          const std::string BaseName,
+          const double BaseValue,
+          const std::string DiffName = "",
+          const double DiffValue = 0.0); 
  
   /**
-   * @brief 読込みランクファイルリストの作成
-   * @param [in] head[3]  計算領域の開始位置　　　　
-   * @param [in] tail[3]  計算領域の終了位置　　　　
-   * @param [in] gc       仮想セル数(自)　　　
-   * @param [in] readflag 粗密データ判定フラグ
-   * @param [out]rankList 読込みに必要なランク番号リスト 
+   * @brief TimeSlice OnOff フラグをセットする
+   * @param [in] onoff
    */
-  void CreateRankList(int head[3], int tail[3], int gc, cio_EGlobalVoxel readflag,
-                      vector<int> &rankList);
+  void 
+  SetTimeSliceFlag(const CIO::E_CIO_ONOFF ONOFF); 
 
   /**
-   * @brief 読込み範囲を求める
+   * @brief FileInfoの成分名を登録する
+   * @param [in] pcomp    成分位置 0:u, 1:v, 2:w
+   * @param [in] compName 成分名 "u","v","w",,,
+   */
+  void setComponentVariable(int pcomp, std::string compName); 
+
+  /**
+   * @brief FileInfoの成分名を取得する
+   * @param [i] pcomp 成分位置 0:u, 1:v, 2:w
+   * @return 成分名
+   */
+  std::string getComponentVariable(int pcomp);
+
+  /**
+   * @brief DFIに出力されているminmaxの合成値を取得
+   * @param [in]  step 取得するステップ
+   * @param [out] vec_min 取得したminmaxの合成値
+   * @param [out] vec_max 取得したminmaxの合成値
+   * @return error code 取得出来たときは E_CIO_SUCCESS
+   */
+  CIO::E_CIO_ERRORCODE getVectorMinMax(const unsigned step,
+                                       double &vec_min,
+                                       double &vec_max);
+
+  /**
+   *brief DFIに出力されているminmaxを取得
+   * @param [in]  step 取得するステップ
+   * @param [in]  compNo 成分No(0～n)
+   * @param [out] min_value 取得したmin
+   * @param [out] max_value 取得したmax
+   * @return error code 取得出来たときは E_CIO_SUCCESS
+   */
+  CIO::E_CIO_ERRORCODE getMinMax(const unsigned step,
+                                 const int compNo,
+                                 double &min_value,
+                                 double &max_value);
+
+  /**
+   * @brief 読込みランクリストの作成
+   * @details RankListがあるかないか判定しないときは新規にRankListを生成し
+   *          それをもとにランクマップの生成、読込みランクリストreadRankList
+   *          を生成する
+   * @param [in]  dfi_domain DFIのdomain情報
+   * @param [in]  head       ソルバーのHeadIndex
+   * @param [in]  tail       ソルバーのTailIndex
+   * @param [in]  readflag   読込み方法
+   * @param [out] readRankList 読込みランクリスト
+   * @return error code
+   */
+  CIO::E_CIO_ERRORCODE
+  CheakReadRank(cio_Domain dfi_domain,
+                const int head[3],
+                const int tail[3],
+                CIO::E_CIO_READTYPE readflag,
+                vector<int> &readRankList);
+
+  /**
+   * @brief 出力インターバルステップの登録
+   * @details 登録しない（本メソッドがコールされない）場合はCIOでのインターバル
+   *          制御は行わない
+   * @param [in] interval_step インターバルステップ
+   * @param [in] base_step     基準となるステップ（デフォルト0ステップ）
+   * @param [in] start_step    セッション開始ステップ（デフォルト0ステップ）
+   * @param [in] last_step     セッション最終ステップ（デフォルト、-1：最終ステップで出力しない）
+   */
+  void setIntervalStep(int interval_step,
+                       int base_step =0, 
+                       int start_step=0,
+                       int last_step =-1); 
+
+  /**
+   * @brief インターバルタイムの登録
+   * @param [in] interval_time 出力インターバルタイム
+   * @param [in] dt            計算の時間間隔
+   * @param [in] base_time     基準となるタイム（デフォルト0.0タイム）
+   * @param [in] start_time    セッション開始タイム（デフォルト0.0タイム）
+   * @param [in] last_time     せっしょん最終タイム（デフォルト、-1.0：最終タイムで出力しない）
+   */
+  void setIntervalTime(double interval_time,
+                       double dt,
+                       double base_time =0.0, 
+                       double start_time=0.0,
+                       double last_time =-1.0); 
+
+  /**
+   * @brief インターバルの計算に使われる全ての時間をスケールで無次元化する
+   * @details (base_time, interval_time, start_time, last_time)
+   * @param [in] scale スケール
+   * return modeがStepのときはfalseを返す、無次元化しない
+   */
+  bool normalizeTime(const double scale);
+
+  /**
+   * @brief インターバルのbase_timeをスケールで無次元化する
+   * @param [in] scale スケール
+   */
+  void normalizeBaseTime(const double scale);
+ 
+  /**
+   * @brief インターバルのintervalをスケールで無次元化する
+   * @param [in] scale スケール
+   */
+  void normalizeIntervalTime(const double scale);
+ 
+  /**
+   * @brief インターバルのstart_timeをスケールで無次元化する
+   * @param [in] scale スケール
+   */
+  void normalizeStartTime(const double scale);
+
+  /**
+   * @brief インターバルのlast_timeをスケールで無次元化する
+   * @param [in] scale スケール
+   */
+  void normalizeLastTime(const double scale);
+
+  /**
+   * @brief インターバルのDetlaTをスケールで無次元化する
+   * @param [in] scale スケール
+   */
+  void normalizeDelteT(const double scale);
+
+
+protected :
+
+  /**
+   * @brief read field data record(sph or bov)
+   * @param [in]  fname    FieldData ファイル名
+   * @param [in]  sta      読込みスタート位置
+   * @param [in]  end      読込みエンド位置
+   * @param [in]  DFI_head dfiのHeadIndex
+   * @param [in]  DFI_tail dfiのTailIndex
+   * @param [out] time     読み込んだ時間
+   * @param [in]  mode     平均ステップ＆時間読込みフラグ　false : 読込み
+   *                                                       true  : 読み込まない
+   * @param [out] avr_step 平均ステップ
+   * @param [out] avr_time 平均時間
+   * @param [out] ret      終了コード
+   * @return 読み込んだ配列のポインタ
+   */
+  virtual
+  cio_Array* 
+  ReadFieldData(std::string fname,
+                const unsigned step,
+                double &time,
+                const int sta[3],
+                const int end[3],
+                const int DFI_head[3],
+                const int DFI_tail[3],
+                bool avr_mode,
+                unsigned &avr_step,
+                double &avr_time,
+                CIO::E_CIO_ERRORCODE &ret );
+
+  /**
+   * @brief フィールドデータファイルのヘッダーレコード読込み
+   * @param[in]  fp         ファイルポインタ
+   * @param[in]  matchEtype true:Endian一致
+   * @param[in]  step       ステップ番号
+   * @param[in]  head       dfiのHeadIndex
+   * @param[in]  tail       dfiのTailIndex
+   * @param[in]  gc         dfiのガイドセル数
+   * @param[out] voxsize[3] voxsize
+   * @param[out] time       時刻
+   * @return true:出力成功 false:出力失敗
+   */
+  virtual CIO::E_CIO_ERRORCODE 
+  read_HeaderRecord(FILE* fp,
+                    bool matchEndian,
+                    unsigned step,
+                    const int head[3],
+                    const int tail[3],
+                    int gc,
+                    int voxsize[3],
+                    double &time)=0;
+
+  /**
+   * @brief フィールドデータファイルのデータレコード読込み
+   * @param[in]  fp         ファイルポインタ
+   * @param[in]  matchEtype true:Endian一致
+   * @param[in]  buf        読込み用バッファ
+   * @param[in]  head       読込みバッファHeadIndex
+   * @param[in]  nz         z方向のボクセルサイズ（実セル＋ガイドセル＊２）
+   * @param[out] src        読み込んだデータを格納した配列のポインタ
+   */
+  virtual CIO::E_CIO_ERRORCODE 
+  read_Datarecord(FILE* fp,
+                  bool matchEndian,
+                  cio_Array* buf,
+                  int head[3],
+                  int nz,
+                  cio_Array* &src)=0;
+
+  /**
+   * @brief sphファイルのAverageデータレコードの読込み
+   * @param[in]  fp         ファイルポインタ
+   * @param[in]  matchEtype true:Endian一致
+   * @param[in]  step       読込みstep番号
+   * @param[out] avr_step   平均ステップ
+   * @param[out] avr_time   平均タイム
+   */
+  virtual CIO::E_CIO_ERRORCODE
+  read_averaged(FILE* fp,
+                bool matchEndian,
+                unsigned step,
+                unsigned &avr_step,
+                double &avr_time)=0;   
+
+  /**
+   * @brief write field data record (double)
+   * @param [in] fname    出力フィールドファイル名
+   * @param [in] step     出力ステップ番号
+   * @param [in] tiem     出力時刻　　　　
+   * @param [in] val      出力データポインタ
+   * @param [in] mode     平均ステップ＆時間出力　false : 出力
+   *                                              true  : 出力しない
+   * @param [in] step_avr 平均ステップ
+   * @param [in] time_avr 平均時間
+   * @return error code
+   */
+  virtual
+  CIO::E_CIO_ERRORCODE 
+  WriteFieldData(std::string fname,
+                 const unsigned step, 
+                 double time, 
+                 cio_Array* val, 
+                 const bool mode, 
+                 const unsigned step_avr, 
+                 const double time_avr);
+
+  /**
+   * @brief SPHヘッダファイルの出力
+   * @param[in] fp     ファイルポインタ
+   * @param[in] step   ステップ番号
+   * @param[in] time   時刻
+   * @param[in] RankID ランク番号
+   * @return true:出力成功 false:出力失敗
+   */
+  virtual CIO::E_CIO_ERRORCODE
+  write_HeaderRecord(FILE* fp,
+                     const unsigned step,
+                     const double time,
+                     const int RankID)=0;
+
+  /**
+   * @brief SPHデータレコードの出力
+   * @param[in]  fp ファイルポインタ
+   * @param[in]  val データポインタ
+   * @param[in]  gc ガイドセル
+   * @param[in]  RankID ランク番号
+   * @return true:出力成功 false:出力失敗
+   */
+  virtual CIO::E_CIO_ERRORCODE
+  write_DataRecord(FILE* fp,
+                   cio_Array* val,
+                   const int gc,
+                   const int RankID)=0;
+
+  /**
+   * @brief Averageレコードの出力
+   * @param[in] step_avr     平均ステップ番号
+   * @param[in] time_avr     平均時刻
+   * @return true:出力成功 false:出力失敗
+   */
+  virtual CIO::E_CIO_ERRORCODE
+  write_averaged(FILE* fp,
+                 const unsigned step_avr,
+                 const double time_avr)=0;
+
+  /**
+   * @brief データタイプ毎のサイズを取得
+   * @param [in] Dtype データタイプ(Int8,Int16,,,,etc)
+   * @return データサイズ
+   * @return 0 エラー
+   */
+  static int 
+  get_cio_Datasize(CIO::E_CIO_DTYPE Dtype); 
+
+  /**
+   * @brief Create Process 
+   * @param [in] comm          MPIコミュニケータ
+   * @param [out]G_Process     Process class　　　
+   */
+  void 
+  cio_Create_dfiProcessInfo(const MPI_Comm comm,
+                            cio_Process &G_Process);
+
+
+  /**
+   * @brief 読込み判定判定
+   * @param [in] G_voxel            計算空間全体のボクセルサイズ（自）
+   * @param [in] DFI_GlobalVoxel    計算空間全体のボクセルサイズ（DFI）
+   * @param [in] G_Div              分割数（自）
+   * @param [in] DFI_GlobalDivision 分割数（DFI）
+   * @return 読込みタイプコード
+   */
+  //cio_EGlobalVoxel CheckGlobalVoxel(const int Gvoxel[3], 
+  CIO::E_CIO_READTYPE 
+  CheckReadType(const int G_voxel[3], 
+                const int DFI_GlobalVoxel[3],
+                const int G_Div[3],
+                const int DFI_GlobalDivision[3]); 
+
+  /**
+   * @brief フィールドデータの読込み範囲を求める
+   * @param [in] isSame      粗密フラグ true:密、false:粗
    * @param [in] head[3]     計算領域の開始位置(自)　
    * @param [in] tail[3]     計算領域の終了位置(自)　
    * @param [in] gc          仮想セル数(自)　
    * @param [in] DEF_head[3] 計算領域の開始位置(DFI)　　
    * @param [in] DEF_tail[3] 計算領域の終了位置(DFI)　　
    * @param [in] DFI_gc      仮想セル数(DFI)　
-   * @param [out]sta[3]      読込み開始位置
-   * @param [out]end[3]      読込み終了位置　　
-   * @return true:１対１
+   * @param [in] readflag    読込み方法
+   * @param [out]copy_sta[3] コピー開始位置
+   * @param [out]copy_end[3] コピー終了位置　　
+   * @param [out]read_sta[3] 読込み開始位置
+   * @param [out]read_end[3] 読込み終了位置　　
    */
-  bool CheckReadArea(int head[3], int tail[3], int gc, int DEF_head[3], int DFI_tail[3],
-                     int DFI_gc, cio_EGlobalVoxel readflag, int sta[3], int end[3]);
-
-
-  /**
-   * @brief write field data record
-   * @param [in] step     出力ステップ番号
-   * @param [in] gc       仮想セル数　　　
-   * @param [in] tiem     出力時刻　　　　
-   * @param [in] val      出力データポインタ
-   * @param [in] interval 出力間隔
-   * @param [in] force    強制出力指示
-   */ 
-  virtual void WriteData(int step, int gc, void* time, 
-                        void *val, void *minmax, int interval,
-                        const bool mode, const unsigned step_avr, const double time_avr,
-                        bool force) = 0;
+  void 
+  CreateReadStartEnd(bool isSame,
+                     const int head[3], 
+                     const int tail[3], 
+                     const int gc, 
+                     const int DEF_head[3], 
+                     const int DFI_tail[3],
+                     const int DFI_gc, 
+                     const CIO::E_CIO_READTYPE readflag, 
+                     int copy_sta[3], 
+                     int copy_end[3],
+                     int read_sta[3],
+                     int read_end[3]);
 
   /**
-   * @brief index DFIファイル出力コントロール
-   * @param [in] prefix  ファイル接頭文字
-   * @param [in] step    ステップ
-   * @param [in] time    時間　　
-   * @param [in] mio     出力時の分割指定　 true = local / false = gather
+   * @brief index DFIファイル出力
+   * @param [in] dfi_name  DFIファイル名
    * @return true:出力成功 false:出力失敗
    */
-  bool WriteIndexDfiFile(string DfiName, int RabkID,const std::string prefix, const unsigned step, 
-       void* time, void *minmax, const bool mio, const bool mode, const unsigned step_avr, 
-       const double time_avr); 
+  CIO::E_CIO_ERRORCODE
+  WriteIndexDfiFile(const std::string dfi_name);
 
   /**
-   * @brief proc DFIファイル出力コントロール
-   * @param [in] comm          MPIコミュニケータ
-   * @param [in] procFileName  出力proc.dfiファイル名
-   * @param [in] G_size[3]     グローバルボクセルサイズ　
-   * @param [in] division[3]   領域分割数　　　　　　　　
-   * @param [in] head[3]       計算領域の開始位置　　　　
-   * @param [in] tail[3]       計算領域の終了位置　　　　
-   * @param [in] hostname      ホスト名　　　　　　　　　
-   * @param [in] out_host      ホスト名出力フラグ　　　　
-   * @return true:出力成功 false:出力失敗
+   * @brief フィールドデータ（SPH,BOV)ファイル名の作成
+   * @param [in] RankID ランク番号
+   * @param [in] step   読込みステップ番号
+   * @param [in] mio    並列判定フラグ（逐次or並列の判定用）
+   * @return 生成されたファイル名　　　　　　　
    */
-  template<class T>
-  static bool WriteProcDfiFile(MPI_Comm comm, string procFileName, 
-                               int G_size[3],
-                               int division[3], int head[3], int tail[3], T org[3],
-                               T pch[3], 
-                               string hostname, bool out_host)
-  {
-
-  if( procFileName.empty() ) return false;
-
-  int RankID;
-  MPI_Comm_rank( comm, &RankID );
-
-  int nrank;
-  MPI_Comm_size( comm, &nrank );
-
-  cio_MPI out_mpi;
-  out_mpi.NumberOfRank = nrank;
-  out_mpi.NumberOfGroup = 1;
-
-  cio_Domain out_domain;
-  vector<cio_Rank> out_RankInfo;
-  cio_Rank out_Rank;
-
-  cio_Create_Domain(comm, G_size, division, head, tail, out_domain, out_RankInfo, out_Rank);
-  for(int i=0; i<3; i++) {
-    out_domain.GlobalOrigin[i] = org[i];
-    out_domain.GlobalRegion[i] = pch[i]*G_size[i];
-  }
-
-  if( out_host ) {
-    const int LEN=256;
-    char *recbuf = new char[out_RankInfo.size()*LEN];
-    char  sedbuf[LEN];
-    sprintf(sedbuf,"%s",hostname.c_str());
-    MPI_Gather(sedbuf,LEN,MPI_CHAR,recbuf,LEN,MPI_CHAR,0,MPI_COMM_WORLD);
-
-    for( int i=0; i<out_RankInfo.size(); i++ ) {
-     char* hn =&(recbuf[i*LEN]);
-     out_RankInfo[i].HostName=(string(hn));
-    }
-
-    if( recbuf ) delete [] recbuf;
-  }
-
-  if(RankID != 0) return NULL;
-
-  if( !Write_Proc_File(procFileName,out_domain,out_mpi,out_RankInfo) )
-  {
-    return false;
-  }
-
-  return true;
-
-  };
+  std::string Generate_FieldFileName(int RankID,
+                                int step, 
+                                const bool mio);
 
   /**
-   * @brief 出力DFIファイル名を作成する
-   * @param [in] prefix ファイル接頭文字
-   * @return DFIファイル名
+   * @brief ディレクトリパスの作成(MakeDirectorySubを呼出して作成)
+   * @param [in] path パス
+   * @return error code　　　　　　　
    */ 
-  static std::string Generate_DFI_Name(const std::string prefix);
+  int MakeDirectory(const std::string path);
 
   /**
-   * @brief Directoryパスを生成する
+   * @brief ディレクトリパスの作成(MakeDirectory関数を呼出して作成)
+   * @return error code　　　　　　　
+   */ 
+  int MakeDirectoryPath();
+
+  /**
+   * @brief ディレクトリパスの作成(system関数mkdirで作成)
+   * @param
+   * @return error code　　　　　　　
+   */ 
+  static int MakeDirectorySub( std::string path );
+
+  /**
+   * @brief dfiのパスとDirectoryPathを連結する関数
    * @return パス名
    */
   std::string Generate_Directory_Path(); 
 
+public:
 
-  /**
-   * @brief DFIファイルを出力する
-   * @param [in] dfi_name  DFIファイル名
-   * @param [in] prefix    ファイル接頭文字
-   * @param [in] step      ステップ数
-   * @param [in] time      時間　　
-   * @param [in] dfi_mng   出力管理カウンタ
-   * @param [in] mio       出力時の分割指定　 true = local / false = gather
-   * @return true:出力成功 false:出力失敗
-   */
-  bool Write_Index_File(const std::string dfi_name, const std::string prefix, const unsigned step, 
-                        void* time, int& dfi_mng, void *minmax, const bool mio,
-                        const bool avr_mode, const unsigned step_avr,const double time_avr);
-
-  /**
-   * @brief DFIファイルを出力する
-   * @param [in] dfi_name  DFIファイル名
-   * @return true:出力成功 false:出力失敗
-   */
-  bool Write_Proc_File(const std::string dfi_name); 
-
-  /**
-   * @brief DFIファイルを出力する
-   * @param [in] dfi_name   DFIファイル名
-   * @param [in] out_domain 出力Domain
-   * @param [in] out_mpi    出力MPI
-   * @param [in] out_RankInfo 出力Process
-   * @return true:出力成功 false:出力失敗
-   */
-  static bool Write_Proc_File(const std::string dfi_name, cio_Domain out_domain, 
-                              cio_MPI out_mpi, vector<cio_Rank> out_RankInfo); 
-
-  /**
-   * @brief DFIファイル:FileInfo要素を出力する
-   * @param [in] fp      ファイルポインタ
-   * @param [in] tab     インデント
-   * @param [in] prefix  ファイル接頭文字
-   * @return true:出力成功 false:出力失敗
-   */
-   bool Write_FileInfo(FILE* fp, const unsigned tab, const std::string prefix);
-
-  /**
-   * @brief DFIファイル:Unit要素を出力する
-   * @param [in] fp      ファイルポインタ
-   * @param [in] tab     インデント
-   * @param [in] prefix  ファイル接頭文字
-   * @return true:出力成功 false:出力失敗
-   */
-   bool Write_Unit(FILE* fp, const unsigned tab, const std::string prefix);
-
-  /**
-   * @brief DFIファイル:TimeSlice要素を出力する
-   * @param [in] fp      ファイルポインタ
-   * @param [in] tab     インデント
-   * @param [in] step    ステップ数
-   * @param [in] time    時間　　
-   * @param [in] mio     出力時の分割指定　 true = local / false = gather
-   * @return true:出力成功 false:出力失敗
-   */
-   template<class T>
-   bool Write_TimeSlice(FILE* fp, const unsigned tab, const unsigned step, T* time,
-                        T* minmax, const bool avr_mode, const unsigned a_step, const double a_time)
-   {
-
-     string compname;
-
-     Write_Tab(fp, tab);
-     fprintf(fp, "Slice[@] {\n");
-
-     Write_Step(fp,tab+1,step);
-
-     Write_Time(fp,tab+1,time);
-
-     if( !avr_mode ) {
-       Write_Average(fp,tab+1,a_step,a_time);
-     }
-
-     if( DFI_Finfo.Component ) {
-       Write_Tab(fp, tab+1);
-       fprintf(fp, "MinMax[@] {\n");
-       for(int i=0; i<1; i++){
-         compname="Min";
-         Write_Comp(fp,tab+2,compname,minmax[i*2]);
-         compname="Max";
-         Write_Comp(fp,tab+2,compname,minmax[i*2+1]);
-       }
-       Write_Tab(fp, tab+1);
-       fprintf(fp, "}\n");
-     }
-
-     Write_Tab(fp, tab);
-     fprintf(fp, "}\n");
-
-     return true;
-   };
-
-  /**
-   * @brief Tab(space２つ)を出力する
-   * @param [in] fp      ファイルポインタ
-   * @param [in] tab     インデント数
-   */
-  void Write_Tab(FILE* fp, const unsigned tab);
-
-
-  /**
-   * @brief DFIファイル:出力ファイル情報要素を出力する
-   * @param [in] fp      ファイルポインタ
-   * @param [in] prefix  ファイル接頭文字
-   * @param [in] tab     インデント
-   * @param [in] step    ステップ数
-   * @param [in] mio     出力時の分割指定　 true = local / false = gather
-   * @return true:出力成功 false:出力失敗
-   */
-  bool Write_OutFileInfo(FILE* fp, const unsigned tab, const std::string prefix, const unsigned step, const bool mio);
-
-
-  /**
-   * @brief DFIファイル:DirectoryPathを出力する
-   * @param [in] fp      ファイルポインタ
-   * @param [in] tab     インデント
-   * @param [in] dirpath ディレクトリ　　
-   */
- void Write_DirectoryPath(FILE* fp, const unsigned tab, const std::string dirpath); 
-
-  /**
-   * @brief DFIファイル:TimeSliceDirectoryを出力する
-   * @param [in] fp      ファイルポインタ
-   * @param [in] tab     インデント
-   * @param [in] dirpath ディレクトリ　　
-   */
- void Write_TimeSliceDir(FILE* fp, const unsigned tab, const std::string timeslicedir); 
-
-  /**
-   * @brief DFIファイル:BaseName要素を出力する
-   * @param [in] fp      ファイルポインタ
-   * @param [in] tab     インデント
-   * @param [in] prefix  ファイル接頭文字
-   */
- void Write_BaseName(FILE* fp, const unsigned tab, const std::string prefix); 
-
-  /**
-   * @brief DFIファイル:ファイルフォーマット要素を出力する
-   * @param [in] fp      ファイルポインタ
-   * @param [in] tab     インデント
-   */
-  void Write_FileFormat(FILE* fp, const unsigned tab); 
-
-  /**
-   * @brief DFIファイル:ガイドセル要素を出力する
-   * @param [in] fp     ファイルポインタ
-   * @param [in] tab    インデント
-   */
-  void Write_GuideCell(FILE* fp, const unsigned tab);
-
-  /**
-   * @brief DFIファイル:データタイプを出力する
-   * @param [in] fp     ファイルポインタ
-   * @param [in] tab    インデント
-   */
-  void Write_DataType(FILE* fp, const unsigned tab);
-
-  /**
-   * @brief DFIファイル:Endianを出力する
-   * @param [in] fp     ファイルポインタ
-   * @param [in] tab    インデント
-   */
-  void Write_Endian(FILE* fp, const unsigned tab);
-
-  /**
-   * @brief DFIファイル:ArrayShapeを出力する
-   * @param [in] fp     ファイルポインタ
-   * @param [in] tab    インデント
-   */
-  void Write_ArrayShape(FILE* fp, const unsigned tab);
-
-  /**
-   * @brief DFIファイル:Componentを出力する
-   * @param [in] fp     ファイルポインタ
-   * @param [in] tab    インデント
-   */
-  void Write_Component(FILE* fp, const unsigned tab);
-
-  /**
-   * @brief DFIファイル:Processを出力する
-   * @param [in] fp     ファイルポインタ
-   * @param [in] tab    インデント
-   */
-  void Write_Process(FILE* fp, const unsigned tab);
-
-  /**
-   * @brief DFIファイル:Lengthを出力する
-   * @param [in] fp     ファイルポインタ
-   * @param [in] tab    インデント
-   */
-  void Write_Length(FILE* fp, const unsigned tab);
-
-  /**
-   * @brief DFIファイル:L0を出力する
-   * @param [in] fp     ファイルポインタ
-   * @param [in] tab    インデント
-   */
-  void Write_L0(FILE* fp, const unsigned tab);
-
-  /**
-   * @brief DFIファイル:Velocityを出力する
-   * @param [in] fp     ファイルポインタ
-   * @param [in] tab    インデント
-   */
-  void Write_Velocity(FILE* fp, const unsigned tab);
-
-  /**
-   * @brief DFIファイル:V0を出力する
-   * @param [in] fp     ファイルポインタ
-   * @param [in] tab    インデント
-   */
-  void Write_V0(FILE* fp, const unsigned tab);
-
-  /**
-   * @brief DFIファイル:Pressureを出力する
-   * @param [in] fp     ファイルポインタ
-   * @param [in] tab    インデント
-   */
-  void Write_Pressure(FILE* fp, const unsigned tab);
-
-  /**
-   * @brief DFIファイル:P0を出力する
-   * @param [in] fp     ファイルポインタ
-   * @param [in] tab    インデント
-   */
-  void Write_P0(FILE* fp, const unsigned tab);
-
-  /**
-   * @brief DFIファイル:P0を出力する
-   * @param [in] fp     ファイルポインタ
-   * @param [in] tab    インデント
-   */
-  void Write_DiffPrs(FILE* fp, const unsigned tab);
-
-  /**
-   * @brief DFIファイル:Temperatureを出力する
-   * @param [in] fp     ファイルポインタ
-   * @param [in] tab    インデント
-   */
-  void Write_Temperature(FILE* fp, const unsigned tab);
-
-  /**
-   * @brief DFIファイル:BaseTempを出力する
-   * @param [in] fp     ファイルポインタ
-   * @param [in] tab    インデント
-   */
-  void Write_BaseTemp(FILE* fp, const unsigned tab);
-
-  /**
-   * @brief DFIファイル:DiffTempを出力する
-   * @param [in] fp     ファイルポインタ
-   * @param [in] tab    インデント
-   */
-  void Write_DiffTemp(FILE* fp, const unsigned tab);
-
-  /**
-   * @brief DFIファイル:Stepを出力する
-   * @param [in] fp     ファイルポインタ
-   * @param [in] tab    インデント
-   * @param [in] step   step番号
-   */
-  void Write_Step(FILE* fp, const unsigned tab, const unsigned step);
-
-  /**
-   * @brief DFIファイル:Timeを出力する
-   * @param [in] fp     ファイルポインタ
-   * @param [in] tab    インデント
-   * @param [in] time   time 
-   */
-  template<class T>
-  void Write_Time(FILE* fp, const unsigned tab, T time)
-  {
-    Write_Tab(fp, tab);
-    fprintf(fp, "Time = %e\n",time[0]);
-  };
-
-  /**
-   * @brief DFIファイル:Averageを出力する
-   * @param [in] fp     ファイルポインタ
-   * @param [in] tab    インデント
-   * @param [in] a_step
-   * @param [in] a_time
-   */
-  void Write_Average(FILE* fp, const unsigned tab, const unsigned a_step, const double a_time);
-
-  /**
-   * @brief DFIファイル:成分を出力する
-   * @param [in] fp       ファイルポインタ
-   * @param [in] tab      インデント
-   * @param [in] compname 成分名
-   * @param [in] comp     出力成分 
-   */
-  template<class T>
-  void Write_Comp(FILE* fp, const unsigned tab, const std::string compname,
-                  T comp)
-  {
-    Write_Tab(fp, tab);
-    fprintf(fp, "%s = %e\n",compname.c_str(),comp);
-  }
-  /**
-   * @brief DFIファイル:Domainを出力する
-   * @param [in] fp     ファイルポインタ
-   * @param [in] tab    インデント
-   * @return true:出力成功 false:出力失敗
-   */
-  bool Write_Domain(FILE* fp, const unsigned tab);
-
-  /**
-   * @brief DFIファイル:Domainを出力する
-   * @param [in] fp         ファイルポインタ
-   * @param [in] tab        インデント
-   * @param [in] out_domain 出力Domain
-   * @return true:出力成功 false:出力失敗
-   */
-  static bool Write_Domain(FILE* fp, const unsigned tab, cio_Domain out_domain);
-
-  /**
-   * @brief DFIファイル:MPIを出力する
-   * @param [in] fp     ファイルポインタ
-   * @param [in] tab    インデント
-   * @return true:出力成功 false:出力失敗
-   */
-  bool Write_MPI(FILE* fp, const unsigned tab);
-
-  /**
-   * @brief DFIファイル:MPIを出力する
-   * @param [in] fp      ファイルポインタ
-   * @param [in] tab     インデント
-   * @param [in] out_mpi 出力MPI
-   * @return true:出力成功 false:出力失敗
-   */
-  static bool Write_MPI(FILE* fp, const unsigned tab, cio_MPI out_mpi);
-
-  /**
-   * @brief DFIファイル:Processを出力する
-   * @param [in] fp     ファイルポインタ
-   * @param [in] tab    インデント
-   * @return true:出力成功 false:出力失敗
-   */
-  bool Write_Process_Rank(FILE* fp, const unsigned tab);
-
-  /**
-   * @brief DFIファイル:Processを出力する
-   * @param [in] fp           ファイルポインタ
-   * @param [in] tab          インデント
-   * @param [in] out_RankInfo 出力Process
-   * @return true:出力成功 false:出力失敗
-   */
-  static bool Write_Process_Rank(FILE* fp, const unsigned tabi, vector<cio_Rank> out_RankInfo);
-
-  /**
-   * @brief DFIファイル:Processを出力する
-   * @param [in] fp     ファイルポインタ
-   * @param [in] tab    インデント
-   * @return true:出力成功 false:出力失敗
-   */
-  bool Write_Rank(FILE* fp, const unsigned tab, const int n);
-
-  /**
-   * @brief DFIファイル:Processを出力する
-   * @param [in] fp     ファイルポインタ
-   * @param [in] tab    インデント
-   * @param [in] rank   出力Process
-   * @return true:出力成功 false:出力失敗
-   */
-  static bool Write_Rank(FILE* fp, const unsigned tab, cio_Rank rank);
-
-  /**
-   * @brief DFIファイル:Originを出力する
-   * @param [in] fp     ファイルポインタ
-   * @param [in] tab    インデント
-   */
-  void Write_Origin(FILE* fp, const unsigned tab);
-
-  /**
-   * @brief DFIファイル:Originを出力する
-   * @param [in] fp     ファイルポインタ
-   * @param [in] tab    インデント
-   * @param [in] org[3] 出力Origin
-   */
-  static void Write_Origin(FILE* fp, const unsigned tab, double org[3]);
-
-  /**
-   * @brief DFIファイル:Regionを出力する
-   * @param [in] fp     ファイルポインタ
-   * @param [in] tab    インデント
-   */
-  void Write_Region(FILE* fp, const unsigned tab);
-
-  /**
-   * @brief DFIファイル:Regionを出力する
-   * @param [in] fp        ファイルポインタ
-   * @param [in] tab       インデント
-   * @param [in] Region[3] 出力Region
-   */
-  static void Write_Region(FILE* fp, const unsigned tab, double Region[3]);
-
-  /**
-   * @brief DFIファイル:ノード番号要素を出力する
-   * @param [in] fp      ファイルポインタ
-   * @param [in] tab     インデント
-  */
-  void Write_MyID(FILE* fp, const unsigned tab, const int n);
-
-  /**
-   * @brief DFIファイル:ノード数要素を出力する
-   * @param [in] fp  ファイルポインタ
-   * @param [in] tab インデント
-   */
-  void Write_NodeNum(FILE* fp, const unsigned tab); 
-
-  /**
-   * @brief DFIファイル:ノード数要素を出力する
-   * @param [in] fp           ファイルポインタ
-   * @param [in] tab          インデント
-   * @param [in] NumberOfRank ノード数
-   */
-  static void Write_NodeNum(FILE* fp, const unsigned tab, int NumberOfRank); 
-
-  /**
-   * @brief DFIファイル:全体ボクセルサイズ要素を出力する
-   * @param [in] fp      ファイルポインタ
-   * @param [in] tab     インデント
-   */
-  void Write_WholeSize(FILE* fp, const unsigned tab); 
-
-  /**
-   * @brief DFIファイル:全体ボクセルサイズ要素を出力する
-   * @param [in] fp     　　    ファイルポインタ
-   * @param [in] tab    　　    インデント
-   * @param [in] GlobalVoxel[3] 全体ボクセルサイズ
-   */
-  static void Write_WholeSize(FILE* fp, const unsigned tab, int GlobalVoxel[3]); 
-
-  /**
-   * @brief DFIファイル:I,J,K分割数要素を出力する
-   * @param [in] fp      ファイルポインタ
-   * @param [in] tab     インデント
-   */
-  void Write_NumDivDomain(FILE* fp, const unsigned tab); 
-
-  /**
-   * @brief DFIファイル:I,J,K分割数要素を出力する
-   * @param [in] fp                ファイルポインタ
-   * @param [in] tab               インデント
-   * @param [in] GlobalDivision[3] 分割数
-   */
-  static void Write_NumDivDomain(FILE* fp, const unsigned tab, int GlobalDivision[3]); 
-
-  /**
-   * @brief DFIファイル:ActiveSubdomainを出力する
-   * @param [in] fp      ファイルポインタ
-   * @param [in] tab     インデント
-   */
-  void Write_ActiveSubdomain_fname(FILE* fp, const unsigned tab); 
-
-  /**
-   * @brief DFIファイル:ActiveSubdomainを出力する
-   * @param [in] fp      ファイルポインタ
-   * @param [in] tab     インデント
-   */
-  static void Write_ActiveSubdomain_fname(FILE* fp, const unsigned tab, string ActiveSubdomain); 
-
-  /**
-   * @brief DFIファイル:IDを出力する
-   * @param [in] fp  ファイルポインタ
-   * @param [in] tab インデント
-   * @param [in] n   ランク番号     
-  */
-  void Write_ID(FILE* fp, const unsigned tab, const int n);
-
-  /**
-   * @brief DFIファイル:IDを出力する
-   * @param [in] fp  ファイルポインタ
-   * @param [in] tab インデント
-   * @param [in] n   ランク番号     
-  */
-  static void Write_RankID(FILE* fp, const unsigned tab, const int n);
-
-  /**
-   * @brief DFIファイル:Hostnameを出力する
-   * @param [in] fp  ファイルポインタ
-   * @param [in] tab インデント
-   * @param [in] n   ランク番号
-  */
-  void Write_Hostname(FILE* fp, const unsigned tab, const int n);
-
-  /**
-   * @brief DFIファイル:Hostnameを出力する
-   * @param [in] fp       ファイルポインタ
-   * @param [in] tab      インデント
-   * @param [in] hostname ホスト名
-  */
-  static void Write_Hostname(FILE* fp, const unsigned tab, string hostname);
-
-  /**
-   * @brief DFIファイル:VoxelSizeを出力する
-   * @param [in] fp  ファイルポインタ
-   * @param [in] tab インデント
-   * @param [in] n   ランク番号
-  */
-  void Write_L_VoxelSize(FILE* fp, const unsigned tab, const int n);
-
-  /**
-   * @brief DFIファイル:VoxelSizeを出力する
-   * @param [in] fp           ファイルポインタ
-   * @param [in] tab          インデント
-   * @param [in] VoxelSize[3] VoxelSize
-  */
-  static void Write_L_VoxelSize(FILE* fp, const unsigned tab, int VoxelSize[3]);
-
-  /**
-   * @brief DFIファイル:HeadIndexを出力する
-   * @param [in] fp  ファイルポインタ
-   * @param [in] tab インデント
-   * @param [in] n   ランク番号
-  */
-  void Write_HeadIndex(FILE* fp, const unsigned tab, const int n);
-
-  /**
-   * @brief DFIファイル:HeadIndexを出力する
-   * @param [in] fp　　　　   ファイルポインタ
-   * @param [in] tab          インデント
-   * @param [in] HeadIndex[3] HeadIndex
-  */
-  static void Write_HeadIndex(FILE* fp, const unsigned tab, int HeadIndex[3]);
-
-  /**
-   * @brief DFIファイル:HeadIndexを出力する
-   * @param [in] fp  ファイルポインタ
-   * @param [in] tab インデント
-   * @param [in] n   ランク番号
-  */
-  void Write_TailIndex(FILE* fp, const unsigned tab, const int n);
-
-  /**
-   * @brief DFIファイル:HeadIndexを出力する
-   * @param [in] fp           ファイルポインタ
-   * @param [in] tab          インデント
-   * @param [in] TailIndex[3] TailIndex
-  */
-  static void Write_TailIndex(FILE* fp, const unsigned tab, int TailIndex[3]);
-
-  /**
-   *
-   */
-  void SetUnitLength(bool out_length, string Length, double L0); 
-
-  /**
-   *
-   */
-  void SetUnitVelo(bool out_Velocity, string Velocity, double V0); 
-
-  /**
-   *
-   */
-  void SetUnitPres(bool out_Pressure, string Pressure, double P0, double DiffPrs); 
-
-  /**
-   *
-   */
-  void SetUnitTemp(bool out_Temp, string Temp, double Btemp, double DiffTemp); 
-
-  /**
-   * @brief Debug wreite
-   * @param [in] RankID ランク番号
-   */
-  bool dbwrite(int RankID);
-
-  
-  /** 
-   * @brief バージョン番号文字列を返す
+  /** バージョンを出力する
    */
   static std::string getVersionInfo()
   {
     std::string str(CIO_VERSION_NO);
     return str;
   }
-
-protected:
-  static int MakeDirectorySub( std::string path );
   
 };
+
+//inline 関数
+#include "inline/cio_DFI_inline.h"
+
 
 #endif // _cio_DFI_H_
