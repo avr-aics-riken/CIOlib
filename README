@@ -16,8 +16,8 @@ This CIO library provides following functions for the Cartesian structured data.
   - Restart from previous calculated data (standard)
   - Restart from previous calculated data of the number of different process
   - Restart from previous coarse data with interpolation
-  - Staging helper
-  - File comverter utility
+  - Staging helper : File Rank Mapper
+  - File converter utility
 
 
 INGREDIENTS
