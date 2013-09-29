@@ -29,8 +29,10 @@
 // フィールドデータの読込み(読み込んだデータのポインタを戻り値として
 // 返す）
 
-template<class T, class TimeT, class TimeAvrT> 
-CIO_INLINE T*
+//template<class T, class TimeT, class TimeAvrT> 
+//CIO_INLINE T*
+template<class TimeT, class TimeAvrT> 
+CIO_INLINE void*
 cio_DFI::ReadData(CIO::E_CIO_ERRORCODE &ret,
                   const unsigned step, 
                   const int gc, 
@@ -46,7 +48,6 @@ cio_DFI::ReadData(CIO::E_CIO_ERRORCODE &ret,
 
    int sz[3];
    for(int i=0; i<3; i++) sz[i]=tail[i]-head[i]+1;
-
    cio_Array *data = cio_Array::instanceArray
                      ( DFI_Finfo.DataType
                      , DFI_Finfo.ArrayShape
@@ -57,7 +58,8 @@ cio_DFI::ReadData(CIO::E_CIO_ERRORCODE &ret,
    double d_time = (double)time;
    double d_time_avr = (double)time_avr;
 
-   int ret = ReadData(data, step, gc, Gvoxel, Gdivision, head, tail,
+//   int ret = ReadData(data, step, gc, Gvoxel, Gdivision, head, tail,
+   ret = ReadData(data, step, gc, Gvoxel, Gdivision, head, tail,
                        d_time, mode, step_avr, d_time_avr);
 
    if( ret != CIO::E_CIO_SUCCESS ) {
@@ -65,7 +67,8 @@ cio_DFI::ReadData(CIO::E_CIO_ERRORCODE &ret,
      return NULL;
    }
 
-   T* ptr = (T*)data->getData(true);
+//   T* ptr = (T*)data->getData(true);
+   void* ptr = data->getData(true);
    delete data;
    time = d_time;
    time_avr = d_time_avr;

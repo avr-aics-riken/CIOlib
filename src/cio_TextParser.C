@@ -7,7 +7,7 @@
  */
 
 /**
- * @file   TPControl.C
+ * @file   cio_TextParser.C
  * @brief  TextParser Control class
  * @author kero
  */

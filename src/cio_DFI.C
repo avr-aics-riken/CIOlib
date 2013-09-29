@@ -183,10 +183,13 @@ cio_DFI* cio_DFI::ReadInit(const MPI_Comm comm,
   dfi->m_read_type = dfi->CheckReadType(G_Voxel,dfi->DFI_Domain.GlobalVoxel,
                                          G_Div,dfi->DFI_Domain.GlobalDivision);
   if( dfi->m_read_type == CIO::E_CIO_READTYPE_UNKNOWN ) {
-    printf("\tDimension size error (%d %d %d)\n", 
-           G_Voxel[0], G_Voxel[1], G_Voxel[2]);
+    //printf("\tDimension size error (%d %d %d)\n", 
+    //       G_Voxel[0], G_Voxel[1], G_Voxel[2]);
     ret = CIO::E_CIO_ERROR_INVALID_DIVNUM;
-    return NULL;
+    dfi->m_comm = comm;
+    dfi->m_indexDfiName = DfiName;
+    dfi->m_RankID = RankID;
+    return dfi;
   }
 
 #if 0
@@ -209,6 +212,63 @@ cio_DFI* cio_DFI::ReadInit(const MPI_Comm comm,
 
   return dfi;
 
+}
+
+// #################################################################
+// cio_FileInfoクラスのポインタ取得
+const
+cio_FileInfo* cio_DFI::GetcioFileInfo()
+{
+  return &DFI_Finfo;
+}
+
+// #################################################################
+// cio_FilePathクラスのポインタ取得
+const
+cio_FilePath* cio_DFI::GetcioFilePath()
+{
+  return &DFI_Fpath;
+}
+
+// #################################################################
+// cio_Unitクラスのポインタ取得
+const
+cio_Unit* cio_DFI::GetcioUnit()
+{
+  return &DFI_Unit;
+}
+
+// #################################################################
+// cio_Domainクラスのポインタ取得
+const
+cio_Domain* cio_DFI::GetcioDomain()
+{
+  return &DFI_Domain;
+}
+
+// #################################################################
+// cio_MPIクラスのポインタ取得
+const
+cio_MPI* cio_DFI::GetcioMPI()
+{
+  return &DFI_MPI;
+}
+
+// #################################################################
+// cio_TimeSliceクラスのポインタ取得
+const
+cio_TimeSlice* cio_DFI::GetcioTimeSlice()
+{
+  return &DFI_TimeSlice;
+}
+
+
+// #################################################################
+// cio_Processクラスのポインタ取得
+const
+cio_Process* cio_DFI::GetcioProcess()
+{
+  return &DFI_Process;
 }
 
 // #################################################################
@@ -854,14 +914,14 @@ CIO::E_CIO_ERRORCODE cio_DFI::getMinMax(const unsigned step,
 // #################################################################
 // 読込みランクリストの作成
 CIO::E_CIO_ERRORCODE
-cio_DFI::CheakReadRank(cio_Domain dfi_domain,
+cio_DFI::CheckReadRank(cio_Domain dfi_domain,
                        const int head[3],
                        const int tail[3],
                        CIO::E_CIO_READTYPE readflag,
                        vector<int> &readRankList)
 {
 
-  return DFI_Process.CheakReadRank(dfi_domain,head,tail,readflag,readRankList);
+  return DFI_Process.CheckReadRank(dfi_domain,head,tail,readflag,readRankList);
 
 }
 

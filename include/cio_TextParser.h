@@ -42,7 +42,7 @@ public:
 
   /**
    * @brief TextParser入力ファイルからベクトル値を取得する（整数型）
-   * @param [int] label 取得するベクトルのラベル（絶対パス）
+   * @param [in] label 取得するベクトルのラベル（絶対パス）
    * @param [out] vec   ベクトル格納配列ポインタ
    * @param [in]  nvec  ベクトルサイズ
    */
@@ -123,7 +123,7 @@ public:
   
   /**
    * @brief TextParserLibraryのインスタンス生成
-   * @retrun エラーコード
+   * @return エラーコード
    */
   void getTPinstance();
   

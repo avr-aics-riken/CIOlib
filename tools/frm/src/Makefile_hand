@@ -1,0 +1,20 @@
+###################################################################
+#
+# FFV : Frontflow / violet Cartesian
+#
+# Copyright (c) 2012-2013  All right reserved.
+#
+# Institute of Industrial Science, University of Tokyo, Japan. 
+#
+###################################################################
+
+
+# DO NOT DELETE
+
+main.o: ../include/Staging_Utility.h
+main.o: ../include/ActiveSubDomain.h ../include/Staging_Define.h
+main.o: ../include/frm_Version.h ../include/frm_EndianUtil.h
+Staging.o: ../include/Staging_Utility.h
+Staging.o: ../include/ActiveSubDomain.h ../include/Staging_Define.h
+Staging.o: ../include/frm_Version.h ../include/frm_EndianUtil.h
+ActiveSubDomain.o: ../include/ActiveSubDomain.h

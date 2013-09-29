@@ -28,7 +28,8 @@ public:
 
   /**
    * @brief コンストラクタ
-   * @param [in] _NumberOfRank プロセス数
+   * @param [in] _NumberOfRank  プロセス数
+   * @param [in] _NumberOfGroup グループ数
    */ 
   cio_MPI(const int _NumberOfRank, int _NumberOfGroup=0);
 

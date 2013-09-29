@@ -393,6 +393,8 @@ CIO_MEMFUN(int)
 cio_TypeArray<T>::copyArray( int _sta[3], int _end[3], cio_Array *dstptr )
 {
   cio_TypeArray<T> *src = this;
+
+  //mod.s 
   cio_TypeArray<T> *dst = dynamic_cast<cio_TypeArray<T>*>(dstptr);
   if( !dst )
   {

@@ -13,13 +13,13 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.57])
-AC_INIT([CIOlib],[1.3.5],[keno@riken.jp],[CIOlib])
+AC_INIT([CIOlib],[1.3.6],[keno@riken.jp],[CIOlib])
 AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR([src/cio_DFI.C])
 AM_CONFIG_HEADER([config.h])
 
 # revision No.
-CIO_REVISION="20130802_2300"
+CIO_REVISION="20130929_1300"
 AC_SUBST(CIO_REVISION)
 
 #
@@ -42,33 +42,44 @@ AC_SUBST(MPI_CFLAGS)
 AC_SUBST(MPI_LDFLAGS)
 AC_SUBST(MPI_LIBS)
 
+# 
+# MPI library
+#
+AC_ARG_WITH(MPI, [AC_HELP_STRING([--without-MPI],[do not use MPI library])], , with_MPI=yes)
+if test "$with_MPI" = "no" ; then
+  CXXFLAGS=-D_CIO_WITHOUT_MPI_
+  enable_mpi="without"
+else
 
-# mpich
-AC_ARG_WITH(mpich, [AC_HELP_STRING([--with-mpich=dir],[Specify MPICH install directory])], , with_mpich=none)
-if test "$with_mpich" != "none" ; then
-  MPI_DIR=$with_mpich;
-  MPI_CFLAGS=-I$MPI_DIR/include
-  MPI_LDFLAGS=-L$MPI_DIR/lib
-  MPI_LIBS=-lmpich
-  enable_mpi="mpich"
-fi
-
-
-# openmpi
-if test "$with_mpich" = "none" ; then
-  AC_ARG_WITH( ompi, [AC_HELP_STRING([--with-ompi=dir],[Specify OpenMPI install directory])], , with_ompi=none)
-  if test "$with_ompi" != "none" ; then
-    MPI_DIR=$with_ompi;
+  # mpich
+  AC_ARG_WITH(mpich, [AC_HELP_STRING([--with-mpich=dir],[Specify MPICH install directory])], , with_mpich=none)
+  if test "$with_mpich" != "none" ; then
+    MPI_DIR=$with_mpich;
     MPI_CFLAGS=-I$MPI_DIR/include
     MPI_LDFLAGS=-L$MPI_DIR/lib
-    MPI_LIBS=-lmpi
-    enable_mpi="ompi"
+    MPI_LIBS=-lmpich
+    enable_mpi="mpich"
+  fi
+
+
+  # openmpi
+  if test "$with_mpich" = "none" ; then
+    AC_ARG_WITH( ompi, [AC_HELP_STRING([--with-ompi=dir],[Specify OpenMPI install directory])], , with_ompi=none)
+    if test "$with_ompi" != "none" ; then
+      MPI_DIR=$with_ompi;
+      MPI_CFLAGS=-I$MPI_DIR/include
+      MPI_LDFLAGS=-L$MPI_DIR/lib
+      MPI_LIBS=-lmpi
+      enable_mpi="ompi"
+    fi
   fi
 fi
 
-if test "$enable_mpi" = "none" ; then
-  echo "  Warning: Neither MPICH nor OpenMPI library is not specified."
-  echo "           If compilation error occurs about MPI, specify --with-mpich or --with-ompi option."
+if test "$enable_mpi" != "without" ; then
+  if test "$enable_mpi" = "none" ; then
+    echo "  Warning: Neither MPICH nor OpenMPI library is not specified."
+    echo "           If compilation error occurs about MPI, specify --with-mpich or --with-ompi option."
+  fi
 fi
 
 
@@ -111,7 +122,7 @@ AC_SUBST(CIO_CXX)
 # MAKE_SUB_DIRS
 #
 AC_SUBST(MAKE_SUB_DIRS)
-MAKE_SUB_DIRS="src doc"
+MAKE_SUB_DIRS="src doc tools/frm/src"
 
 
 #
@@ -125,6 +136,7 @@ AC_PROG_RANLIB
 #
 # Checks for header files.
 #
+AC_HEADER_STDC
 AC_CHECK_HEADERS([stdlib.h unistd.h])
 
 
@@ -144,8 +156,9 @@ AC_CHECK_FUNCS([gethostname memset mkdir strcasecmp strerror])
 AC_CONFIG_FILES([Makefile \
                  src/Makefile \
                  doc/Makefile \
+                 tools/frm/src/Makefile \
                  cio-config \
-                 include/cio_Version.h
+                 include/cio_Version.h \
                 ])
 
 AC_OUTPUT

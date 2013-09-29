@@ -15,8 +15,11 @@
  * @author kero
  */
 
-
-#include "mpi.h"
+#ifdef _CIO_WITHOUT_MPI_
+ #include "mpi_stubs.h"
+#else
+ #include "mpi.h"
+#endif
 
 
 #define D_CIO_EXT_SPH "sph"
@@ -280,7 +283,7 @@ namespace CIO
 
 /** DFIファイルのTab出力
  *  @param[in] _FP  ファイルポインタ
- *  @param[in] _TAB インデント数
+ *  @param[in] _NTAB インデント数
  */
 #define _CIO_WRITE_TAB(_FP,_NTAB) {\
  for(int _NTCNT=0; _NTCNT<_NTAB; _NTCNT++) fprintf(_FP,_CIO_TAB_STR); \

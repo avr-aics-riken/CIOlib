@@ -65,7 +65,7 @@ protected:
    * @param[in]  head        dfiのHeadIndex
    * @param[in]  tail        dfiのTailIndex
    * @param[in]  gc          dfiのガイドセル数
-   * @param[out] voxsize[3]  voxsize
+   * @param[out] voxsize     voxsize
    * @param[out] time        時刻
    * @return error code
    */
@@ -81,12 +81,12 @@ protected:
 
   /**
    * @brief フィールドデータファイルのデータレコード読込み
-   * @param[in]  fp         ファイルポインタ
-   * @param[in]  matchEtype true:Endian一致
-   * @param[in]  buf        読込み用バッファ
-   * @param[in]  head       読込みバッファHeadIndex
-   * @param[in]  nz         z方向のボクセルサイズ（実セル＋ガイドセル＊２）
-   * @param[out] src        読み込んだデータを格納した配列のポインタ
+   * @param[in]  fp          ファイルポインタ
+   * @param[in]  matchEndian true:Endian一致
+   * @param[in]  buf         読込み用バッファ
+   * @param[in]  head        読込みバッファHeadIndex
+   * @param[in]  nz          z方向のボクセルサイズ（実セル＋ガイドセル＊２）
+   * @param[out] src         読み込んだデータを格納した配列のポインタ
    * @return error code
    */
   CIO::E_CIO_ERRORCODE
@@ -99,11 +99,11 @@ protected:
 
   /**
    * @brief bovファイルのAverageデータレコードの読込み
-   * @param[in]  fp         ファイルポインタ
-   * @param[in]  matchEtype true:Endian一致
-   * @param[in]  step       読込みstep番号
-   * @param[out] avr_step   平均ステップ
-   * @param[out] avr_time   平均タイム
+   * @param[in]  fp          ファイルポインタ
+   * @param[in]  matchEndian true:Endian一致
+   * @param[in]  step        読込みstep番号
+   * @param[out] avr_step    平均ステップ
+   * @param[out] avr_time    平均タイム
    * @return errorcode
    */
   CIO::E_CIO_ERRORCODE
@@ -129,8 +129,9 @@ protected:
 
   /**
    * @brief bovデータ出力 
-   * @param[in]  fp ファイルポインタ
-   * @param[in]  val データポインタ
+   * @param[in]  fp     ファイルポインタ
+   * @param[in]  val    データポインタ
+   * @param[in]  gc     仮想セル数  
    * @param[in]  RankID ランク番号
    * @return error code 
    */
@@ -142,8 +143,9 @@ protected:
 
   /**
    * @brief Averageレコードの出力
-   * @param[in] step_avr     平均ステップ番号
-   * @param[in] time_avr     平均時刻
+   * @param[in] fp       ファイルポインタ
+   * @param[in] step_avr 平均ステップ番号
+   * @param[in] time_avr 平均時刻
    * @return error code
    */
   CIO::E_CIO_ERRORCODE

@@ -53,7 +53,7 @@ cio_DFI::ReadData(cio_Array *dst,
   if( readflag == CIO::E_CIO_SAMEDIV_REFINEMENT || readflag == CIO::E_CIO_DIFFDIV_REFINEMENT ) isSame = false; 
 
   /**読込みランクリストの生成 */
-  ret = DFI_Process.CheakReadRank(DFI_Domain, head, tail, readflag, m_readRankList);
+  ret = DFI_Process.CheckReadRank(DFI_Domain, head, tail, readflag, m_readRankList);
   if( ret != CIO::E_CIO_SUCCESS ) {
     printf("error code : %d\n",(int)ret);
     return ret;
@@ -85,6 +85,7 @@ cio_DFI::ReadData(cio_Array *dst,
     /** 読込み方法の取得 */
 
     /** フィールドデータの読込み */
+
     cio_Array* src = ReadFieldData(fname, step, time, read_sta, read_end,
                                    DFI_Process.RankList[n].HeadIndex, 
                                    DFI_Process.RankList[n].TailIndex, 
@@ -98,6 +99,7 @@ cio_DFI::ReadData(cio_Array *dst,
     if( m_RankID == 0 ) {
       printf("\t[%s] has read :\tstep=%d  time=%e ]\n",fname.c_str(), step, time);
     }
+
 
     /** src にHead/Tailをセット */
     src->setHeadIndex(read_sta);
@@ -135,6 +137,7 @@ cio_Array* cio_DFI::ReadFieldData(std::string fname,
 {
 
   ret = CIO::E_CIO_SUCCESS;
+
 
   if( !fname.c_str() || !DFI_Finfo.Component ) {
     ret = CIO::E_CIO_ERROR_READ_FIELDDATA_FILE;
@@ -206,6 +209,7 @@ cio_Array* cio_DFI::ReadFieldData(std::string fname,
                    , DFI_Finfo.Component );
   src->setHeadIndex( headS );
 
+
   //data 読込み
   //if( !read_Datarecord(fp, matchEndian, buf, headB, voxsize[2], src ) ) {
   ret = read_Datarecord(fp, matchEndian, buf, headB, voxsize[2], src );
@@ -224,6 +228,8 @@ cio_Array* cio_DFI::ReadFieldData(std::string fname,
     if( ret !=CIO::E_CIO_SUCCESS )
     {
       ret = CIO::E_CIO_ERROR_READ_FIELD_AVERAGED_RECORD;
+      delete buf;
+      return src;
     }
   }
 

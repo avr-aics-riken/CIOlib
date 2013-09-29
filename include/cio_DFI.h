@@ -25,7 +25,6 @@
 #include "cio_Define.h"
 #include "cio_Version.h"
 
-#include "cio_Interval_Mngr.h"
 
 #include "cio_PathUtil.h"
 #include "cio_TextParser.h"
@@ -40,6 +39,8 @@
 #include "cio_Domain.h"
 #include "cio_MPI.h"
 #include "cio_Process.h"
+
+#include "cio_Interval_Mngr.h"
 
 /** CIO main class */
 class cio_DFI {
@@ -75,10 +76,11 @@ public:
 
   /**
    * @brief read インスタンス
-   * @param [in] comm    MPIコミュニケータ
-   * @param [in] dfifile DFIファイル名
-   * @param [in] G_Voxel 計算空間全体のボクセルサイズ
-   * @param [in] G_Div   計算空間の領域分割数
+   * @param [in]  comm    MPIコミュニケータ
+   * @param [in]  dfifile DFIファイル名
+   * @param [in]  G_Voxel 計算空間全体のボクセルサイズ
+   * @param [in]  G_Div   計算空間の領域分割数
+   * @param [out] ret     終了コード
    * @return インスタンスされたクラスのポインタ
    */
   static cio_DFI*
@@ -89,6 +91,48 @@ public:
            CIO::E_CIO_ERRORCODE &ret); 
 
   /**
+   * @brief cioFileInfoクラスのポインタを取得
+   * @return cio_FileInfoクラスポインタ
+   */
+  const cio_FileInfo* GetcioFileInfo();
+
+  /**
+   * @brief cio_FilePathクラスのポインタを取得
+   * @return cio_FilePathクラスポインタ
+   */
+  const cio_FilePath* GetcioFilePath();  
+
+  /**
+   * @brief cio_Unitクラスのポインタを取得
+   * @return cio_Unitクラスポインタ
+   */
+  const cio_Unit* GetcioUnit(); 
+
+  /**
+   * @brief cio_Domainクラスのポインタ取得
+   * @return cio_Domainクラスポインタ
+   */
+  const cio_Domain* GetcioDomain(); 
+
+  /**
+   * @brief cio_MPIクラスのポインタ取得
+   * @return cio_MPIクラスポインタ 
+   */
+  const cio_MPI* GetcioMPI();
+
+  /**
+   * @brief cio_TimeSliceクラスのポインタ取得
+   * @return cio_TimeSliceクラスポインタ
+   */
+  const cio_TimeSlice* GetcioTimeSlice(); 
+
+  /**
+   * @brief cio_Processクラスのポインタ取得
+   * @return cio_Processクラスポインタ
+   */
+  const cio_Process* GetcioProcess(); 
+
+  /**
    * @brief 出力DFIファイル名を作成する
    * @param [in] prefix ファイル接頭文字
    * @return DFIファイル名
@@ -97,25 +141,35 @@ public:
   Generate_DFI_Name(const std::string prefix);
 
   /**
+   * @brief フィールドデータ（SPH,BOV)ファイル名の作成
+   * @param [in] RankID ランク番号
+   * @param [in] step   読込みステップ番号
+   * @param [in] mio    並列判定フラグ（逐次or並列の判定用）
+   * @return 生成されたファイル名　　　　　　　
+   */
+  std::string Generate_FieldFileName(int RankID,
+                                int step, 
+                                const bool mio);
+  /**
    * @brief write インスタンス float型
-   * @param [in] comm          MPIコミュニケータ
-   * @param [in] DfiName       DFIファイル名
-   * @param [in] Path          フィールドデータのディレクトリ
-   * @param [in] prefix        ベースファイル名
-   * @param [in] format        ファイルフォーマット
-   * @param [in] GCell         出力仮想セル数　　　
-   * @param [in] DataType      データタイプ　　　　
-   * @param [in] ArrayShape    配列形状　　　　　　
-   * @param [in] nComp         成分数　　　　　　　
-   * @param [in] proc_fname    proc.dfiファイル名
-   * @param [in] G_size[3]     グローバルボクセルサイズ　
-   * @param [in] pitch[3]      ピッチ　　　　　　　　　　
-   * @param [in] G_origin[3]   原点座標値　　　　　　　　
-   * @param [in] division[3]   領域分割数　　　　　　　　
-   * @param [in] head[3]       計算領域の開始位置　　　　
-   * @param [in] tail[3]       計算領域の終了位置　　　　
-   * @param [in] hostname      ホスト名
-   * @param [in] TSliceOnOff   TimeSliceフラグ
+   * @param [in] comm        MPIコミュニケータ
+   * @param [in] DfiName     DFIファイル名
+   * @param [in] Path        フィールドデータのディレクトリ
+   * @param [in] prefix      ベースファイル名
+   * @param [in] format      ファイルフォーマット
+   * @param [in] GCell       出力仮想セル数　　　
+   * @param [in] DataType    データタイプ　　　　
+   * @param [in] ArrayShape  配列形状　　　　　　
+   * @param [in] nComp       成分数　　　　　　　
+   * @param [in] proc_fname  proc.dfiファイル名
+   * @param [in] G_size      グローバルボクセルサイズ　
+   * @param [in] pitch       ピッチ　　　　　　　　　　
+   * @param [in] G_origin    原点座標値　　　　　　　　
+   * @param [in] division    領域分割数　　　　　　　　
+   * @param [in] head        計算領域の開始位置　　　　
+   * @param [in] tail        計算領域の終了位置　　　　
+   * @param [in] hostname    ホスト名
+   * @param [in] TSliceOnOff TimeSliceフラグ
    * @return インスタンスされたクラスのポインタ
    */
   static cio_DFI*
@@ -140,24 +194,24 @@ public:
 
   /**
    * @brief write インスタンス double型
-   * @param [in] comm          MPIコミュニケータ
-   * @param [in] DfiName       DFIファイル名
-   * @param [in] Path          フィールドデータのディレクトリ
-   * @param [in] prefix        ベースファイル名
-   * @param [in] format        ファイルフォーマット
-   * @param [in] GCell         出力仮想セル数　　　
-   * @param [in] DataType      データタイプ　　　　
-   * @param [in] ArrayShape    配列形状　　　　　　
-   * @param [in] nComp         成分数　　　　　　　
-   * @param [in] proc_fname    proc.dfiファイル名
-   * @param [in] G_size[3]     グローバルボクセルサイズ　
-   * @param [in] pitch[3]      ピッチ　　　　　　　　　　
-   * @param [in] G_origin[3]   原点座標値　　　　　　　　
-   * @param [in] division[3]   領域分割数　　　　　　　　
-   * @param [in] head[3]       計算領域の開始位置　　　　
-   * @param [in] tail[3]       計算領域の終了位置　　　　
-   * @param [in] hostname      ホスト名　　　　　　　　　
-   * @param [in] TSliceOnOff   TimeSliceフラグ
+   * @param [in] comm        MPIコミュニケータ
+   * @param [in] DfiName     DFIファイル名
+   * @param [in] Path        フィールドデータのディレクトリ
+   * @param [in] prefix      ベースファイル名
+   * @param [in] format      ファイルフォーマット
+   * @param [in] GCell       出力仮想セル数　　　
+   * @param [in] DataType    データタイプ　　　　
+   * @param [in] ArrayShape  配列形状　　　　　　
+   * @param [in] nComp       成分数　　　　　　　
+   * @param [in] proc_fname  proc.dfiファイル名
+   * @param [in] G_size      グローバルボクセルサイズ　
+   * @param [in] pitch       ピッチ　　　　　　　　　　
+   * @param [in] G_origin    原点座標値　　　　　　　　
+   * @param [in] division    領域分割数　　　　　　　　
+   * @param [in] head        計算領域の開始位置　　　　
+   * @param [in] tail        計算領域の終了位置　　　　
+   * @param [in] hostname    ホスト名　　　　　　　　　
+   * @param [in] TSliceOnOff TimeSliceフラグ
    * @return インスタンスされたクラスのポインタ
    */
   static cio_DFI* 
@@ -183,21 +237,22 @@ public:
   /**
    * @brief read field data record (template function)
    * @details 読み込んだデータのポインタを戻り値として返す
-   * @param [in] step          入力ステップ番号
-   * @param [in] gc            仮想セル数　　　
-   * @param [in] Gvoxel[3]     グローバルボクセルサイズ　
-   * @param [in] Gdivision[3]  領域分割数　　　　　　　　
-   * @param [in] head[3]       計算領域の開始位置　　　　
-   * @param [in] tail[3]       計算領域の終了位置　　　　
-   * @param [out] time         読み込んだ時間
-   * @param [in]  mode         平均ステップ＆時間読込みフラグ　false : 読込み
+   * @param [out] ret       終了コード 1:正常、1以外：エラー  
+   * @param [in] step       入力ステップ番号
+   * @param [in] gc         仮想セル数　　　
+   * @param [in] Gvoxel     グローバルボクセルサイズ　
+   * @param [in] Gdivision  領域分割数　　　　　　　　
+   * @param [in] head       計算領域の開始位置　　　　
+   * @param [in] tail       計算領域の終了位置　　　　
+   * @param [out] time      読み込んだ時間
+   * @param [in]  mode      平均ステップ＆時間読込みフラグ　false : 読込み
    *                                                           true  : 読み込まない
-   * @param [out] step_avr     平均ステップ
-   * @param [out] time_avr     平均時間
-   * @param [out] errcode      終了コード 1:正常、1以外：エラー  
+   * @param [out] step_avr  平均ステップ
+   * @param [out] time_avr  平均時間
    * @return 読みんだフィールドデータのポンタ
    */
-  template<class T, class TimeT, class TimeAvrT> T*
+//  template<class T, class TimeT, class TimeAvrT> T*
+  template<class TimeT, class TimeAvrT> void*
   ReadData(CIO::E_CIO_ERRORCODE &ret,
            const unsigned step, 
            const int gc, 
@@ -212,15 +267,15 @@ public:
   /**
    * @brief read field data record (template function)
    * @details 引数で渡された配列ポインタにデータを読込む
-   * @param [out] val           読み込んだデータポインタ　
-   * @param [in]  step          入力ステップ番号
-   * @param [in]  gc            仮想セル数　　　
-   * @param [in]  Gvoxel[3]     グローバルボクセルサイズ　
-   * @param [in]  Gdivision[3]  領域分割数　　　　　　　　
-   * @param [in]  head[3]       計算領域の開始位置　　　　
-   * @param [in]  tail[3]       計算領域の終了位置　　　　
-   * @param [out] time          読み込んだ時間
-   * @param [in]  mode          平均ステップ＆時間読込みフラグ　false : 読込み
+   * @param [out] val        読み込んだデータポインタ　
+   * @param [in]  step       入力ステップ番号
+   * @param [in]  gc         仮想セル数　　　
+   * @param [in]  Gvoxel     グローバルボクセルサイズ　
+   * @param [in]  Gdivision  領域分割数　　　　　　　　
+   * @param [in]  head       計算領域の開始位置　　　　
+   * @param [in]  tail       計算領域の終了位置　　　　
+   * @param [out] time       読み込んだ時間
+   * @param [in]  mode       平均ステップ＆時間読込みフラグ　false : 読込み
    *                                                           true  : 読み込まない
    * @param [out] step_avr      平均ステップ
    * @param [out] time_avr      平均時間
@@ -242,16 +297,16 @@ public:
 
   /**
    * @brief read field data record 
-   * @detailes template ReadData関数で型に応じた配列を確保した後、呼び出される
-   * @param [out] val           読み込み先の配列をポインタで渡す　
-   * @param [in]  step          読み込むステップ番号
-   * @param [in]  gc            仮想セル数　　　
-   * @param [in]  Gvoxel[3]     グローバルボクセルサイズ　
-   * @param [in]  Gdivision[3]  領域分割数　　　　　　　　
-   * @param [in]  head[3]       計算領域の開始位置　　　　
-   * @param [in]  tail[3]       計算領域の終了位置　　　　
-   * @param [out] time          読み込んだ時間
-   * @param [in]  mode          平均ステップ＆時間読込みフラグ　false : 読込み
+   * @details template ReadData関数で型に応じた配列を確保した後、呼び出される
+   * @param [out] val        読み込み先の配列をポインタで渡す　
+   * @param [in]  step       読み込むステップ番号
+   * @param [in]  gc         仮想セル数　　　
+   * @param [in]  Gvoxel     グローバルボクセルサイズ　
+   * @param [in]  Gdivision  領域分割数　　　　　　　　
+   * @param [in]  head       計算領域の開始位置　　　　
+   * @param [in]  tail       計算領域の終了位置　　　　
+   * @param [out] time       読み込んだ時間
+   * @param [in]  mode       平均ステップ＆時間読込みフラグ　false : 読込み
    *                                                           true  : 読み込まない
    * @param [out] step_avr      平均ステップ
    * @param [out] time_avr      平均時間
@@ -276,8 +331,7 @@ public:
    *                          minmax[1]=max
    *          ベクトルのとき、minmax[0]   =成分1のminX
    *                          minmax[1]   =成分1のmaxX
-   *                               . 
-   *                               .
+   *                               ...
    *                          minmax[2n-2]=成分nのminX
    *                          minmax[2n-1]=成分nのmaxX
    *                          minmax[2n  ]=合成値のmin
@@ -290,8 +344,7 @@ public:
    * @param [in] val      出力データポインタ
    * @param [in] minmax   フィールデータのMinMax
    * @param [in] force    強制出力指示
-   * @param [in] avr_mode 平均ステップ＆時間出力　false : 出力
-   *                                              true  : 出力しない
+   * @param [in] avr_mode 平均ステップ＆時間出力　false : 出力 true  : 出力しない
    * @param [in] step_avr 平均ステップ
    * @param [in] time_avr 平均時間
    */ 
@@ -314,7 +367,7 @@ public:
    * @details template WriteData関数で方に応じた配列を確保した後、呼び出される 
    * @param [in] step     出力ステップ番号
    * @param [in] gc       仮想セル数　　　
-   * @param [in] tiem     出力時刻　　　　
+   * @param [in] time     出力時刻　　　　
    * @param [in] val      出力データポインタ
    * @param [in] minmax   フィールデータのMinMax
    * @param [in] avr_mode 平均ステップ＆時間出力　false : 出力
@@ -338,7 +391,7 @@ public:
    * @brief proc DFIファイル出力コントロール (float)
    * @param [in] comm      MPIコミュニケータ
    * @param [in] out_host  ホスト名出力フラグ　　　　
-   * @param [in] org[3]    原点座標値
+   * @param [in] org       原点座標値
    * @details orgがNULLのときは、WriteInitで渡した、G_originを出力
    * @return true:出力成功 false:出力失敗
    */
@@ -351,7 +404,7 @@ public:
    * @brief proc DFIファイル出力コントロール (double 版)
    * @param [in] comm          MPIコミュニケータ
    * @param [in] out_host      ホスト名出力フラグ　　　　
-   * @param [in] org[3]        原点座標値
+   * @param [in] org           原点座標値
    * @details orgがNULLのときは、WriteInitで渡した、G_originを出力
    * @return true:出力成功 false:出力失敗
    * @return true:出力成功 false:出力失敗
@@ -445,7 +498,7 @@ public:
  
   /**
    * @brief TimeSlice OnOff フラグをセットする
-   * @param [in] onoff
+   * @param [in] ONOFF
    */
   void 
   SetTimeSliceFlag(const CIO::E_CIO_ONOFF ONOFF); 
@@ -459,7 +512,7 @@ public:
 
   /**
    * @brief FileInfoの成分名を取得する
-   * @param [i] pcomp 成分位置 0:u, 1:v, 2:w
+   * @param [in] pcomp 成分位置 0:u, 1:v, 2:w
    * @return 成分名
    */
   std::string getComponentVariable(int pcomp);
@@ -501,7 +554,7 @@ public:
    * @return error code
    */
   CIO::E_CIO_ERRORCODE
-  CheakReadRank(cio_Domain dfi_domain,
+  CheckReadRank(cio_Domain dfi_domain,
                 const int head[3],
                 const int tail[3],
                 CIO::E_CIO_READTYPE readflag,
@@ -574,18 +627,18 @@ public:
   void normalizeDelteT(const double scale);
 
 
-protected :
 
   /**
    * @brief read field data record(sph or bov)
    * @param [in]  fname    FieldData ファイル名
+   * @param [in]  step     読込みステップ番号
+   * @param [out] time     読み込んだ時間
    * @param [in]  sta      読込みスタート位置
    * @param [in]  end      読込みエンド位置
    * @param [in]  DFI_head dfiのHeadIndex
    * @param [in]  DFI_tail dfiのTailIndex
-   * @param [out] time     読み込んだ時間
-   * @param [in]  mode     平均ステップ＆時間読込みフラグ　false : 読込み
-   *                                                       true  : 読み込まない
+   * @param [in]  avr_mode 平均ステップ＆時間読込みフラグ　false : 読込み
+   * @details　                                             true  : 読み込まない
    * @param [out] avr_step 平均ステップ
    * @param [out] avr_time 平均時間
    * @param [out] ret      終了コード
@@ -607,14 +660,14 @@ protected :
 
   /**
    * @brief フィールドデータファイルのヘッダーレコード読込み
-   * @param[in]  fp         ファイルポインタ
-   * @param[in]  matchEtype true:Endian一致
-   * @param[in]  step       ステップ番号
-   * @param[in]  head       dfiのHeadIndex
-   * @param[in]  tail       dfiのTailIndex
-   * @param[in]  gc         dfiのガイドセル数
-   * @param[out] voxsize[3] voxsize
-   * @param[out] time       時刻
+   * @param[in]  fp          ファイルポインタ
+   * @param[in]  matchEndian true:Endian一致
+   * @param[in]  step        ステップ番号
+   * @param[in]  head        dfiのHeadIndex
+   * @param[in]  tail        dfiのTailIndex
+   * @param[in]  gc          dfiのガイドセル数
+   * @param[out] voxsize     voxsize
+   * @param[out] time        時刻
    * @return true:出力成功 false:出力失敗
    */
   virtual CIO::E_CIO_ERRORCODE 
@@ -629,12 +682,12 @@ protected :
 
   /**
    * @brief フィールドデータファイルのデータレコード読込み
-   * @param[in]  fp         ファイルポインタ
-   * @param[in]  matchEtype true:Endian一致
-   * @param[in]  buf        読込み用バッファ
-   * @param[in]  head       読込みバッファHeadIndex
-   * @param[in]  nz         z方向のボクセルサイズ（実セル＋ガイドセル＊２）
-   * @param[out] src        読み込んだデータを格納した配列のポインタ
+   * @param[in]  fp          ファイルポインタ
+   * @param[in]  matchEndian true:Endian一致
+   * @param[in]  buf         読込み用バッファ
+   * @param[in]  head        読込みバッファHeadIndex
+   * @param[in]  nz          z方向のボクセルサイズ（実セル＋ガイドセル＊２）
+   * @param[out] src         読み込んだデータを格納した配列のポインタ
    */
   virtual CIO::E_CIO_ERRORCODE 
   read_Datarecord(FILE* fp,
@@ -646,11 +699,11 @@ protected :
 
   /**
    * @brief sphファイルのAverageデータレコードの読込み
-   * @param[in]  fp         ファイルポインタ
-   * @param[in]  matchEtype true:Endian一致
-   * @param[in]  step       読込みstep番号
-   * @param[out] avr_step   平均ステップ
-   * @param[out] avr_time   平均タイム
+   * @param[in]  fp          ファイルポインタ
+   * @param[in]  matchEndian true:Endian一致
+   * @param[in]  step        読込みstep番号
+   * @param[out] avr_step    平均ステップ
+   * @param[out] avr_time    平均タイム
    */
   virtual CIO::E_CIO_ERRORCODE
   read_averaged(FILE* fp,
@@ -659,14 +712,14 @@ protected :
                 unsigned &avr_step,
                 double &avr_time)=0;   
 
+protected :
   /**
    * @brief write field data record (double)
    * @param [in] fname    出力フィールドファイル名
    * @param [in] step     出力ステップ番号
-   * @param [in] tiem     出力時刻　　　　
+   * @param [in] time     出力時刻　　　　
    * @param [in] val      出力データポインタ
-   * @param [in] mode     平均ステップ＆時間出力　false : 出力
-   *                                              true  : 出力しない
+   * @param [in] mode     平均ステップ＆時間出力　false : 出力 true  : 出力しない
    * @param [in] step_avr 平均ステップ
    * @param [in] time_avr 平均時間
    * @return error code
@@ -711,8 +764,9 @@ protected :
 
   /**
    * @brief Averageレコードの出力
-   * @param[in] step_avr     平均ステップ番号
-   * @param[in] time_avr     平均時刻
+   * @param[in] fp       ファイルポインタ
+   * @param[in] step_avr 平均ステップ番号
+   * @param[in] time_avr 平均時刻
    * @return true:出力成功 false:出力失敗
    */
   virtual CIO::E_CIO_ERRORCODE
@@ -731,8 +785,8 @@ protected :
 
   /**
    * @brief Create Process 
-   * @param [in] comm          MPIコミュニケータ
-   * @param [out]G_Process     Process class　　　
+   * @param [in] comm           MPIコミュニケータ
+   * @param [out] G_Process     Process class　　　
    */
   void 
   cio_Create_dfiProcessInfo(const MPI_Comm comm,
@@ -756,25 +810,25 @@ protected :
 
   /**
    * @brief フィールドデータの読込み範囲を求める
-   * @param [in] isSame      粗密フラグ true:密、false:粗
-   * @param [in] head[3]     計算領域の開始位置(自)　
-   * @param [in] tail[3]     計算領域の終了位置(自)　
-   * @param [in] gc          仮想セル数(自)　
-   * @param [in] DEF_head[3] 計算領域の開始位置(DFI)　　
-   * @param [in] DEF_tail[3] 計算領域の終了位置(DFI)　　
-   * @param [in] DFI_gc      仮想セル数(DFI)　
-   * @param [in] readflag    読込み方法
-   * @param [out]copy_sta[3] コピー開始位置
-   * @param [out]copy_end[3] コピー終了位置　　
-   * @param [out]read_sta[3] 読込み開始位置
-   * @param [out]read_end[3] 読込み終了位置　　
+   * @param [in] isSame   粗密フラグ true:密、false:粗
+   * @param [in] head     計算領域の開始位置(自)　
+   * @param [in] tail     計算領域の終了位置(自)　
+   * @param [in] gc       仮想セル数(自)　
+   * @param [in] DFI_head 計算領域の開始位置(DFI)　　
+   * @param [in] DFI_tail 計算領域の終了位置(DFI)　　
+   * @param [in] DFI_gc   仮想セル数(DFI)　
+   * @param [in] readflag 読込み方法
+   * @param [out] copy_sta コピー開始位置
+   * @param [out] copy_end コピー終了位置　　
+   * @param [out] read_sta 読込み開始位置
+   * @param [out] read_end 読込み終了位置　　
    */
   void 
   CreateReadStartEnd(bool isSame,
                      const int head[3], 
                      const int tail[3], 
                      const int gc, 
-                     const int DEF_head[3], 
+                     const int DFI_head[3], 
                      const int DFI_tail[3],
                      const int DFI_gc, 
                      const CIO::E_CIO_READTYPE readflag, 
@@ -791,16 +845,7 @@ protected :
   CIO::E_CIO_ERRORCODE
   WriteIndexDfiFile(const std::string dfi_name);
 
-  /**
-   * @brief フィールドデータ（SPH,BOV)ファイル名の作成
-   * @param [in] RankID ランク番号
-   * @param [in] step   読込みステップ番号
-   * @param [in] mio    並列判定フラグ（逐次or並列の判定用）
-   * @return 生成されたファイル名　　　　　　　
-   */
-  std::string Generate_FieldFileName(int RankID,
-                                int step, 
-                                const bool mio);
+public:
 
   /**
    * @brief ディレクトリパスの作成(MakeDirectorySubを呼出して作成)
@@ -817,7 +862,7 @@ protected :
 
   /**
    * @brief ディレクトリパスの作成(system関数mkdirで作成)
-   * @param
+   * @param [in] path パス
    * @return error code　　　　　　　
    */ 
   static int MakeDirectorySub( std::string path );
@@ -827,8 +872,6 @@ protected :
    * @return パス名
    */
   std::string Generate_Directory_Path(); 
-
-public:
 
   /** バージョンを出力する
    */

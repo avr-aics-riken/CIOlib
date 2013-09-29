@@ -7,7 +7,7 @@
  */
 
 /** 
- * @file   cio_Slice.C
+ * @file   cio_TimeSlice.C 
  * @brief  cio_Slice Class
  * @author kero    
  */

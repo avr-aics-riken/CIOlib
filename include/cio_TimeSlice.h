@@ -93,7 +93,7 @@ public:
    * @brief DFIに出力されているminmaxの合成値を取得 
    * @param [in]  step 取得するステップ
    * @param [out] vec_min 取得したminの合成値
-   * @param [out] vec_mxn 取得したminの合成値
+   * @param [out] vec_max 取得したminの合成値
    * @return error code 取得出来たときは E_CIO_SUCCESS 
    */
   CIO::E_CIO_ERRORCODE getVectorMinMax(const unsigned step,
@@ -123,7 +123,6 @@ public:
    * @param [in]  avr_mode  Averageがあるかないかのフラグ
    * @param [in]  step_avr  Average step
    * @param [in]  time_avr  Average time
-   * @param [out] SliceList TimeSlice
    */
   void AddSlice(int step,
                 double time,

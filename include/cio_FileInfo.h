@@ -38,15 +38,15 @@ public:
 
   /** 
    * @brief コンストラクタ 
-   * @param [in] _DirectoryPath ディレクトリパス
-   * @param [in] _TimeSliceDir  TimeSlice on or off
-   * @param [in] _Prefix        ファイル接頭文字
-   * @param [in] _FileFormat    ファイルフォーマット
-   * @param [in] _GuideCell     仮想セルの数
-   * @param [in] _DataType      配列のデータタイプ
-   * @param [in] _Endian        エンディアンタイプ
-   * @param [in] _ArrayShape    配列形状
-   * @param [in] _Component     成分数
+   * @param [in] _DirectoryPath    ディレクトリパス
+   * @param [in] _TimeSliceDirFlag TimeSlice on or off
+   * @param [in] _Prefix           ファイル接頭文字
+   * @param [in] _FileFormat       ファイルフォーマット
+   * @param [in] _GuideCell        仮想セルの数
+   * @param [in] _DataType         配列のデータタイプ
+   * @param [in] _Endian           エンディアンタイプ
+   * @param [in] _ArrayShape       配列形状
+   * @param [in] _Component        成分数
    */
   cio_FileInfo(const std::string _DirectoryPath, 
                const CIO::E_CIO_ONOFF _TimeSliceDirFlag, 

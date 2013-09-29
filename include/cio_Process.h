@@ -93,7 +93,7 @@ public:
    * @return error code
    */
   CIO::E_CIO_ERRORCODE 
-  CheakReadRank(cio_Domain dfi_domain,
+  CheckReadRank(cio_Domain dfi_domain,
                 const int head[3],
                 const int tail[3],
                 CIO::E_CIO_READTYPE readflag,
@@ -108,7 +108,7 @@ public:
    * @param [out] mapHeadX   headXをキーにした位置情報マップ 
    * @param [out] mapHeadY   headXをキーにした位置情報マップ 
    * @param [out] mapHeadZ   headXをキーにした位置情報マップ 
-   * @retunr error code
+   * @return error code
    */
   CIO::E_CIO_ERRORCODE 
   CreateRankList(cio_Domain dfi_domain,
@@ -178,10 +178,10 @@ public:
 
   /**
    * @brief 生成済のRankListからランクマップを生成
-   * @param [in] div  領域分割数
-   * @param [in] mapX DFIのX方向のhead map
-   * @param [in] mapY DFIのY方向のhead map
-   * @param [in] mapZ DFIのZ方向のhead map
+   * @param [in] ndiv  領域分割数
+   * @param [in] mapHeadX headXをキーにした位置情報マップ
+   * @param [in] mapHeadY headYをキーにした位置情報マップ
+   * @param [in] mapHeadZ headZをキーにした位置情報マップ
    * @return ランクマップ
    * @return NULL
    */
@@ -200,6 +200,7 @@ public:
   /**
    * @brief head mapの生成
    * @param [in] head head インデックス
+   * @param [in] ndiv 分割数
    * @param [out] map head map
    */
   void CreateHeadMap(int* head,
@@ -209,10 +210,14 @@ public:
 
   /**
    * @brief 読込みランクファイルリストの作成
-   * @param [in] head[3]      計算領域の開始位置　　　　
-   * @param [in] tail[3]      計算領域の終了位置　　　　
-   * @param [in] readflag     粗密データ判定フラグ
-   * @param [out]readRankList 読込みに必要なランク番号リスト
+   * @param [in]  dfi_domain   DFIのDomain情報
+   * @param [in]  head         計算領域の開始位置　　　　
+   * @param [in]  tail         計算領域の終了位置　　　　
+   * @param [in]  readflag     粗密データ判定フラグ
+   * @param [in]  mapHeadX     headXをキーにした位置情報マップ
+   * @param [in]  mapHeadY     headYをキーにした位置情報マップ
+   * @param [in]  mapHeadZ     headZをキーにした位置情報マップ
+   * @param [out] readRankList 読込みに必要なランク番号リスト
    */
   CIO::E_CIO_ERRORCODE 
   CheckStartEnd(cio_Domain dfi_domain,

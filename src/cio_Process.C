@@ -202,7 +202,7 @@ cio_Process::Read(cio_TextParser tpCntl)
 // #################################################################
 // 読込みランクリストの作成
 CIO::E_CIO_ERRORCODE 
-cio_Process::CheakReadRank(cio_Domain dfi_domain, 
+cio_Process::CheckReadRank(cio_Domain dfi_domain, 
                            const int head[3],
                            const int tail[3],
                            CIO::E_CIO_READTYPE readflag,
@@ -343,8 +343,10 @@ cio_Process::CreateRankList(int div[3],
   }
 
   CreateHeadMap(headX,div[0],mapHeadX);
-  CreateHeadMap(headY,div[0],mapHeadY);
-  CreateHeadMap(headZ,div[0],mapHeadZ);
+  //CreateHeadMap(headY,div[0],mapHeadY);
+  CreateHeadMap(headY,div[1],mapHeadY);
+  //CreateHeadMap(headZ,div[0],mapHeadZ);
+  CreateHeadMap(headZ,div[2],mapHeadZ);
 
   for( int k=0;k<div[2];k++ ){
   for( int j=0;j<div[1];j++ ){
