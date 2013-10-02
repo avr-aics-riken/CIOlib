@@ -14,6 +14,8 @@
 #ifndef _STAGING_UTILITY_H
 #define _STAGING_UTILITY_H
 
+#include "cio_DFI.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,7 +26,6 @@
 #include <set>
 #include <map>
 
-#include "cio_DFI.h"
 #include "ActiveSubDomain.h"
 #include "Staging_Define.h"
 #include "frm_EndianUtil.h"

@@ -14,6 +14,7 @@
  * @brief  TextParser Control class Header
  * @author kero
  */
+#include "cio_Define.h"
 
 #include <math.h>
 #include <iostream>
@@ -22,7 +23,6 @@
 #include <map>
 #include "string.h"
 
-#include "cio_Define.h"
 #include "TextParser.h"
 
 using namespace std;

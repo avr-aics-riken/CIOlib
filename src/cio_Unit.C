@@ -12,9 +12,8 @@
  * @author kero    
  */
 
-#include <unistd.h> // for gethostname() of FX10/K
-
 #include "cio_DFI.h"
+#include <unistd.h> // for gethostname() of FX10/K
 
 
 /** cio_UnitElem class **/

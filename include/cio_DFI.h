@@ -14,6 +14,8 @@
  * @brief  cio_DFI Class Header
  * @author kero    
  */
+
+#include "cio_Define.h"
 #include <stdlib.h>
 #include <errno.h>
 #include <sys/stat.h>
@@ -22,7 +24,6 @@
 #include <map>
 #include <string>
 
-#include "cio_Define.h"
 #include "cio_Version.h"
 
 
