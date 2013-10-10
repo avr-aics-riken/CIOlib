@@ -484,18 +484,40 @@ public:
    * @brief Uuitをセットする
    * @param [in] Name       追加する単位系("Length","Velocity",,,,)
    * @param [in] Unit       単位ラベル("M","CM","MM","M/S",,,)
-   * @param [in] BaseName   代表値名("L0","V0",,,,)
-   * @param [in] BaseValue  代表値値
-   * @param [in] DiffName   差があるときの名前("DiffPrs","DiffTemp",,,)
-   * @param [in] DiffValue  差の値
+   * @param [in] reference  規格化したスケール値
+   * @param [in] difference 差の値
+   * @param [in] BsetDiff   differenceの有無
    */
   void 
   AddUnit(const std::string Name,
           const std::string Unit,
-          const std::string BaseName,
-          const double BaseValue,
-          const std::string DiffName = "",
-          const double DiffValue = 0.0); 
+          const double reference,
+          const double difference= 0.0,
+          const bool BsetDiff=false);
+
+  /**
+   * @brief UuitElemを取得する
+   * @param[in]  Name 取得する単位系
+   * @param[out] unit 取得したcio_UnitElem
+   * @return error code
+   */
+  CIO::E_CIO_ERRORCODE GetUnitElem(const std::string Name,
+                                   cio_UnitElem &unit); 
+
+  /**
+   * @brief UnitElemのメンバ変数毎に取得する
+   * @param[in]  Name 取得する単位系
+   * @param[out] unit 単位文字列
+   * @param[out] ref  reference
+   * @param[out] diff difference
+   * @param[out] bSetDiff differenceの有無（true:あり false:なし）
+   * @return error code
+   */
+  CIO::E_CIO_ERRORCODE GetUnit(const std::string Name,
+                               std::string &unit,
+                               double &ref,
+                               double &diff,
+                               bool &bSetDiff); 
  
   /**
    * @brief TimeSlice OnOff フラグをセットする

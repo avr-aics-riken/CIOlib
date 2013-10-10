@@ -79,18 +79,18 @@ bool Staging::ReadInfo(string infofile)
   string str;
   int ct;
 
-  //GlovalVoxel
+  //GlobalVoxel
   for (int n=0; n<3; n++) v[n]=0.0;
-  label = "/Domain/GlovalVoxel";
+  label = "/Domain/GlobalVoxel";
   if( !(tp_stg.GetVector(label, v, 3 )) ) {
     printf("\tParsing error : fail to get '%s'\n",label.c_str());
     return false;
   }
   for(int i=0;i<3;i++ ) m_GVoxel[i]=v[i];
 
-  //GlovalDivision
+  //GlobalDivision
   for (int n=0; n<3; n++) v[n]=0.0;
-  label = "/Domain/GlovalDivision";
+  label = "/Domain/GlobalDivision";
   if( !(tp_stg.GetVector(label, v, 3 )) ) {
     printf("\tParsing error : fail to get '%s'\n",label.c_str());
     return false;
@@ -98,7 +98,7 @@ bool Staging::ReadInfo(string infofile)
   for(int i=0;i<3;i++ ) m_Gdiv[i]=v[i];
 
   //ActiveSubdomain
-  label = "/Domain/ActiveSubdomain";
+  label = "/Domain/ActiveSubdomainFile";
   if( !(tp_stg.GetValue(label, &str )) ) {
     m_ActiveSubdomain="";
   } else {

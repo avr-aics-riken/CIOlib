@@ -16,6 +16,7 @@
 #include <unistd.h> // for gethostname() of FX10/K
 
 
+
 /** cio_UnitElem class **/
 
 // #################################################################
@@ -25,10 +26,9 @@ cio_UnitElem::cio_UnitElem()
 
   Name="";
   Unit="";
-  BaseName="";
-  BaseValue=0.0;
-  DiffName="";
-  DiffValue=0.0;
+  reference=0.0;
+  difference=0.0;
+  BsetDiff=false;
 
 }
 
@@ -36,17 +36,15 @@ cio_UnitElem::cio_UnitElem()
 // コンストラクタ
 cio_UnitElem::cio_UnitElem(const std::string _Name,
                            const std::string _Unit,
-                           const std::string _BaseName,
-                           const double      _BaseValue,
-                           std::string       _DiffName,
-                           double            _DiffValue)
+                           const double _reference,
+                           const double _difference,
+                           const bool _BsetDiff)
 {
   Name       = _Name;
   Unit       = _Unit;
-  BaseName   = _BaseName;
-  BaseValue  = _BaseValue;
-  DiffName   = _DiffName;
-  DiffValue  = _DiffValue;
+  reference  = _reference;
+  difference = _difference;
+  BsetDiff   = _BsetDiff;
 }
 
 
@@ -62,17 +60,14 @@ cio_UnitElem::~cio_UnitElem()
 // Unit要素の読込み
 CIO::E_CIO_ERRORCODE 
 cio_UnitElem::Read(cio_TextParser tpCntl,
-                   const std::string _Name,
-                   const std::string _BaseName,
-                   const std::string _DiffName)
+                   const std::string label_leaf)
 {
 
   std::string str,label;
   double dt;
 
   //単位系のの読込み
-  Name = _Name;
-  label="/Unit/"+Name;
+  label = label_leaf + "/Unit";
   if ( !(tpCntl.GetValue(label, &str )) )
   {
     return CIO::E_CIO_WARN_GETUNIT;
@@ -80,23 +75,22 @@ cio_UnitElem::Read(cio_TextParser tpCntl,
   Unit=str;
 
   //値の読込み
-  BaseName = _BaseName;
-  label="/Unit/"+BaseName;
+  label = label_leaf + "/Reference";
   if ( !(tpCntl.GetValue(label, &dt )) )
   {
     dt=0.0;
   }
-  BaseValue=dt;
+  reference=dt;
 
   //diffの読込み
-  DiffName = _DiffName;
-  if( !DiffName.empty() ) {
-    label = "/Unit/"+DiffName;
-    if ( !(tpCntl.GetValue(label, &dt )) )
-    {
-      dt=0.0;
-    }
-    DiffValue=dt;
+  label = label_leaf + "/Difference";
+  if ( !(tpCntl.GetValue(label, &dt )) )
+  {
+    difference=0.0;
+    BsetDiff=false;
+  } else {
+    difference=dt;
+    BsetDiff=true;
   }
 
   return CIO::E_CIO_SUCCESS;
@@ -110,12 +104,12 @@ cio_UnitElem::Write(FILE* fp, const unsigned tab)
 {
 
   _CIO_WRITE_TAB(fp, tab);
-  fprintf(fp, "%-11s = \"%s\"\n",Name.c_str(),Unit.c_str());
+  fprintf(fp, "Unit       = \"%s\"\n",Unit.c_str());
   _CIO_WRITE_TAB(fp, tab);
-  fprintf(fp, "%-11s = %e\n",BaseName.c_str(),BaseValue);
-  if( !DiffName.empty() ) {
+  fprintf(fp, "Reference  = %e\n",reference);
+  if( BsetDiff ) {
     _CIO_WRITE_TAB(fp, tab);
-    fprintf(fp, "%-11s = %e\n",DiffName.c_str(),DiffValue);
+    fprintf(fp, "Difference = %e\n",difference);
   }
 
   return CIO::E_CIO_SUCCESS;
@@ -145,31 +139,34 @@ CIO::E_CIO_ERRORCODE
 cio_Unit::Read(cio_TextParser tpCntl) 
 {
 
-  //Length
-  cio_UnitElem unitLength;
-  if( unitLength.Read(tpCntl, "Length","L0") == CIO::E_CIO_SUCCESS ) {
-     UnitList.insert(map<std::string,cio_UnitElem>::value_type("Length",unitLength));
+  std::string str;
+  std::string label_base,label_leaf;
+  int nnode=0;
+  CIO::E_CIO_ERRORCODE iret = CIO::E_CIO_SUCCESS;
+
+  //UnitList
+  label_base = "/UnitList";
+  if ( tpCntl.chkNode(label_base) )  //nodeがあれば
+  {
+    nnode = tpCntl.countLabels(label_base);
   }
 
-  //Velocity
-  cio_UnitElem unitVelocity;
-  if( unitVelocity.Read(tpCntl,"Velocity","V0") == CIO::E_CIO_SUCCESS ) {
-    UnitList.insert(map<std::string,cio_UnitElem>::value_type("Velocity",unitVelocity));
+  for(int i=0; i<nnode; i++) {
+    /** UnitElemの読込み */
+    if(!tpCntl.GetNodeStr(label_base,i+1,&str))
+    {
+      //printf("\tCIO Parsing error : No Elem name\n");
+      return iret;
+    }
+    label_leaf=label_base+"/"+str;
+    cio_UnitElem unit;
+    unit.Name = str;
+    if( unit.Read(tpCntl,label_leaf) == CIO::E_CIO_SUCCESS ) {
+      UnitList.insert(map<std::string,cio_UnitElem>::value_type(str,unit));
+    }
   }
 
-  //Pressure
-  cio_UnitElem unitPressure;
-  if( unitPressure.Read(tpCntl,"Pressure","P0","DiffPrs") == CIO::E_CIO_SUCCESS ) {
-    UnitList.insert(map<std::string,cio_UnitElem>::value_type("Pressure",unitPressure));
-  }
-
-  //Temperature
-  cio_UnitElem unitTemperature;
-  if( unitTemperature.Read(tpCntl,"Temperature","BaseTemp","DiffTemp") == CIO::E_CIO_SUCCESS ) {
-    UnitList.insert(map<std::string,cio_UnitElem>::value_type("Temperature",unitTemperature));
-  }
-
-  return CIO::E_CIO_SUCCESS; 
+  return iret; 
 
 }
 
@@ -197,8 +194,12 @@ cio_Unit::GetUnitElem(const std::string Name,
 }
 
 // #################################################################
-// 単位の取り出し
-std::string cio_Unit::GetUnit(const std::string Name, int &ret)
+// UnitElemのメンバ変数毎に取得する
+CIO::E_CIO_ERRORCODE cio_Unit::GetUnit(const std::string Name,
+                                       std::string &unit,
+                                       double &ref,
+                                       double &diff,
+                                       bool &BsetDiff)
 {
   map<std::string,cio_UnitElem>::iterator it;
 
@@ -207,18 +208,21 @@ std::string cio_Unit::GetUnit(const std::string Name, int &ret)
 
   //見つからなかった場合は空白を返す
   if( it == UnitList.end() ) {
-    ret = CIO::E_CIO_WARN_GETUNIT;
-    return ""; 
+    return CIO::E_CIO_WARN_GETUNIT;
   }
 
   //単位を返す
-  ret = CIO::E_CIO_SUCCESS;
-  return (*it).second.Unit;
+  unit=(*it).second.Unit;
+  ref =(*it).second.reference;
+  diff=(*it).second.difference;
+  BsetDiff=(*it).second.BsetDiff;
+
+  return CIO::E_CIO_SUCCESS;
 
 }
-
 // #################################################################
 // ベース名の取り出し
+/*
 std::string cio_Unit::GetBaseName(const std::string Name, int &ret)
 {
   map<std::string,cio_UnitElem>::iterator it;
@@ -237,9 +241,10 @@ std::string cio_Unit::GetBaseName(const std::string Name, int &ret)
   return (*it).second.BaseName;
 
 }
-
+*/
 // #################################################################
 // ベース値の取り出し
+/*
 double cio_Unit::GetBaseValue(const std::string Name, int &ret)
 {
   map<std::string,cio_UnitElem>::iterator it;
@@ -258,9 +263,10 @@ double cio_Unit::GetBaseValue(const std::string Name, int &ret)
   return (*it).second.BaseValue;
 
 }
-
+*/
 // #################################################################
 // Diff Name の取り出し
+/*
 std::string cio_Unit::GetDiffName(const std::string Name, int &ret)
 {
   map<std::string,cio_UnitElem>::iterator it;
@@ -278,9 +284,10 @@ std::string cio_Unit::GetDiffName(const std::string Name, int &ret)
   ret = CIO::E_CIO_SUCCESS;
   return (*it).second.DiffName;
 }
-
+*/
 // #################################################################
 // Diff Valueの取り出し
+/*
 double cio_Unit::GetDiffValue(const std::string Name, int &ret)
 {
   map<std::string,cio_UnitElem>::iterator it;
@@ -299,7 +306,7 @@ double cio_Unit::GetDiffValue(const std::string Name, int &ret)
   return (*it).second.DiffValue;
 
 }
-
+*/
 // #################################################################
 // Unitの出力
 CIO::E_CIO_ERRORCODE
@@ -307,12 +314,18 @@ cio_Unit::Write(FILE* fp,
                 const unsigned tab) 
 {
 
-  fprintf(fp, "Unit {\n");
+  fprintf(fp, "UnitList {\n");
   fprintf(fp, "\n");
 
   map<std::string,cio_UnitElem>::iterator it;
   for( it=UnitList.begin(); it!=UnitList.end(); it++ ) {
-    if( (*it).second.Write(fp,tab+1) != CIO::E_CIO_SUCCESS ) return CIO::E_CIO_ERROR;
+
+    _CIO_WRITE_TAB(fp, tab+1);
+    fprintf(fp, "%s {\n",(*it).second.Name.c_str());
+
+    if( (*it).second.Write(fp,tab+2) != CIO::E_CIO_SUCCESS ) return CIO::E_CIO_ERROR;
+    _CIO_WRITE_TAB(fp, tab+1);
+    fprintf(fp, "}\n");
   }
 
   fprintf(fp, "\n");

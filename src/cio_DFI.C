@@ -848,19 +848,38 @@ std::string cio_DFI::Generate_DFI_Name(const std::string prefix)
 // Unitを追加する
 void cio_DFI::AddUnit(const std::string Name,
                       const std::string Unit,
-                      const std::string BaseName,
-                      const double BaseValue,
-                      const std::string DiffName,
-                      const double DiffValue)
+                      const double reference,
+                      const double difference,
+                      const bool BsetDiff)
 {
 
   /** UnitElemの生成 */
-  cio_UnitElem unit =  cio_UnitElem(Name,Unit,BaseName,BaseValue,DiffName,DiffValue);
+  cio_UnitElem unit =  cio_UnitElem(Name,Unit,reference,difference,BsetDiff);
   
   /** UnilListへのセット */
   DFI_Unit.UnitList.insert(map<std::string,cio_UnitElem>::value_type(Name,unit));
 
 }
+
+// #################################################################
+// UuitElemを取得する
+CIO::E_CIO_ERRORCODE cio_DFI::GetUnitElem(const std::string Name,
+                                          cio_UnitElem &unit)
+{
+  return DFI_Unit.GetUnitElem(Name, unit);
+}
+
+// #################################################################
+// UnitElemのメンバ変数毎に取得する
+CIO::E_CIO_ERRORCODE cio_DFI::GetUnit(const std::string Name,
+                                      std::string &unit,
+                                      double &ref,
+                                      double &diff,
+                                      bool &bSetDiff)
+{
+  return DFI_Unit.GetUnit(Name, unit, ref, diff, bSetDiff);
+}
+
 
 // #################################################################
 // TimeSlice OnOff フラグをセットする
