@@ -207,12 +207,8 @@ cio_DFI::WriteData(const unsigned step,
                    double* minmax,
                    const bool avr_mode,
                    const unsigned step_avr,
-                   double time_avr,
-                   bool force)
+                   double time_avr)
 {
-
-  //インターバルチェック
-  if( !m_intervalMngr.isTriggered(step, time, force ) ) return CIO::E_CIO_SUCCESS;
 
   bool mio=false;
   if( DFI_MPI.NumberOfRank > 1 ) mio=true;
@@ -240,7 +236,7 @@ cio_DFI::WriteData(const unsigned step,
     int ret = val->copyArray(outArray);
   }
 
-  //フィールデータの出力
+  // フィールドデータの出力
   CIO::E_CIO_ERRORCODE err = CIO::E_CIO_SUCCESS;
   err = WriteFieldData(outFile, step, time, outArray, avr_mode, step_avr, time_avr);
 

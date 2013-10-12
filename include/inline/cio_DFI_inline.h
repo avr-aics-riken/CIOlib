@@ -132,8 +132,7 @@ cio_DFI::WriteData(const unsigned step,
                    const int nComp,
                    const int gc, 
                    T* val, 
-                   T* minmax, 
-                   bool force,
+                   T* minmax,
                    const bool avr_mode, 
                    const unsigned step_avr, 
                    TimeAvrT time_avr)
@@ -160,12 +159,12 @@ cio_DFI::WriteData(const unsigned step,
     } else { 
       d_minmax = new double[2];
       d_minmax[0] = minmax[0];
-      d_minmax[1] = minmax[1];     
+      d_minmax[1] = minmax[1];
     }
   }
 
   CIO::E_CIO_ERRORCODE ret;
-  ret = WriteData(step, gc, d_time, data, d_minmax, avr_mode, step_avr, d_time_avr, force);
+  ret = WriteData(step, gc, d_time, data, d_minmax, avr_mode, step_avr, d_time_avr);
 
   //val = (T*)data->getData(true);
   //data->getData(true);

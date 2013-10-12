@@ -51,8 +51,7 @@ CIO_include_HEADERS = \
     $(top_builddir)/include/cio_Version.h \
     $(top_builddir)/include/cio_TextParser.h \
     $(top_builddir)/include/cio_PathUtil.h \
-    $(top_builddir)/include/cio_endianUtil.h \
-    $(top_builddir)/include/cio_Interval_Mngr.h 
+    $(top_builddir)/include/cio_endianUtil.h
 
 CIO_inline_includedir = $(includedir)/inline
 CIO_inline_include_HEADERS = \

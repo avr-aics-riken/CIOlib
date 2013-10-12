@@ -11,7 +11,19 @@ REVISION HISTORY
 ================
 
 ------------------
+2013-10-12
+ r23 separates cio_Interval_Mngr class from cio_DFI class
+  - remove cio_Interval_Mngr's methods from cio_DFI class 
+  - change to protected >> normalizeBaseTime(), normalizeIntervalTime(), normalizeStartTime(), normalizeLastTime(), normalizeDelteT()
+  - remove force option >> when WriteData() is called, the data is immediately written into a file
+  - delete cio_Interval_Mngr.h
+ 
+ 
+------------------
 2013-10-10
+
+ r22 update userguide
+ 
  r21 update UnitList [ver 1.3.8]
   - change format of UnitList
 

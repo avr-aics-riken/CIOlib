@@ -41,8 +41,6 @@
 #include "cio_MPI.h"
 #include "cio_Process.h"
 
-#include "cio_Interval_Mngr.h"
-
 /** CIO main class */
 class cio_DFI {
 
@@ -66,7 +64,6 @@ protected :
 
   vector<int>m_readRankList;         ///< 読込みランクリスト
 
-  cio_Interval_Mngr m_intervalMngr;  ///< インターバルマネージャー
 
 public:
   /** コンストラクタ */
@@ -344,7 +341,6 @@ public:
    * @param [in] gc       valの仮想セル数　　　
    * @param [in] val      出力データポインタ
    * @param [in] minmax   フィールデータのMinMax
-   * @param [in] force    強制出力指示
    * @param [in] avr_mode 平均ステップ＆時間出力　false : 出力 true  : 出力しない
    * @param [in] step_avr 平均ステップ
    * @param [in] time_avr 平均時間
@@ -358,7 +354,6 @@ public:
             const int gc, 
             T* val, 
             T* minmax=NULL, 
-            bool force=true,
             bool avr_mode=true, 
             unsigned step_avr=0, 
             TimeAvrT time_avr=0.0);
@@ -375,7 +370,6 @@ public:
    *                                              true  : 出力しない
    * @param [in] step_avr 平均ステップ
    * @param [in] time_avr 平均時間
-   * @param [in] force    強制出力指示
    */ 
   CIO::E_CIO_ERRORCODE
   WriteData(const unsigned step, 
@@ -385,8 +379,7 @@ public:
             double* minmax, 
             const bool avr_mode, 
             const unsigned step_avr, 
-            double time_avr,
-            bool force);
+            double time_avr);
 
   /**
    * @brief proc DFIファイル出力コントロール (float)
