@@ -1,14 +1,11 @@
-###################################################################################
+#########################################################################
 #
-# Staging 
-#
-# Copyright (c) 2007-2011 VCAD System Research Program, RIKEN.
-# All rights reserved.
+# CIOlib Staging 
 # 
-# Copyright (c) 2012-2013 Advanced Institute for Computational Science, RIKEN.
+# Copyright (c) 2013 Advanced Institute for Computational Science, RIKEN.
 # All rights reserved.
 #
-# ##################################################################################
+# #######################################################################
 
 bin_PROGRAMS = frm
 

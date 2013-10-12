@@ -1,7 +1,10 @@
 /*
  * frm (File Rank Mapper)
  *
- * Copyright (c) RIKEN AICS, Japan. All right reserved. 2013
+ * CIOlib - Cartesian Input / Output library
+ *
+ * Copyright (c) 2013 Advanced Institute for Computational Science, RIKEN.
+ * All rights reserved.
  *
  */
 /**

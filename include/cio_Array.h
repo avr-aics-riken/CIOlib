@@ -1,6 +1,14 @@
 #ifndef _CIO_ARRAY_H_
 #define _CIO_ARRAY_H_
 
+/*
+ * CIOlib - Cartesian Input / Output library
+ *
+ * Copyright (c) 2013 Advanced Institute for Computational Science, RIKEN.
+ * All rights reserved.
+ *
+ */
+
 #include "cio_Define.h"
 
 extern "C"

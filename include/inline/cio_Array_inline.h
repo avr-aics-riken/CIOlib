@@ -1,3 +1,11 @@
+/*
+ * CIOlib - Cartesian Input / Output library
+ *
+ * Copyright (c) 2013 Advanced Institute for Computational Science, RIKEN.
+ * All rights reserved.
+ *
+ */
+
 #ifndef _CIO_ARRAY_INLINE_H_
 #define _CIO_ARRAY_INLINE_H_
 
