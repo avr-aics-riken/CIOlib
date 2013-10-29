@@ -13,13 +13,13 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.57])
-AC_INIT([CIOlib],[1.3.9],[keno@riken.jp],[CIOlib])
+AC_INIT([CIOlib],[1.4.0],[keno@riken.jp],[CIOlib])
 AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR([src/cio_DFI.C])
 AM_CONFIG_HEADER([config.h])
 
 # revision No.
-CIO_REVISION="20131012_1730"
+CIO_REVISION="20131029_1030"
 AC_SUBST(CIO_REVISION)
 
 #
@@ -122,7 +122,7 @@ AC_SUBST(CIO_CXX)
 # MAKE_SUB_DIRS
 #
 AC_SUBST(MAKE_SUB_DIRS)
-MAKE_SUB_DIRS="src doc tools/frm/src"
+MAKE_SUB_DIRS="src doc"
 
 
 #
@@ -156,7 +156,6 @@ AC_CHECK_FUNCS([gethostname memset mkdir strcasecmp strerror])
 AC_CONFIG_FILES([Makefile \
                  src/Makefile \
                  doc/Makefile \
-                 tools/frm/src/Makefile \
                  cio-config \
                  include/cio_Version.h \
                 ])

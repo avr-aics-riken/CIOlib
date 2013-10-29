@@ -885,7 +885,7 @@ CIO::E_CIO_ERRORCODE cio_DFI::GetUnit(const std::string Name,
 // TimeSlice OnOff フラグをセットする
 void cio_DFI::SetTimeSliceFlag(const CIO::E_CIO_ONOFF ONOFF)
 {
-  DFI_Finfo.TimeSliceDirFlag == ONOFF;
+  DFI_Finfo.TimeSliceDirFlag = ONOFF;
 }
 
 // #################################################################
