@@ -13,6 +13,8 @@ REVISION HISTORY
 ------------------
 2013-10-29
 
+ r27 update NEWS
+
  r26 change compilation of tools manulally [ver 1.4.0]
   - bug fix : cio_DFI.C L.888 DFI_Finfo.TimeSliceDirFlag == ONOFF >> = ONOFF
   - Since frm(tools) works on a login node for K/FX10, separate from autotools

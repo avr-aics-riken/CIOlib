@@ -2927,7 +2927,7 @@ ac_config_headers="$ac_config_headers config.h"
 
 
 # revision No.
-CIO_REVISION="20131029_1030"
+CIO_REVISION="20131029_1031"
 
 
 #

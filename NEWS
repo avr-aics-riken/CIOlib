@@ -11,6 +11,10 @@ RELEASE
 =======
 
 -------------
+Version 1.4.0   2013-10-29
+ - separete frm compilation from autotool
+
+-------------
 Version 1.3.9   2013-10-12
  - cio_Interval_Mngrクラスを分離
  
