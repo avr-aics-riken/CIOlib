@@ -35,6 +35,10 @@ Configure options:
  --prefix=INSTALL_DIR
     Specify a directory to be installed. The default directory is /usr/local/CIOlib.
 
+ --with-comp=(INTEL|FJ)
+    If Intel compiler is used, choose INTEL, and if Fujitsu compiler, specify FJ. 
+    This option is mandatory when using both compilers.
+    
  --with-mpich=MPICH_DIR
     If you will use the MPICH library, specify the directory that MPICH library is 
     installed. Either --with-mpich or --with-ompi option will be required except using 
@@ -47,7 +51,15 @@ Configure options:
  --with-parser=TEXTPARSER_PATH
     Specify the directory path that TextParser library is installed.
 
+ --with-precision=(single|double)
+    Specify the REAL macro by selecting single(4bytes) or double(8bytes). If this 
+    option is omitted, single precision will be applied.
 
+ --without-MPI=(yes|no)
+    If you compile CIO library for parallel environment with MPI library, specify 'yes',
+    otherwise 'no'.
+    
+    
  CXX=CXX_COMPILER
    Specify C++ compiler or a wrapper compiler for MPI. If a wrapper compiler is specified, 
    set string as CXX=mpiCC without directory prefix. To do so, please set path before
@@ -69,6 +81,7 @@ Here is examples.
 
   $ ./configure --with-ompi=/opt/openmpi \
                 --with-parser=/usr/local/TextParser \
+                --with-comp=INTEL \
                 CXX=icpc \
                 CXXFLAGS="-O3 -Wall" \
                 F90=ifort \
@@ -77,7 +90,7 @@ Here is examples.
 
 ## OpenMPI with wrapper compiler, assume that mpicxx is a wrapper compiler for OpenMPI.
 
-  $ ./configure --with-parser=/usr/local/TextParser CXX=mpicxx CXXFLAGS=-O3
+  $ ./configure --with-comp=INTEL --with-parser=/usr/local/TextParser CXX=mpicxx CXXFLAGS=-O3
 
 
 ## K-computer
@@ -85,6 +98,7 @@ Here is examples.
   $ ./configure --prefix=$1 \
                 --with-parser=hoge \
                 --host=sparc64-unknown-linux-gnu \
+                --with-comp=FJ \
                 CXX=mpiFCCpx \
                 CXXFLAGS=-Kfast \
                 F90=mpifrtpx \

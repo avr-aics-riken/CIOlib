@@ -11,6 +11,13 @@ REVISION HISTORY
 ================
 
 ------------------
+2013-10-30
+
+ r28 update configure.ac [ver 1.4.1]
+  - update chk-uname for Marvericks on Mac
+  - rewrite configure.ac to Fortran compiler configuration
+
+------------------
 2013-10-29
 
  r27 update NEWS

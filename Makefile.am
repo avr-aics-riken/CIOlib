@@ -11,8 +11,9 @@
 
 SUBDIRS = @MAKE_SUB_DIRS@
 
-bin_SCRIPTS = cio-config
-EXTRA_DIST = cio-config.in LICENSE tools #config_cio.sh
+bin_SCRIPTS= cio-config
+CLEANFILES = $(bin_SCRIPTS)
+EXTRA_DIST = cio-config.in LICENSE tools chk-uname
 dist_data_DATA = AUTHORS COPYING ChangeLog README LICENSE
 
 clean-local:
