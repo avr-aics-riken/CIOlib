@@ -51,34 +51,21 @@ if test "$with_MPI" = "no" ; then
   enable_mpi="without"
 else
 
-  # mpich
-  AC_ARG_WITH(mpich, [AC_HELP_STRING([--with-mpich=dir],[Specify MPICH install directory])], , with_mpich=none)
-  if test "$with_mpich" != "none" ; then
-    MPI_DIR=$with_mpich;
+  # openmpi
+  AC_ARG_WITH( ompi, [AC_HELP_STRING([--with-ompi=dir],[Specify OpenMPI install directory])], , with_ompi=none)
+  if test "$with_ompi" != "none" ; then
+    MPI_DIR=$with_ompi;
     MPI_CFLAGS=-I$MPI_DIR/include
     MPI_LDFLAGS=-L$MPI_DIR/lib
-    MPI_LIBS=-lmpich
-    enable_mpi="mpich"
-  fi
-
-
-  # openmpi
-  if test "$with_mpich" = "none" ; then
-    AC_ARG_WITH( ompi, [AC_HELP_STRING([--with-ompi=dir],[Specify OpenMPI install directory])], , with_ompi=none)
-    if test "$with_ompi" != "none" ; then
-      MPI_DIR=$with_ompi;
-      MPI_CFLAGS=-I$MPI_DIR/include
-      MPI_LDFLAGS=-L$MPI_DIR/lib
-      MPI_LIBS=-lmpi
-      enable_mpi="ompi"
-    fi
+    MPI_LIBS=-lmpi
+    enable_mpi="ompi"
   fi
 fi
 
 if test "$enable_mpi" != "without" ; then
   if test "$enable_mpi" = "none" ; then
-    echo "  Warning: Neither MPICH nor OpenMPI library is not specified."
-    echo "           If compilation error occurs about MPI, specify --with-mpich or --with-ompi option."
+    echo "  Warning: MPI library is not specified."
+    echo "           If compilation error occurs about MPI, specify --with-ompi option."
   fi
 fi
 

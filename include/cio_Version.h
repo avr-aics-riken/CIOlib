@@ -18,7 +18,7 @@
 #define CIO_VERSION_NO  "1.4.1"
 
 /** CIOライブラリのリビジョン */
-#define CIO_REVISION    "20130627_2300"
+#define CIO_REVISION    "20131101_1600"
 
 #endif /* _CIO_VERSION_H_ */
 
