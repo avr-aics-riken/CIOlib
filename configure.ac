@@ -111,6 +111,9 @@ AC_SUBST(CIO_CXX)
 AC_SUBST(MAKE_SUB_DIRS)
 MAKE_SUB_DIRS="src doc"
 
+if test "$host" != "sparc*" ; then
+  MAKE_SUB_DIRS="$MAKE_SUB_DIRS"" tools/frm/src"
+fi
 
 #
 # Checks for programs.
@@ -145,7 +148,11 @@ AC_CONFIG_FILES([Makefile \
                  doc/Makefile \
                  cio-config \
                  include/cio_Version.h \
-                ])
+                 ])
+
+if test "$host" != "sparc*" ; then
+  AC_CONFIG_FILES([tools/frm/src/Makefile])
+fi
 
 AC_OUTPUT
 

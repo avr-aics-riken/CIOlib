@@ -3038,6 +3038,9 @@ CIO_CXX="$CXX"
 
 MAKE_SUB_DIRS="src doc"
 
+if test "$host" != "sparc*" ; then
+  MAKE_SUB_DIRS="$MAKE_SUB_DIRS"" tools/frm/src"
+fi
 
 #
 # Checks for programs.
@@ -5357,6 +5360,11 @@ done
 ac_config_files="$ac_config_files Makefile src/Makefile doc/Makefile cio-config include/cio_Version.h"
 
 
+if test "$host" != "sparc*" ; then
+  ac_config_files="$ac_config_files tools/frm/src/Makefile"
+
+fi
+
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -6092,6 +6100,7 @@ do
     "doc/Makefile") CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
     "cio-config") CONFIG_FILES="$CONFIG_FILES cio-config" ;;
     "include/cio_Version.h") CONFIG_FILES="$CONFIG_FILES include/cio_Version.h" ;;
+    "tools/frm/src/Makefile") CONFIG_FILES="$CONFIG_FILES tools/frm/src/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
