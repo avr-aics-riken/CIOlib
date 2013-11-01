@@ -11,12 +11,7 @@
 
 lib_LIBRARIES = libCIO.a
 
-libCIO_a_CXXFLAGS = \
-   @MPI_CFLAGS@ \
-   @TP_CFLAGS@ \
-   @REALOPT@ \
-   @FREALOPT@ \
-   -I$(top_builddir)/include
+libCIO_a_CXXFLAGS = @MPI_CFLAGS@ @TP_CFLAGS@ -I$(top_builddir)/include
 
 libCIO_a_SOURCES = \
     cio_ActiveSubDomain.C \

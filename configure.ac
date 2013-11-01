@@ -19,7 +19,7 @@ AC_CONFIG_SRCDIR([src/cio_DFI.C])
 AM_CONFIG_HEADER([config.h])
 
 # revision No.
-CIO_REVISION="20131101_1600"
+CIO_REVISION="20131101_2130"
 AC_SUBST(CIO_REVISION)
 
 #
@@ -32,90 +32,15 @@ else
   CIO_INST_DIR="$prefix"
 fi
 
-
-#
-# platform
-#
-TGT_DEVICE="$($SHELL ./chk-uname)"
-AC_SUBST(TGT_DEVICE)
-
-
-#
-# FORTRAN f90 compiler check
-#
-
-if test "_$FC" = "_"; then
-  if test "_$F90" != "_"; then
-    FC=$F90
-  fi
-fi
-if test "_$FCFLAGS" = "_"; then
-  if test "_$F90FLAGS" != "_"; then
-    FCFLAGS=$F90FLAGS
-  fi
-fi
-
-
-
-#
-# compiler
-#
-AC_ARG_WITH(comp, [AC_HELP_STRING([--with-comp=(INTEL|FJ)],[Specify Compiler type])], , with_comp=none)
-
-
-
-#
-# REAL type
-#
-AC_ARG_WITH(precision, [AC_HELP_STRING([--with-precision=(single|double)],[Specify REAL type [single]])], , with_precision=single)
-AC_SUBST(REALOPT)
-AC_SUBST(FREALOPT)
-
-if test "$with_precision" = "double" ; then
-  REALOPT=-D_REAL_IS_DOUBLE_
-  if test "$with_comp" = "INTEL" ; then
-    FREALOPT="-r8"
-  elif test "$with_comp" = "FJ" ; then
-    FREALOPT="-CcdRR8"
-  fi
-else
-  REALOPT=
-  FREALOPT=
-fi
-
-
-
-#
-# MPI setting. wrappers like mpicxx, mpicc, mpiCC, mpic++, mpiFCCpx are taking 
-# into consideration, if not add in case.
-#
-
-enable_mpi="none"
-
-CIO_CXX="$CXX"
-AC_SUBST(CIO_CXX)
-
-
-case "$CIO_CXX" in
-  mpicxx)   enable_mpi="wrappermpi" ;;
-  mpicc)    enable_mpi="wrappermpi" ;;
-  mpiCC)    enable_mpi="wrappermpi" ;;
-  mpic++)   enable_mpi="wrappermpi" ;;
-  mpiFCCpx) enable_mpi="wrappermpi" ;;
-esac
-
-
-
 #
 # MPI environment
 #
+enable_mpi="none"
 
 AC_SUBST(MPI_DIR)
 AC_SUBST(MPI_CFLAGS)
 AC_SUBST(MPI_LDFLAGS)
 AC_SUBST(MPI_LIBS)
-AC_SUBST(MPI_FCLIBS)
-
 
 # 
 # MPI library
@@ -123,15 +48,8 @@ AC_SUBST(MPI_FCLIBS)
 AC_ARG_WITH(MPI, [AC_HELP_STRING([--without-MPI],[do not use MPI library])], , with_MPI=yes)
 if test "$with_MPI" = "no" ; then
   CXXFLAGS=-D_CIO_WITHOUT_MPI_
-  enable_mpi="none"
-fi
-
-
-#
-# if wrapper compiler is specified, skip this part
-#
-
-if test "$enable_mpi" = "none" ; then
+  enable_mpi="without"
+else
 
   # openmpi
   AC_ARG_WITH( ompi, [AC_HELP_STRING([--with-ompi=dir],[Specify OpenMPI install directory])], , with_ompi=none)
@@ -153,35 +71,6 @@ fi
 
 
 #
-# CIO special flags
-#
-
-CIO_CFLAGS="-I$CIO_INST_DIR/include"
-AC_SUBST(CIO_CFLAGS)
-
-CIO_LDFLAGS="-L$CIO_INST_DIR/lib"
-AC_SUBST(CIO_LDFLAGS)
-
-CIO_LIBS="-lCIO"
-AC_SUBST(CIO_LIBS)
-
-CIO_FC="$FC"
-AC_SUBST(CIO_FC)
-
-CIO_FC_LD="$FC"
-AC_SUBST(CIO_FC_LD)
-
-
-
-if test "$with_comp" = "FJ"; then
-  CIO_FC_LD="$CXX"" --linkfortran"
-elif test "$with_comp" = "INTEL" ; then
-  CIO_LIBS="$CIO_LIBS"" -lstdc++"
-fi
-
-
-
-#
 # TextParser environment
 #
 AC_ARG_WITH(parser, [AC_HELP_STRING([--with-parser=dir],[Specify TextParser install directory])], , with_parser=none)
@@ -200,6 +89,20 @@ else
 fi
 
 
+#
+# CIO special flags
+#
+CIO_CFLAGS="-I$CIO_INST_DIR/include"
+AC_SUBST(CIO_CFLAGS)
+
+CIO_LDFLAGS="-L$CIO_INST_DIR/lib"
+AC_SUBST(CIO_LDFLAGS)
+
+CIO_LIBS="-lCIO"
+AC_SUBST(CIO_LIBS)
+
+CIO_CXX="$CXX"
+AC_SUBST(CIO_CXX)
 
 
 #

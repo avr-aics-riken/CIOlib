@@ -658,23 +658,17 @@ LDFLAGS
 CXXFLAGS
 CXX
 MAKE_SUB_DIRS
-TP_LDFLAGS
-TP_CFLAGS
-TP_DIR
-CIO_FC_LD
-CIO_FC
+CIO_CXX
 CIO_LIBS
 CIO_LDFLAGS
 CIO_CFLAGS
-MPI_FCLIBS
+TP_LDFLAGS
+TP_CFLAGS
+TP_DIR
 MPI_LIBS
 MPI_LDFLAGS
 MPI_CFLAGS
 MPI_DIR
-CIO_CXX
-FREALOPT
-REALOPT
-TGT_DEVICE
 CIO_REVISION
 AM_BACKSLASH
 AM_DEFAULT_VERBOSITY
@@ -745,8 +739,6 @@ ac_subst_files=''
 ac_user_opts='
 enable_option_checking
 enable_silent_rules
-with_comp
-with_precision
 with_MPI
 with_ompi
 with_parser
@@ -1390,9 +1382,6 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-comp=(INTEL|FJ)  Specify Compiler type
-  --with-precision=(single|double)
-                          Specify REAL type [single]
   --without-MPI           do not use MPI library
   --with-ompi=dir         Specify OpenMPI install directory
   --with-parser=dir       Specify TextParser install directory
@@ -2936,7 +2925,7 @@ ac_config_headers="$ac_config_headers config.h"
 
 
 # revision No.
-CIO_REVISION="20131101_1600"
+CIO_REVISION="20131101_2130"
 
 
 #
@@ -2949,99 +2938,10 @@ else
   CIO_INST_DIR="$prefix"
 fi
 
-
-#
-# platform
-#
-TGT_DEVICE="$($SHELL ./chk-uname)"
-
-
-
-#
-# FORTRAN f90 compiler check
-#
-
-if test "_$FC" = "_"; then
-  if test "_$F90" != "_"; then
-    FC=$F90
-  fi
-fi
-if test "_$FCFLAGS" = "_"; then
-  if test "_$F90FLAGS" != "_"; then
-    FCFLAGS=$F90FLAGS
-  fi
-fi
-
-
-
-#
-# compiler
-#
-
-# Check whether --with-comp was given.
-if test "${with_comp+set}" = set; then :
-  withval=$with_comp;
-else
-  with_comp=none
-fi
-
-
-
-
-#
-# REAL type
-#
-
-# Check whether --with-precision was given.
-if test "${with_precision+set}" = set; then :
-  withval=$with_precision;
-else
-  with_precision=single
-fi
-
-
-
-
-if test "$with_precision" = "double" ; then
-  REALOPT=-D_REAL_IS_DOUBLE_
-  if test "$with_comp" = "INTEL" ; then
-    FREALOPT="-r8"
-  elif test "$with_comp" = "FJ" ; then
-    FREALOPT="-CcdRR8"
-  fi
-else
-  REALOPT=
-  FREALOPT=
-fi
-
-
-
-#
-# MPI setting. wrappers like mpicxx, mpicc, mpiCC, mpic++, mpiFCCpx are taking
-# into consideration, if not add in case.
-#
-
-enable_mpi="none"
-
-CIO_CXX="$CXX"
-
-
-
-case "$CIO_CXX" in
-  mpicxx)   enable_mpi="wrappermpi" ;;
-  mpicc)    enable_mpi="wrappermpi" ;;
-  mpiCC)    enable_mpi="wrappermpi" ;;
-  mpic++)   enable_mpi="wrappermpi" ;;
-  mpiFCCpx) enable_mpi="wrappermpi" ;;
-esac
-
-
-
 #
 # MPI environment
 #
-
-
+enable_mpi="none"
 
 
 
@@ -3061,15 +2961,8 @@ fi
 
 if test "$with_MPI" = "no" ; then
   CXXFLAGS=-D_CIO_WITHOUT_MPI_
-  enable_mpi="none"
-fi
-
-
-#
-# if wrapper compiler is specified, skip this part
-#
-
-if test "$enable_mpi" = "none" ; then
+  enable_mpi="without"
+else
 
   # openmpi
 
@@ -3098,35 +2991,6 @@ fi
 
 
 #
-# CIO special flags
-#
-
-CIO_CFLAGS="-I$CIO_INST_DIR/include"
-
-
-CIO_LDFLAGS="-L$CIO_INST_DIR/lib"
-
-
-CIO_LIBS="-lCIO"
-
-
-CIO_FC="$FC"
-
-
-CIO_FC_LD="$FC"
-
-
-
-
-if test "$with_comp" = "FJ"; then
-  CIO_FC_LD="$CXX"" --linkfortran"
-elif test "$with_comp" = "INTEL" ; then
-  CIO_LIBS="$CIO_LIBS"" -lstdc++"
-fi
-
-
-
-#
 # TextParser environment
 #
 
@@ -3151,6 +3015,20 @@ else
   exit 1
 fi
 
+
+#
+# CIO special flags
+#
+CIO_CFLAGS="-I$CIO_INST_DIR/include"
+
+
+CIO_LDFLAGS="-L$CIO_INST_DIR/lib"
+
+
+CIO_LIBS="-lCIO"
+
+
+CIO_CXX="$CXX"
 
 
 

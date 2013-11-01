@@ -13,11 +13,13 @@ REVISION HISTORY
 ------------------
 2013-11-01
 
+ r33 clean configure.ac
+
  r32 modify merge [ver 1.4.1]
 
  r31 merge commit
 
- r30 add [if test "$host" != "sparc*" ; then] to switch K/FX cross-compile
+ r30 add [if test "$host" != "sparc*" ; then] to switch K/FX cross-compile [ver 1.4.1]
 
  r29 expire MPICH version
 
