@@ -47,7 +47,11 @@ Configure options:
     If you compile CIO library for parallel environment with MPI library, specify 'yes',
     otherwise 'no'.
 
-
+ --without-MPI=(yes|no)
+    If you compile CIO library for parallel environment with MPI library, specify 'yes',
+    otherwise 'no'.
+    
+    
  CXX=CXX_COMPILER
    Specify C++ compiler or a wrapper compiler for MPI. If a wrapper compiler is specified, 
    set string as CXX=mpiCC without directory prefix. To do so, please set path before

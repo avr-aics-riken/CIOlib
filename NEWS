@@ -9,6 +9,11 @@
 
 RELEASE
 =======
+ 
+-------------
+Version 1.4.1   2013-10-30
+ - modify configure.ac to compile fortran source
+ - modify configure.ac and change precision specification
 
 -------------
 Version 1.4.1   2013-11-01
