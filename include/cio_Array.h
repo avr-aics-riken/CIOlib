@@ -153,44 +153,34 @@ public:
     case CIO::E_CIO_INT8:
       return "INT8";
       break;
-        
     case CIO::E_CIO_INT16:
       return "INT16";
       break;
-        
     case CIO::E_CIO_INT32:
       return "INT32";
       break;
-        
     case CIO::E_CIO_INT64:
       return "INT64";
       break;
-        
     case CIO::E_CIO_UINT8:
       return "UINT8";
       break;
-        
     case CIO::E_CIO_UINT16:
       return "UINT16";
       break;
-        
     case CIO::E_CIO_UINT32:
       return "UINT32";
       break;
-        
     case CIO::E_CIO_UINT64:
       return "UINT64";
       break;
-        
     case CIO::E_CIO_FLOAT32:
       return "FLOAT32";
       break;
-        
     case CIO::E_CIO_FLOAT64:
       return "FLOAT64";
       break;
     }
-
     return "Unknown";
   }
 
