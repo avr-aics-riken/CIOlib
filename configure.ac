@@ -19,7 +19,7 @@ AC_CONFIG_SRCDIR([src/cio_DFI.C])
 AM_CONFIG_HEADER([config.h])
 
 # revision No.
-CIO_REVISION="20131102_1000"
+CIO_REVISION="20131102_1500"
 AC_SUBST(CIO_REVISION)
 
 #
@@ -42,10 +42,26 @@ FCFLAGS=$F90FLAGS
 
 
 
+
 #
 # MPI environment
 #
 enable_mpi="none"
+
+
+CIO_CXX="$CXX"
+AC_SUBST(CIO_CXX)
+
+case "$CIO_CXX" in
+  mpicxx)   enable_mpi="wrappermpi" ;;
+  mpicc)    enable_mpi="wrappermpi" ;;
+  mpiCC)    enable_mpi="wrappermpi" ;;
+  mpic++)   enable_mpi="wrappermpi" ;;
+  mpiFCCpx) enable_mpi="wrappermpi" ;;
+esac
+
+
+
 
 AC_SUBST(MPI_DIR)
 AC_SUBST(MPI_CFLAGS)
@@ -59,7 +75,6 @@ AC_SUBST(MPI_LIBS)
 AC_ARG_WITH(MPI, [AC_HELP_STRING([--without-MPI],[do not use MPI library])], , with_MPI=yes)
 if test "$with_MPI" = "no" ; then
   CXXFLAGS=-D_CIO_WITHOUT_MPI_
-  enable_mpi="without"
 else
 
   # openmpi
@@ -73,10 +88,17 @@ else
   fi
 fi
 
-if test "$enable_mpi" != "without" ; then
-  if test "$enable_mpi" = "none" ; then
-    echo "  Warning: MPI library is not specified."
-    echo "           If compilation error occurs about MPI, specify --with-ompi option."
+
+#
+# Warning
+#
+
+if test "$with_MPI" = "yes" ; then
+  if test "$enable_mpi" != "wrappermpi" ; then
+    if test "$with_ompi" = "none" ; then
+      echo "  Warning: OpenMPI library is not specified."
+      echo "           If compilation error occurs about MPI, specify --with-ompi option."
+    fi
   fi
 fi
 
@@ -116,8 +138,6 @@ AC_SUBST(CIO_LDFLAGS)
 CIO_LIBS="-lCIO"
 AC_SUBST(CIO_LIBS)
 
-CIO_CXX="$CXX"
-AC_SUBST(CIO_CXX)
 
 
 #
