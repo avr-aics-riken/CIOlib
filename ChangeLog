@@ -11,6 +11,11 @@ REVISION HISTORY
 ================
 
 ------------------
+2013-11-02
+
+ r34 change default Fortran compiler from FC/FCFLAGS to F90/F90FLAGS [ver 1.4.2]
+
+------------------
 2013-11-01
 
  r33 clean configure.ac

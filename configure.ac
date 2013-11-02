@@ -13,13 +13,13 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.57])
-AC_INIT([CIOlib],[1.4.1],[keno@riken.jp],[CIOlib])
+AC_INIT([CIOlib],[1.4.2],[keno@riken.jp],[CIOlib])
 AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR([src/cio_DFI.C])
 AM_CONFIG_HEADER([config.h])
 
 # revision No.
-CIO_REVISION="20131101_2130"
+CIO_REVISION="20131102_1000"
 AC_SUBST(CIO_REVISION)
 
 #
@@ -32,6 +32,16 @@ else
   CIO_INST_DIR="$prefix"
 fi
 
+
+#
+# FORTRAN
+#
+
+FC=$F90
+FCFLAGS=$F90FLAGS
+
+
+
 #
 # MPI environment
 #
@@ -41,6 +51,7 @@ AC_SUBST(MPI_DIR)
 AC_SUBST(MPI_CFLAGS)
 AC_SUBST(MPI_LDFLAGS)
 AC_SUBST(MPI_LIBS)
+
 
 # 
 # MPI library
@@ -70,6 +81,8 @@ if test "$enable_mpi" != "without" ; then
 fi
 
 
+
+
 #
 # TextParser environment
 #
@@ -87,6 +100,8 @@ else
   echo "         Specify --with-parser option."
   exit 1
 fi
+
+
 
 
 #
@@ -111,9 +126,12 @@ AC_SUBST(CIO_CXX)
 AC_SUBST(MAKE_SUB_DIRS)
 MAKE_SUB_DIRS="src doc"
 
-if test "$host" != "sparc*" ; then
+# K/FX
+if test "$host" != "sparc64-unknown-linux-gnu" ; then
   MAKE_SUB_DIRS="$MAKE_SUB_DIRS"" tools/frm/src"
 fi
+
+
 
 #
 # Checks for programs.
@@ -150,9 +168,12 @@ AC_CONFIG_FILES([Makefile \
                  include/cio_Version.h \
                  ])
 
-if test "$host" != "sparc*" ; then
+# K/FX
+if test "$host" != "sparc64-unknown-linux-gnu" ; then
   AC_CONFIG_FILES([tools/frm/src/Makefile])
 fi
+
+
 
 AC_OUTPUT
 

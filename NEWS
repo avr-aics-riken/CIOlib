@@ -11,6 +11,10 @@ RELEASE
 =======
 
 -------------
+Version 1.4.2   2013-11-02
+ - change default Fortran compiler from FC/FCFLAGS to F90/F90FLAGS
+
+-------------
 Version 1.4.1   2013-11-01
  - Compilation on K/FX
  
