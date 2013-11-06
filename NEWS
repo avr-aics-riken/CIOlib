@@ -11,6 +11,11 @@ RELEASE
 =======
 
 -------------
+Version 1.4.3   2013-11-06
+ - update Makefile.am
+ - フロントエンドで動作するfrmをビルドしたい場合に、--without-MPIをつけてconfigure、ビルドを実行したときに、MPI関連のエラーが発生するバグを修正
+
+-------------
 Version 1.4.2   2013-11-02
  - change default Fortran compiler from FC/FCFLAGS to F90/F90FLAGS
 

@@ -68,7 +68,7 @@ Here is examples.
 ## for the combination of Intel compiler and OpenMPI.
 
   $ ./configure --with-ompi=/opt/openmpi \
-                --with-parser=/usr/local/TextParser \
+                --with-parser=/usr/local/FFV/TextParser \
                 CXX=icpc \
                 CXXFLAGS="-O3 -Wall" \
                 F90=ifort \
@@ -77,7 +77,7 @@ Here is examples.
 
 ## OpenMPI with wrapper compiler, assume that mpicxx is a wrapper compiler for OpenMPI.
 
-  $ ./configure --with-parser=/usr/local/TextParser CXX=mpicxx CXXFLAGS=-O3
+  $ ./configure --with-parser=/usr/local/FFV/TextParser CXX=mpicxx CXXFLAGS=-O3
 
 
 ## K-computer

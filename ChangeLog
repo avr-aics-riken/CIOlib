@@ -11,6 +11,14 @@ REVISION HISTORY
 ================
 
 ------------------
+2013-11-06
+
+ r36 update Makefile.am [ver 1.4.3]
+  - add include/mpi_stubs.h to EXTRA_DIST
+  - add dist_include_HEADERS = include/mpi_stubs.h
+  - add mpi_stub.h
+
+------------------
 2013-11-02
 
  r35 add MPI check
