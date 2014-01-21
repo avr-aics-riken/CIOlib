@@ -2,7 +2,7 @@
 #
 # CIO - Cartesian Input / Output library
 #
-# Copyright (c) 2013 Advanced Institute for Computational Science, RIKEN. 
+# Copyright (c) 2013-2014 Advanced Institute for Computational Science, RIKEN. 
 # All rights reserved.
 #
 #########################################################################
@@ -12,4 +12,4 @@ doc_include_HEADERS = \
     $(top_builddir)/doc/ciolib_ug.pdf \
     $(top_builddir)/doc/reference.pdf
 
-dist_data_DATA = doxygen/Doxyfile doxygen/makepdf.sh
+# dist_data_DATA = doxygen/Doxyfile doxygen/makepdf.sh
