@@ -181,6 +181,17 @@ namespace CIO
     return path;
   }
 
+  //ファイル名から拡張子を削除
+  inline std::string ExtractPathWithoutExt(const std::string &fn)
+  {
+    std::string::size_type pos;
+    if((pos = fn.find_last_of(".")) == std::string::npos){
+        return fn;
+    }
+ 
+    return fn.substr(0, pos);
+  } 
+
 };
 
 #endif /* _CIO_PATHUTIL_H_ */

@@ -472,6 +472,109 @@ cio_TypeArray<T>::copyArray( int _sta[3], int _end[3], cio_Array *dstptr )
   return 0;
 }
 
+//FCONV 20131216.s
+//成分指定の配列コピー
+template<class T>
+CIO_MEMFUN(int)
+cio_TypeArray<T>::copyArrayNcomp( cio_Array *dst, int comp, bool ignoreGc )
+{
+  cio_TypeArray<T> *src = this;
+
+  // コピーの範囲
+  int       gcS    = src->getGcInt();
+  const int *headS = src->getHeadIndex();
+  const int *tailS = src->getTailIndex();
+  int       gcD    = dst->getGcInt();
+  const int *headD = dst->getHeadIndex();
+  const int *tailD = dst->getTailIndex();
+  if( ignoreGc )
+  {
+    gcS = gcD = 0;
+  }
+  int sta[3],end[3];
+  for( int i=0;i<3;i++ )
+  {
+    sta[i] = (headS[i]-gcS>=headD[i]-gcD) ? headS[i]-gcS : headD[i]-gcD;
+    end[i] = (tailS[i]+gcS<=tailD[i]+gcD) ? tailS[i]+gcS : tailD[i]+gcD;
+  }
+
+  return copyArrayNcomp(sta,end,dst,comp);
+}
+
+//成分指定の範囲指定での配列コピー
+template<class T>
+CIO_MEMFUN(int)
+cio_TypeArray<T>::copyArrayNcomp( int _sta[3], int _end[3], cio_Array *dstptr, int comp )
+{
+  cio_TypeArray<T> *src = this;
+
+  cio_TypeArray<T> *dst = dynamic_cast<cio_TypeArray<T>*>(dstptr);
+  if( !dst )
+  {
+    return 1;
+  }
+
+  // データタイプのチェック
+  if( src->getDataType() != dst->getDataType() )
+  {
+    return 2;
+  }
+  CIO::E_CIO_DTYPE dtype = src->getDataType();
+
+  //配列形状
+  if( src->getArrayShape() != dst->getArrayShape() )
+  {
+    return 3;
+  }
+  CIO::E_CIO_ARRAYSHAPE shape = src->getArrayShape();
+
+  //成分数
+  if( src->getNcomp() != src->getNcomp() )
+  {
+    return 4;
+  }
+
+  //コピーの範囲
+  int       gcS    = src->getGcInt();
+  const int *headS = src->getHeadIndex();
+  const int *tailS = src->getTailIndex();
+  int       gcD    = dst->getGcInt();
+  const int *headD = dst->getHeadIndex();
+  const int *tailD = dst->getTailIndex();
+  int sta[3],end[3];
+  for( int i=0;i<3;i++ )
+  {
+    sta[i] = (headS[i]-gcS>=headD[i]-gcD) ? headS[i]-gcS : headD[i]-gcD;
+    end[i] = (tailS[i]+gcS<=tailD[i]+gcD) ? tailS[i]+gcS : tailD[i]+gcD;
+  }
+  for( int i=0;i<3;i++ )
+  {
+    sta[i] = (_sta[i]>=sta[i]) ? _sta[i] : sta[i];
+    end[i] = (_end[i]<=end[i]) ? _end[i] : end[i];
+  }
+
+  // コピー
+  if( m_shape == CIO::E_CIO_IJKN )
+  {
+    for( int k=sta[2];k<=end[2];k++ ){
+    for( int j=sta[1];j<=end[1];j++ ){
+    for( int i=sta[0];i<=end[0];i++ ){
+      dst->hval(i,j,k,comp) = src->hval(i,j,k,0);
+    }}}
+  }
+  else
+  {
+    for( int k=sta[2];k<=end[2];k++ ){
+    for( int j=sta[1];j<=end[1];j++ ){
+    for( int i=sta[0];i<=end[0];i++ ){
+      dst->hval(comp,i,j,k) = src->hval(0,i,j,k);
+    }}}
+  }
+
+  return 0;
+
+}
+
 // 粗密データの補間処理を行う
 CIO_MEMFUN(cio_Array*)
 cio_Array::interp_coarse( cio_Array *src, int &err, bool head0start )
@@ -583,6 +686,21 @@ size_t cio_TypeArray<T>::writeBinary( FILE *fp )
 {
   if( !fp ) return size_t(0);
   return fwrite(m_data,sizeof(T),getArrayLength(),fp);
+}
+
+// 配列サイズ分のasciiデータを書き出す(戻り値は読み込んだ要素数)
+template<class T>
+size_t cio_TypeArray<T>::writeAscii( FILE *fp )
+{
+  if( !fp ) return size_t(0);
+  //return fwrite(m_data,sizeof(T),getArrayLength(),fp);
+
+  for(int i=0; i<getArrayLength(); i++) {
+    fprintf(fp,"%e\n",(float)m_data[i]);
+  }
+
+  return getArrayLength();
+
 }
 
 #endif /* _CIO_ARRAY_INLINE_H_ */

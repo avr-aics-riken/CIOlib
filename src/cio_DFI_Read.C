@@ -186,13 +186,26 @@ cio_Array* cio_DFI::ReadFieldData(std::string fname,
   //１層ずつ読み込むので、バッファのZサイズは１にしておく
   szB[2]=1;
 
- //読み込みバッファ
-  cio_Array* buf = cio_Array::instanceArray
+//FCONV 20121216.s
+  //読み込みバッファ
+  cio_Array* buf=NULL;
+  //配列形状がIJKNのときは成分数を１にしてインスタンスする
+  if( DFI_Finfo.ArrayShape == CIO::E_CIO_NIJK ) {
+    buf = cio_Array::instanceArray
+                   ( DFI_Finfo.DataType
+                   , DFI_Finfo.ArrayShape
+                   , szB
+                   , 0 
+                   , DFI_Finfo.Component );
+  } else if( DFI_Finfo.ArrayShape == CIO::E_CIO_IJKN ) {
+    buf = cio_Array::instanceArray
                    ( DFI_Finfo.DataType
                    , DFI_Finfo.ArrayShape
                    , szB
                    , 0
-                   , DFI_Finfo.Component );
+                   , 1 );
+  }
+//FCONV 20121216.e
 
   int szS[3];
   int headS[3];

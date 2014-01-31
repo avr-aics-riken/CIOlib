@@ -69,17 +69,38 @@ cio_DFI_BOV::read_Datarecord(FILE* fp,
   //１層ずつ読み込み
   int hzB = head[2];
 
-  for( int k=0; k<nz; k++ ) {
-    //headインデクスをずらす
-    head[2]=hzB+k;
-    buf->setHeadIndex(head);
+  CIO::E_CIO_ARRAYSHAPE shape = buf->getArrayShape();
 
-    //１層読み込
-    size_t ndata = buf->getArrayLength();
-    if( buf->readBinary(fp,matchEndian) != ndata ) return CIO::E_CIO_ERROR_READ_FIELD_DATA_RECORD;
+  //NIJKの読込み
+  if( shape == CIO::E_CIO_NIJK ) {
+    for( int k=0; k<nz; k++ ) {
+      //headインデクスをずらす
+      head[2]=hzB+k;
+      buf->setHeadIndex(head);
 
-    // コピー
-    buf->copyArray(src);
+      //１層読み込
+      size_t ndata = buf->getArrayLength();
+      if( buf->readBinary(fp,matchEndian) != ndata ) return CIO::E_CIO_ERROR_READ_FIELD_DATA_RECORD;
+
+      // コピー
+      buf->copyArray(src);
+    }
+  }
+  //IJKNの読込み 
+  else if( shape == CIO::E_CIO_IJKN ) {
+    for(int n=0; n<src->getNcomp(); n++) {
+    for(int k=0; k<nz; k++) {
+      //headインデックスをずらす
+      head[2]=hzB+k;
+      buf->setHeadIndex(head);
+
+      //１層読み込
+      size_t ndata = buf->getArrayLength();
+      if( buf->readBinary(fp,matchEndian) != ndata ) return CIO::E_CIO_ERROR_READ_FIELD_DATA_RECORD;
+
+      //コピー
+      buf->copyArrayNcomp(src,n);
+    }}
   }
 
   return CIO::E_CIO_SUCCESS;
@@ -140,8 +161,7 @@ cio_DFI_BOV::write_DataRecord(FILE* fp,
 
   unsigned int dmy = dLen * Real_size;
 
-  if( val->writeBinary(fp) != dLen ) return CIO::E_CIO_ERROR_WRITE_FIELD_HEADER_RECORD;
-
+  if( val->writeBinary(fp) != dLen ) return CIO::E_CIO_ERROR_WRITE_FIELD_DATA_RECORD;
   return CIO::E_CIO_SUCCESS;
 }
 
@@ -154,3 +174,117 @@ cio_DFI_BOV::write_averaged(FILE* fp,
 {
   return CIO::E_CIO_SUCCESS;
 }
+
+// #################################################################
+// BOV ascii header file output
+bool
+cio_DFI_BOV::write_ascii_header(const unsigned step,
+                                const double time)
+{
+
+  FILE* fp=NULL;
+
+  //ファイル名生成
+  bool mio=false;
+  if( DFI_MPI.NumberOfRank > 1 ) mio = true;
+
+  std::string fname,tmp;
+  tmp = Generate_FileName(DFI_Finfo.Prefix,
+                          m_RankID,
+                          step,
+                          "bov",
+                          m_output_fname,
+                          mio,
+                          DFI_Finfo.TimeSliceDirFlag);
+
+  if( CIO::cioPath_isAbsolute(DFI_Finfo.DirectoryPath) ){
+    fname = DFI_Finfo.DirectoryPath + "/" + tmp;
+  } else {
+    fname = m_directoryPath + "/" + DFI_Finfo.DirectoryPath +"/"+ tmp;
+  }
+
+  //bov ヘッダーファイルオープン
+  if( (fp = fopen(fname.c_str(),"w")) == NULL ) {
+    printf("\tCan't open file.(%s)\n",fname.c_str());
+    return false;
+  }
+
+  //TIME: 
+  fprintf(fp,"Time: %e\n",time);
+
+  //DATA_FILE:
+  std::string o_fname;
+  o_fname = Generate_FileName(DFI_Finfo.Prefix,
+                              m_RankID,
+                              step,
+                              "dat",
+                              m_output_fname,
+                              mio,
+                              DFI_Finfo.TimeSliceDirFlag);
+  fprintf(fp,"DATA_FILE: %s\n",o_fname.c_str());
+
+  //DATA_SIZE:
+  fprintf(fp,"DATA_SIZE: %d %d %d\n",DFI_Process.RankList[m_RankID].VoxelSize[0],
+                                     DFI_Process.RankList[m_RankID].VoxelSize[1],
+                                     DFI_Process.RankList[m_RankID].VoxelSize[2]);
+
+  //DATA_FORMAT
+  std::string dType;
+  if(      GetDataType() == CIO::E_CIO_INT8    ) dType=D_CIO_BYTE;
+  else if( GetDataType() == CIO::E_CIO_UINT8   ) dType=D_CIO_UINT8;
+  else if( GetDataType() == CIO::E_CIO_INT16   ) dType=D_CIO_INT16;
+  else if( GetDataType() == CIO::E_CIO_UINT16  ) dType=D_CIO_UINT16;
+  else if( GetDataType() == CIO::E_CIO_INT32   ) dType=D_CIO_INT;
+  else if( GetDataType() == CIO::E_CIO_UINT32  ) dType=D_CIO_UINT32;
+  else if( GetDataType() == CIO::E_CIO_INT64   ) dType=D_CIO_INT64;
+  else if( GetDataType() == CIO::E_CIO_UINT64  ) dType=D_CIO_UINT64;
+  else if( GetDataType() == CIO::E_CIO_FLOAT32 ) dType=D_CIO_FLOAT;
+  else if( GetDataType() == CIO::E_CIO_FLOAT64 ) dType=D_CIO_DOUBLE;
+  fprintf(fp,"DATA_FORMAT: %s\n",dType.c_str());
+
+  //DATA_COMPONENT
+  fprintf(fp,"DATA_COMPONENT: %d\n",DFI_Finfo.Component);
+
+  //VARIABLE:
+  fprintf(fp,"VARIABLE: %s\n",DFI_Finfo.Prefix.c_str());
+
+  //DATA_ENDIAN
+  if( DFI_Finfo.Endian == CIO::E_CIO_LITTLE ) {
+    fprintf(fp,"DATA_ENDIAN: LITTLE\n");
+  } else {
+    fprintf(fp,"DATA_ENDIAN: BIG\n");
+  }
+
+  //CENTERING
+  fprintf(fp,"CENTERING: zonal\n");
+
+  //BRICK_ORIGN
+  fprintf(fp,"BRICK_ORIGN: %e %e %e\n",DFI_Domain.GlobalOrigin[0],
+                                       DFI_Domain.GlobalOrigin[1],
+                                       DFI_Domain.GlobalOrigin[2]);
+
+  //pitを計算
+  double pit[3];
+  for(int i=0; i<3; i++) {
+    pit[i]=(DFI_Domain.GlobalRegion[i]/DFI_Domain.GlobalVoxel[i]);
+  }
+
+  //BRICK_SIZE
+  fprintf(fp,"BRICK_SIZE: %e %e %e\n",
+          DFI_Process.RankList[m_RankID].VoxelSize[0]*pit[0],
+          DFI_Process.RankList[m_RankID].VoxelSize[1]*pit[1],
+          DFI_Process.RankList[m_RankID].VoxelSize[2]*pit[2]);
+
+  //#CIO_ARRAY_SHAPE
+  if( DFI_Finfo.ArrayShape == CIO::E_CIO_IJKN ) {
+    fprintf(fp,"#CIO_ARRAY_SHAPE: IJKN\n");
+  } else {
+    fprintf(fp,"#CIO_ARRAY_SHAPE: NIJK\n");
+  }
+
+  //file close
+  fclose(fp);
+
+  return true;
+}
+

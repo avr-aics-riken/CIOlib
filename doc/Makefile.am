@@ -10,6 +10,7 @@
 doc_includedir = $(prefix)/doc
 doc_include_HEADERS = \
     $(top_builddir)/doc/ciolib_ug.pdf \
-    $(top_builddir)/doc/reference.pdf
+    $(top_builddir)/doc/reference.pdf \
+    $(top_builddir)/doc/fconv_reference.pdf
 
-# dist_data_DATA = doxygen/Doxyfile doxygen/makepdf.sh
+# dist_data_DATA = doxygen/Doxyfile doxygen/makepdf.sh 

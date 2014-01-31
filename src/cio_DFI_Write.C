@@ -74,6 +74,7 @@ cio_DFI::WriteIndexDfiFile(const std::string dfi_name)
 
 // #################################################################
 // proc DFIファイルの出力コントロール (float 版)
+/*
 CIO::E_CIO_ERRORCODE
 cio_DFI::WriteProcDfiFile(const MPI_Comm comm,
                           bool out_host,
@@ -95,12 +96,13 @@ cio_DFI::WriteProcDfiFile(const MPI_Comm comm,
   return WriteProcDfiFile(comm, out_host, d_org);
 
 }
+*/
 // #################################################################
-// proc DFIファイルの出力コントロール (double 版)
+// proc DFIファイルの出力コントロール
 CIO::E_CIO_ERRORCODE
 cio_DFI::WriteProcDfiFile(const MPI_Comm comm,
-                          bool out_host,
-                          double* org)
+                          bool out_host)
+                          //double* org)
 {
 
   //procファイル名の生成
@@ -125,15 +127,17 @@ cio_DFI::WriteProcDfiFile(const MPI_Comm comm,
   cio_Create_dfiProcessInfo(comm, out_Process);
 
   //orign の設定
+  /*
   if( org!=NULL ) {
     for(int i=0; i<3; i++) {
       out_domain.GlobalOrigin[i] = org[i];
     }
   } else {
+  */
     for(int i=0; i<3; i++) {
       out_domain.GlobalOrigin[i] = DFI_Domain.GlobalOrigin[i];
     }
-  }
+  //}
 
   //Domain の設定
   for(int i=0; i<3; i++) {
@@ -210,14 +214,47 @@ cio_DFI::WriteData(const unsigned step,
                    double time_avr)
 {
 
+  //printf("WriteData RankID : %d\n",m_RankID);
+
   bool mio=false;
   if( DFI_MPI.NumberOfRank > 1 ) mio=true;
-  std::string outFile;
-  if( CIO::cioPath_isAbsolute(DFI_Finfo.DirectoryPath) ){
-    outFile = Generate_FieldFileName(m_RankID,step,mio);
+
+  std::string outFile,tmp;
+//FCONV 20131128.s
+  if( m_output_fname != CIO::E_CIO_FNAME_RANK_STEP ) {
+    tmp = Generate_FieldFileName(m_RankID,step,mio);
+    if( CIO::cioPath_isAbsolute(DFI_Finfo.DirectoryPath) ){
+      outFile = tmp;
+    } else {
+      outFile = m_directoryPath + "/"+ tmp;
+    }
   } else {
-    outFile = m_directoryPath + "/"+ Generate_FieldFileName(m_RankID,step,mio);
+    std::string ext;
+    if( DFI_Finfo.FileFormat == CIO::E_CIO_FMT_SPH ) {
+      ext = D_CIO_EXT_SPH;
+    } else if( DFI_Finfo.FileFormat == CIO::E_CIO_FMT_BOV ) {
+      ext = D_CIO_EXT_BOV;
+    } else if( DFI_Finfo.FileFormat == CIO::E_CIO_FMT_AVS ) {
+      //ext = D_CIO_EXT_SPH;
+      ext = D_CIO_EXT_BOV;
+    } else if( DFI_Finfo.FileFormat == CIO::E_CIO_FMT_VTK ) {
+      ext = D_CIO_EXT_VTK;
+    } else if( DFI_Finfo.FileFormat == CIO::E_CIO_FMT_PLOT3D ) {
+      ext = D_CIO_EXT_FUNC;
+    }
+    tmp = Generate_FileName(DFI_Finfo.Prefix,
+                            m_RankID,
+                            step,ext,
+                            m_output_fname,
+                            mio,
+                            DFI_Finfo.TimeSliceDirFlag);
+    if( CIO::cioPath_isAbsolute(DFI_Finfo.DirectoryPath) ){
+      outFile = DFI_Finfo.DirectoryPath +"/"+ tmp;
+    } else {
+      outFile = m_directoryPath + "/" + DFI_Finfo.DirectoryPath +"/"+ tmp;
+    }
   }
+//FCONV 20131128.e
 
   std::string dir = CIO::cioPath_DirName(outFile);
 
@@ -247,19 +284,26 @@ cio_DFI::WriteData(const unsigned step,
 
   if( err != CIO::E_CIO_SUCCESS ) return err;
 
-  //index dfi ファイルのディレクトリ作成
-  cio_DFI::MakeDirectory(m_directoryPath);
-  std::string dfiname = CIO::cioPath_FileName(m_indexDfiName,".dfi");
-  std::string fname = CIO::cioPath_ConnectPath( m_directoryPath, dfiname );
+//FCONV 20131218.s
+  if( m_indexDfiName != "" ) {
+    //index dfi ファイルのディレクトリ作成
+    cio_DFI::MakeDirectory(m_directoryPath);
+    std::string dfiname = CIO::cioPath_FileName(m_indexDfiName,".dfi");
+    std::string fname = CIO::cioPath_ConnectPath( m_directoryPath, dfiname );
 
-  //Slice へのセット
-  DFI_TimeSlice.AddSlice(step, time, minmax, DFI_Finfo.Component, avr_mode,
-                         step_avr, time_avr);
+    //Slice へのセット
+    DFI_TimeSlice.AddSlice(step, time, minmax, DFI_Finfo.Component, avr_mode,
+                           step_avr, time_avr);
 
-  //index dfi のファイル出力
-  if( m_RankID == 0 ) {
-    err = WriteIndexDfiFile(fname);
+    //index dfi のファイル出力
+    if( m_RankID == 0 ) {
+      err = WriteIndexDfiFile(fname);
+    }
   }
+//FCONV 20131218.e
+//FCONV 20131125.s
+  if( !write_ascii_header(step,time) ) return CIO::E_CIO_ERROR;
+//FCONV 20131125.e
 
   return err;
 }
@@ -282,14 +326,65 @@ cio_DFI::WriteFieldData(std::string fname,
     return CIO::E_CIO_ERROR_OPEN_FIELDDATA;
   }
 
+  //printf("field file name : %s\n",fname.c_str());
+
   //ヘッダー出力
   if( write_HeaderRecord(fp, step, time, m_RankID) != CIO::E_CIO_SUCCESS ) {
     fclose(fp);
     return CIO::E_CIO_ERROR_WRITE_FIELD_HEADER_RECORD;
   }
 
+  cio_Array *outArray = val;
+
+  //格子点補間処理ありの場合、図心データから格子点への補間を行う
+  if( m_bgrid_interp_flag ) {
+    //配列サイズの取得
+    const int *szVal = val->getArraySizeInt();
+    //配列成分の取得
+    int nComp = val->getNcomp();
+    //格子点データ配列サイズのセット
+    int szOut[3];
+    for(int i=0; i<3; i++) szOut[i]=szVal[i]+1;
+    //出力バッファのインスタンス
+    outArray =  cio_Array::instanceArray
+                           (val->getDataType(),
+                            val->getArrayShape(),
+                            szOut,
+                            0,
+                            nComp);
+
+    //char
+    if( val->getDataType() == CIO::E_CIO_INT8 ) {
+      cio_TypeArray<char> *V = dynamic_cast<cio_TypeArray<char>*>(val);
+      cio_TypeArray<char> *P = dynamic_cast<cio_TypeArray<char>*>(outArray);
+      setGridData(P,V);
+    //short
+    } else if( val->getDataType() == CIO::E_CIO_INT16 ) {
+      cio_TypeArray<short> *V = dynamic_cast<cio_TypeArray<short>*>(val);
+      cio_TypeArray<short> *P = dynamic_cast<cio_TypeArray<short>*>(outArray);
+      setGridData(P,V);
+    //int
+    } else if( val->getDataType() == CIO::E_CIO_INT32 ) {
+      cio_TypeArray<int> *V = dynamic_cast<cio_TypeArray<int>*>(val);
+      cio_TypeArray<int> *P = dynamic_cast<cio_TypeArray<int>*>(outArray);
+      setGridData(P,V);
+    //float
+    } else if( val->getDataType() == CIO::E_CIO_FLOAT32 ) {
+      cio_TypeArray<float> *V = dynamic_cast<cio_TypeArray<float>*>(val);
+      cio_TypeArray<float> *P = dynamic_cast<cio_TypeArray<float>*>(outArray);
+      setGridData(P,V);
+    //double
+    } else if( val->getDataType() == CIO::E_CIO_FLOAT64 ) {
+      cio_TypeArray<double> *V = dynamic_cast<cio_TypeArray<double>*>(val);
+      cio_TypeArray<double> *P = dynamic_cast<cio_TypeArray<double>*>(outArray);
+      setGridData(P,V);
+    }
+
+  } 
+
   //データ出力
-  if( write_DataRecord(fp, val, DFI_Finfo.GuideCell, m_RankID) != CIO::E_CIO_SUCCESS) {
+  //if( write_DataRecord(fp, val, DFI_Finfo.GuideCell, m_RankID) != CIO::E_CIO_SUCCESS) {
+  if( write_DataRecord(fp, outArray, DFI_Finfo.GuideCell, m_RankID) != CIO::E_CIO_SUCCESS) {
     fclose(fp);
     return CIO::E_CIO_ERROR_WRITE_FIELD_DATA_RECORD;
   }

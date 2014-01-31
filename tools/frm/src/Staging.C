@@ -19,18 +19,29 @@
 
 ///////////////////////////////////////////////////////////////////
 // 初期化、ファイルの読込み
-bool Staging::Initial( string infofile, string dfiname )
+//bool Staging::Initial( string infofile, string dfiname )
+bool Staging::Initial( string infofile )
 {
 
+  string fconvfile; //FCONV 入力ファイル名
 
   //infoファイル読込み
-  if( !ReadInfo(infofile) ) return false;
+  if( !ReadInfo(infofile, fconvfile) ) return false;
+
+  //FCONV入力ファイルの読込み
+  if( !ReadFconvInputFile(fconvfile) ) return false;
+
+  DFI.clear();
 
   //dfiファイル読込み
   CIO::E_CIO_ERRORCODE ret;
-  DFI = cio_DFI::ReadInit(MPI_COMM_WORLD, dfiname, m_GVoxel, m_Gdiv, ret);
+  for(int i=0; i<m_dfi_fname.size(); i++) {
+    cio_DFI* dfi_in = cio_DFI::ReadInit(MPI_COMM_WORLD, m_dfi_fname[i], m_GVoxel, m_Gdiv, ret);
+    DFI.push_back(dfi_in);
+  }
 
   //dfi情報が格納されたクラスポインタの取得
+  /*
   dfi_Finfo = DFI->GetcioFileInfo();
   dfi_Fpath = DFI->GetcioFilePath();
   dfi_Unit  = DFI->GetcioUnit();
@@ -38,6 +49,7 @@ bool Staging::Initial( string infofile, string dfiname )
   dfi_MPI   = DFI->GetcioMPI();
   dfi_TSlice= DFI->GetcioTimeSlice();
   dfi_Process=(cio_Process *)DFI->GetcioProcess();
+  */
 
   if( !m_ActiveSubdomain.empty() ) {
     int divSudomain[3] = {0,0,0};
@@ -57,7 +69,7 @@ bool Staging::Initial( string infofile, string dfiname )
 
 ///////////////////////////////////////////////////////////////////
 // infoファイルの読込み
-bool Staging::ReadInfo(string infofile)
+bool Staging::ReadInfo(string infofile, string &fconvfile)
 {
 
   //実行プログラム情報ローダのインスタンス生成
@@ -107,6 +119,32 @@ bool Staging::ReadInfo(string infofile)
   } else {
     m_ActiveSubdomain=str;
   }
+
+//FCONV 20140116.s
+  //InputFile
+  label = "/FCONVInfo/InputFile";
+  if( !(tp_stg.GetValue(label, &str )) ) {
+    fconvfile="";
+  } else {
+    fconvfile=str;
+  }
+
+  //NumberOfProcess
+  label = "/FCONVInfo/NumberOfProcess";
+  if( !(tp_stg.GetValue(label, &ct )) ) {
+    m_fconv_numproc=0;
+  } else {
+    m_fconv_numproc=ct;
+  }
+
+  m_ConvType = STG_E_OUTPUT_MxN;
+
+  for(int i=0; i<3; i++) {
+    m_CropStart[i]=1;
+    m_CropEnd[i]=m_GVoxel[i];
+  }
+
+//FCONV 20140116.e
 
   //NumberOfRank
   label = "/MPI/NumberOfRank";
@@ -174,9 +212,202 @@ bool Staging::ReadInfo(string infofile)
 
   }
 
+  if( m_GRankInfo.size() != m_NumberOfRank ) return false;
+
   tp_stg.remove();
 
   return true;
+}
+
+///////////////////////////////////////////////////////////////////
+// FCONV 入力ファイルの読込み
+bool Staging::ReadFconvInputFile(string fconvfile)
+{
+
+  if( fconvfile == "" ) {
+    m_fconv_inputfile = false;
+    return true;
+  }
+
+  string label;
+  string str;
+  int v[3];
+
+  //実行プログラム情報ローダのインスタンス生成
+  cio_TextParser tp_stg;
+  tp_stg.getTPinstance();
+
+  FILE* fp = NULL;
+  if( !(fp=fopen(fconvfile.c_str(),"rb")) ) {
+    printf("Can't open file. (%s)\n",fconvfile.c_str());
+    return false;
+  }
+  fclose(fp);
+
+  int ierr = tp_stg.readTPfile(fconvfile);
+
+  //コンバートタイプの読込み
+  label = "/ConvData/ConvType";
+  if( (tp_stg.GetValue(label,&str)) ) {
+    if     ( !strcasecmp(str.c_str(), "Mx1") )  m_ConvType = STG_E_OUTPUT_Mx1;
+    else if( !strcasecmp(str.c_str(), "MxN") )  m_ConvType = STG_E_OUTPUT_MxN;
+    else if( !strcasecmp(str.c_str(), "MxM") )  m_ConvType = STG_E_OUTPUT_MxM;
+    else
+    {
+      printf("\tInvalid keyword is described for '%s'\n", label.c_str());
+      return false;
+    }
+  }
+
+  //ファイル割振り方法の取得
+  label = "/ConvData/MultiFileCasting";
+  if( (tp_stg.GetValue(label,&str)) ) {
+    if     ( !strcasecmp(str.c_str(), "step") ) m_outList = STG_E_OUTPUT_TYPE_STEP;
+    else if( !strcasecmp(str.c_str(), "rank") ) m_outList = STG_E_OUTPUT_TYPE_RANK;
+  } else m_outList = STG_E_OUTPUT_TYPE_STEP;
+
+
+  //入力指示の読込み
+  label = "/ConvData/CropIndexStart";
+  if( (tp_stg.GetVector(label, v, 3 )) ) {
+    for(int i=0; i<3; i++) m_CropStart[i]=v[i]; 
+  }
+  label = "/ConvData/CropIndexEnd";
+  if( (tp_stg.GetVector(label, v, 3 )) ) {
+    for(int i=0; i<3; i++) m_CropEnd[i]=v[i];
+  }
+
+  tp_stg.remove();
+
+  m_fconv_inputfile = true;
+  return true;
+
+}
+
+///////////////////////////////////////////////////////////////////
+// step基準のリスト生成
+void Staging::makeStepList(int myID)
+{
+
+  m_StepRankList.clear();
+
+  //総ステップ数を求める
+  int Total_step = 0;
+  for(int i=0; i<DFI.size(); i++) {
+    const cio_TimeSlice* TSlice = DFI[i]->GetcioTimeSlice();
+    for(int j=0; j<TSlice->SliceList.size(); j++) {
+      if( m_step > 0 && TSlice->SliceList[j].step != m_step ) continue;
+      Total_step++;
+    }
+  }
+
+  //各ランクで担当するステップ数を
+  int nStep = Total_step/m_fconv_numproc;
+  if( Total_step%m_fconv_numproc != 0 ) {
+    for(int i=0; i<Total_step%m_fconv_numproc; i++) {
+      if( myID==i ) nStep++;
+    }
+  }
+
+  //各ランクが担当するステップのスタートとエンドを求める
+  int sta,end;
+  sta = myID * nStep;
+  if( Total_step%m_fconv_numproc != 0 ) {
+    if( myID >= Total_step%m_fconv_numproc ) sta = sta+Total_step%m_fconv_numproc;
+  }
+  end = sta+nStep-1;
+  if( nStep == 0 ) return;
+
+  //処理ステップリストの生成
+  int cnt=0;
+  for(int i=0; i<DFI.size(); i++) {
+    step_rank_info info;
+    info.stepStart = -1;
+    const cio_TimeSlice* TSlice = DFI[i]->GetcioTimeSlice();
+    for(int j=0; j<TSlice->SliceList.size(); j++) {
+      if( sta > cnt ) { cnt++; continue; }
+      if( info.stepStart == -1 ) {
+        info.dfi = DFI[i];
+        info.stepStart = j;
+      }
+      info.stepEnd = j;
+      cnt++;
+      if( end < cnt ) break;
+    }
+    if( info.stepStart > -1 ) m_StepRankList.push_back(info);
+    if( end < cnt ) break;
+  }    
+
+  //rantStart,rankEndのセット
+  for(int i=0; i<m_StepRankList.size(); i++) {
+    const cio_Process* DFI_Process = m_StepRankList[i].dfi->GetcioProcess();
+    m_StepRankList[i].rankStart=0;
+    m_StepRankList[i].rankEnd=DFI_Process->RankList.size()-1;
+  }
+
+}
+
+///////////////////////////////////////////////////////////////////
+// rank基準のリスト生成
+void Staging::makeRankList(int myID)
+{
+
+  m_StepRankList.clear();
+
+  //総ランク数を求める
+  int Total_rank = 0;
+  for(int i=0; i<DFI.size(); i++) {
+    const cio_Process* DFI_Process = DFI[i]->GetcioProcess();
+    Total_rank += DFI_Process->RankList.size();
+  }
+
+  //各ランクで担当するrank数を求める
+  int nRank = Total_rank/m_fconv_numproc;
+  if( Total_rank%m_fconv_numproc != 0 ) {
+    for(int i=0; i<Total_rank%m_fconv_numproc; i++) {
+      if( myID == i ) nRank++;
+    }
+  }
+
+  //自ランクが担当するランクのスタートとエンドを求める
+  int sta,end;
+  sta = myID * nRank;
+  if( Total_rank%m_fconv_numproc != 0 ) {
+    if( myID >= Total_rank%m_fconv_numproc ) sta = sta+Total_rank%m_fconv_numproc;
+  }
+  end = sta+nRank-1;
+  if( nRank == 0 ) return;
+
+  //処理rankリストの生成
+  int cnt=0;
+  for(int i=0; i<DFI.size(); i++) {
+    step_rank_info info;
+    info.rankStart = -1;
+    const cio_Process* DFI_Process = DFI[i]->GetcioProcess();
+    for(int j=0; j<DFI_Process->RankList.size(); j++) {
+      if( sta > cnt ) { cnt++; continue; }
+      if( info.rankStart == -1 ) {
+        info.dfi = DFI[i];
+        info.rankStart = j;
+      }
+      info.rankEnd = j;
+      cnt++;
+      if( end < cnt ) break;
+    } 
+    if( info.rankStart > -1 ) m_StepRankList.push_back(info);
+    if( end < cnt ) break;
+  }
+
+  //tepStart,stepEndのセット
+  for(int i=0; i<m_StepRankList.size(); i++) {
+    const cio_TimeSlice* TSlice = m_StepRankList[i].dfi->GetcioTimeSlice();
+    m_StepRankList[i].stepStart=0;
+    m_StepRankList[i].stepEnd=TSlice->SliceList.size()-1;
+
+  }
+  printf("myID : %d nRank : %d sta : %d end : %d m_StepRankList.size : %d\n",
+          myID,nRank,sta,end,(int)m_StepRankList.size());
+
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -802,104 +1033,6 @@ stg_EGlobalVoxel Staging::CheckGlobalVoxel(int Gvoxel[3], int DFI_Gvoxel[3])
   return STG_E_OTHER;
 }
 
-/*
-///////////////////////////////////////////////////////////////////
-// 密HeadTail作成（DFI)
-void Staging::MakeGVX2HeadTeail(int (*HeadTail)[6], int numrank)
-{
-
-  for(int i=0; i<numrank; i++ ) {
-    HeadTail[i][0] = DFI->DFI_HeadTail[i][0]*2-1;
-    HeadTail[i][1] = DFI->DFI_HeadTail[i][1]*2-1;
-    HeadTail[i][2] = DFI->DFI_HeadTail[i][2]*2-1;
-    HeadTail[i][3] = DFI->DFI_HeadTail[i][3]*2;
-    HeadTail[i][4] = DFI->DFI_HeadTail[i][4]*2;
-    HeadTail[i][5] = DFI->DFI_HeadTail[i][5]*2;
-  }
-
-}
-
-
-///////////////////////////////////////////////////////////////////
-// 検索範囲のしぼりこみ
-bool Staging::CreateStartEnd(int (*HeadTail)[6])
-{
-
-  int div[3];
-  div[0] = DFI->DFI_mapX.size();
-  div[1] = DFI->DFI_mapY.size();
-  div[2] = DFI->DFI_mapZ.size();
-
-  std::set<int>headx,heady,headz;
-  for(int k=0; k<div[2]; k++) {
-  for(int j=0; j<div[1]; j++) {
-  for(int i=0; i<div[0]; i++) {
-    int rank = DFI->DFI_rankMap[_IDX_S3D(i,j,k,div[0],div[1],div[2],0)];
-    headx.insert(HeadTail[rank][0]);
-    heady.insert(HeadTail[rank][1]);
-    headz.insert(HeadTail[rank][2]);
-  }}}
-
-  headT mapx,mapy,mapz;
-  CreateHeadMap(headx,mapx);
-  CreateHeadMap(heady,mapy);
-  CreateHeadMap(headz,mapz);
-
-  int gdiv[3];
-  gdiv[0]=m_mapX.size();
-  gdiv[1]=m_mapY.size();
-  gdiv[2]=m_mapZ.size();
-  for( int k=0; k<gdiv[2]; k++ ) {
-  for( int j=0; j<gdiv[1]; j++ ) {
-  for( int i=0; i<gdiv[0]; i++ ) {
-   int myRank = m_rankMap[_IDX_S3D(i,j,k,gdiv[0],gdiv[1],gdiv[2],0)]; 
-   if( myRank<0 ) continue;
-
-   //x方向のしぼりこみ
-   int sta=m_HeadTail[myRank][0];
-   int end=m_HeadTail[myRank][3];
-
-   for( std::set<int>::iterator it=headx.begin(); it!=headx.end(); it++ )
-   {
-     if( sta >= *it ) m_StartEnd[myRank][0]=mapx.find(*it)->second;
-     if( end >= *it ) m_StartEnd[myRank][3]=mapx.find(*it)->second;
-   } 
-
-   //y方向のしぼりこみ
-   sta=m_HeadTail[myRank][1];
-   end=m_HeadTail[myRank][4];
-
-   for( std::set<int>::iterator it=heady.begin(); it!=heady.end(); it++ )
-   {
-     if( sta >= *it ) m_StartEnd[myRank][1]=mapy.find(*it)->second;
-     if( end >= *it ) m_StartEnd[myRank][4]=mapy.find(*it)->second;
-   } 
-
-   //z方向のしぼりこみ
-   sta=m_HeadTail[myRank][2];
-   end=m_HeadTail[myRank][5];
-
-   for( std::set<int>::iterator it=headz.begin(); it!=headz.end(); it++ )
-   {
-     if( sta >= *it ) m_StartEnd[myRank][2]=mapz.find(*it)->second;
-     if( end >= *it ) m_StartEnd[myRank][5]=mapz.find(*it)->second;
-   } 
-
-
-  }}}
-
-
-  if( headx.size()>0 ) headx.clear();
-  if( heady.size()>0 ) heady.clear();
-  if( headz.size()>0 ) headz.clear();
-  if( mapx.size()>0 ) mapx.clear();
-  if( mapy.size()>0 ) mapy.clear();
-  if( mapz.size()>0 ) mapz.clear();
-
-  return true; 
-
-}
-*/
 ///////////////////////////////////////////////////////////////////
 // ファイルコピー
 bool Staging::FileCopy(vector<int>readRankList, int myRank)
@@ -970,6 +1103,75 @@ bool Staging::FileCopy(vector<int>readRankList, int myRank)
 }
 
 ///////////////////////////////////////////////////////////////////
+// ファイルコピー(FCONV用)
+bool Staging::FileCopy(step_rank_info info, int myRank)
+{
+
+  dfi_Process = (cio_Process *)info.dfi->GetcioProcess();
+  dfi_Finfo   = info.dfi->GetcioFileInfo();
+  dfi_TSlice  = info.dfi->GetcioTimeSlice();
+  dfi_Fpath   = info.dfi->GetcioFilePath();
+  dfi_Unit    = info.dfi->GetcioUnit();
+  dfi_Domain  = info.dfi->GetcioDomain();
+  dfi_MPI     = info.dfi->GetcioMPI();
+
+  string dfi_fname = info.dfi->get_dfi_fname();
+  m_inPath = CIO::cioPath_DirName(dfi_fname);
+
+  bool mio;
+  if( dfi_Process->RankList.size()>1 ) mio = true;
+  else mio=false;
+
+  char* cmd = new char[512];
+  char tmp[20];
+  string fname;
+
+  if( m_outPath == "" ) m_outPath=".";
+  int len = m_outPath.size()+7;
+
+  //コピーするディレクトリの生成
+  sprintf(tmp,"%06d", myRank);
+  string path = m_outPath + string("/") + string(tmp);
+  MakeDirectory(path);
+  path += string("/"); 
+ 
+  string path2;
+  //ファイル名を生成しディレクトリのファイルをコピーする
+  for(int i=info.stepStart; i<=info.stepEnd; i++) {
+    int step = dfi_TSlice->SliceList[i].step;
+    //TimeSlice 出力の場合のディレクトリの生成
+    if( dfi_Finfo->TimeSliceDirFlag == CIO::E_CIO_ON ) {
+      sprintf(tmp,"%010d",step);
+      path2 = path+tmp;
+      MakeDirectory(path2);
+    } else {
+      path2 = path;
+    }
+    for(int j=info.rankStart; j<=info.rankEnd; j++) {
+      fname=CIO::cioPath_ConnectPath(m_inPath,Generate_FileName(j,step,mio));
+      memset(cmd, 0, sizeof(char)*512 );
+      sprintf(cmd,"cp %s %s\n",fname.c_str(),path2.c_str());
+      system(cmd);
+    }
+  }
+
+  //proc.dfiのコピー
+  memset(cmd, 0, sizeof(char)*512 );
+  string procfname = CIO::cioPath_ConnectPath(m_inPath,dfi_Fpath->ProcDFIFile);
+  sprintf(cmd,"cp %s %s/%s_proc.dfi\n",procfname.c_str(),path.c_str(),
+          dfi_Finfo->Prefix.c_str());
+  system(cmd);
+ 
+  if( cmd ) delete [] cmd;
+
+  //index.dfiの生成、出力
+  string indexfname = path+CIO::cioPath_FileName(dfi_fname,".dfi");
+  WriteIndexDfiFile(indexfname, info);
+
+  return true;
+}
+
+///////////////////////////////////////////////////////////////////
 // dfiファイル出力
 bool Staging::OutputDFI(string fname, int* rankMap)
 {
@@ -995,24 +1197,9 @@ bool Staging::OutputDFI(string fname, int* rankMap)
     MakeDirectory(path);
     path += string("/");
 
-    //dfi_Fpath->Process=DFI->DFI_Finfo.Prefix+"_proc.dfi";
-    //dfi_Finfo->DirectoryPath = "./";
     string DfiName = path+CIO::cioPath_FileName(fname,".dfi");
-    //DFI->m_dfi_mng=0;
 
-    unsigned step;
-    float time;
-    float minmax[2];
-
-    for(int i=0; i<dfi_TSlice->SliceList.size(); i++) {
-      step = dfi_TSlice->SliceList[i].step;
-      if( m_step >0 && m_step != step ) continue;
-      time = dfi_TSlice->SliceList[i].time;
-      minmax[0]=dfi_TSlice->SliceList[i].Min[0];
-      minmax[1]=dfi_TSlice->SliceList[i].Max[0];
-      int ID=0;
-      WriteIndexDfiFile(DfiName);
-    }
+    WriteIndexDfiFile(DfiName);
 
   }}}
 
@@ -1042,14 +1229,28 @@ std::string Staging::Generate_FileName(int RankID, int step, const bool mio)
   memset(tmp, 0, sizeof(char)*len);
 
   if( mio ) {
-    if( dfi_Finfo->TimeSliceDirFlag == CIO::E_CIO_ON ) {
-      sprintf(tmp, "%s/%010d/%s_%010d_id%06d.%s",dfi_Finfo->DirectoryPath.c_str(),
+    if( dfi_Finfo->FieldFilenameFormat == CIO::E_CIO_FNAME_RANK_STEP ) {
+    //ファイル命名順がrank_step
+      if( dfi_Finfo->TimeSliceDirFlag == CIO::E_CIO_ON ) {
+        sprintf(tmp, "%s/%010d/%s_id%06d_%010d.%s",dfi_Finfo->DirectoryPath.c_str(),
+                                         step,dfi_Finfo->Prefix.c_str(),
+                                         RankID,step,fmt.c_str());
+      } else {
+        sprintf(tmp, "%s/%s_id%06d_%010d.%s",dfi_Finfo->DirectoryPath.c_str(),
+                                         dfi_Finfo->Prefix.c_str(),
+                                         RankID,step,fmt.c_str());
+      }
+    } else {
+    //ファイル命名順がstep_rank または、未指定
+      if( dfi_Finfo->TimeSliceDirFlag == CIO::E_CIO_ON ) {
+        sprintf(tmp, "%s/%010d/%s_%010d_id%06d.%s",dfi_Finfo->DirectoryPath.c_str(),
                                          step,dfi_Finfo->Prefix.c_str(),
                                          step,RankID,fmt.c_str());
-    } else {
-      sprintf(tmp, "%s/%s_%010d_id%06d.%s",dfi_Finfo->DirectoryPath.c_str(),
+      } else {
+        sprintf(tmp, "%s/%s_%010d_id%06d.%s",dfi_Finfo->DirectoryPath.c_str(),
                                          dfi_Finfo->Prefix.c_str(),
                                          step,RankID,fmt.c_str());
+      }
     }
   } else {
     sprintf(tmp, "%s/%s_%010d.%s",dfi_Finfo->DirectoryPath.c_str(),
@@ -1188,7 +1389,25 @@ Staging::WriteIndexDfiFile(const std::string dfi_name)
   }
 
   //TimeSlice {} の出力
-  cio_TimeSlice *t_Slice = (cio_TimeSlice *)dfi_TSlice;
+  cio_TimeSlice *t_Slice = new cio_TimeSlice();
+  int nsize = dfi_Finfo->Component;
+  if( dfi_Finfo->Component > 1 ) nsize++;
+  double* minmax = new double[nsize*2];
+  for(int i=0; i<dfi_TSlice->SliceList.size(); i++) {
+    int step = dfi_TSlice->SliceList[i].step;
+    if( m_step >= 0 && m_step != step ) continue;
+    for(int n=0; n<nsize; n++) {
+      minmax[n*2+0] = dfi_TSlice->SliceList[i].Min[n];
+      minmax[n*2+1] = dfi_TSlice->SliceList[i].Max[n];
+    }
+    t_Slice->AddSlice(step,
+                      dfi_TSlice->SliceList[i].time,
+                      minmax,
+                      dfi_Finfo->Component,
+                      dfi_TSlice->SliceList[i].avr_mode,
+                      dfi_TSlice->SliceList[i].AveragedStep,
+                      dfi_TSlice->SliceList[i].AveragedTime);
+  }
   if ( t_Slice->Write(fp, 1) != CIO::E_CIO_SUCCESS )
   {
     fclose(fp);
@@ -1199,4 +1418,79 @@ Staging::WriteIndexDfiFile(const std::string dfi_name)
 
 }
 
+// #################################################################
+// Index DFIファイルの出力(FCONV用)
+CIO::E_CIO_ERRORCODE
+Staging::WriteIndexDfiFile(const std::string dfi_name, const step_rank_info info)
+{
+
+  if( dfi_name.empty() ) return CIO::E_CIO_ERROR_WRITE_INDEXFILENAME_EMPTY;
+  if( dfi_Finfo->Prefix.empty() ) return CIO::E_CIO_ERROR_WRITE_PREFIX_EMPTY;
+
+  FILE* fp = NULL;
+
+  //File exist ?
+  bool flag = false;
+  if ( fp = fopen(dfi_name.c_str(), "r") )
+  {
+    flag = true;
+    fclose(fp);
+  }
+
+  if( !(fp = fopen(dfi_name.c_str(), "w")) )
+  {
+    fprintf(stderr, "Can't open file.(%s)\n", dfi_name.c_str());
+    return CIO::E_CIO_ERROR_WRITE_INDEXFILE_OPENERROR;
+  }
+
+  //FileInfo {} の出力
+  cio_FileInfo *t_Finfo = (cio_FileInfo *)dfi_Finfo;
+  if( t_Finfo->Write(fp, 0) != CIO::E_CIO_SUCCESS )
+  {
+    fclose(fp);
+    return CIO::E_CIO_ERROR_WRITE_FILEINFO;
+  }
+
+  //FilePath {} の出力
+  cio_FilePath t_Fpath;
+  t_Fpath.ProcDFIFile = dfi_Finfo->Prefix+"_proc.dfi";
+  if( t_Fpath.Write(fp, 1) != CIO::E_CIO_SUCCESS )
+  {
+    fclose(fp);
+    return CIO::E_CIO_ERROR_WRITE_FILEPATH;
+  }
+
+  //Unit {} の出力
+ cio_Unit *t_Unit = (cio_Unit *)dfi_Unit;
+  if( t_Unit->Write(fp, 0) != CIO::E_CIO_SUCCESS )
+  {
+    fclose(fp);
+    return CIO::E_CIO_ERROR_WRITE_UNIT;
+  }
+
+  //TimeSlice {} の出力
+  cio_TimeSlice *t_Slice = new cio_TimeSlice();
+  int nsize = dfi_Finfo->Component;
+  double* minmax = new double[nsize*2];
+  for(int i=info.stepStart; i<=info.stepEnd; i++) {
+    int step = dfi_TSlice->SliceList[i].step;
+    for(int n=0; n<nsize; n++) {
+      minmax[n*2+0] = dfi_TSlice->SliceList[i].Min[n];
+      minmax[n*2+1] = dfi_TSlice->SliceList[i].Max[n];
+    }
+    t_Slice->AddSlice(step,
+                      dfi_TSlice->SliceList[i].time,
+                      minmax,
+                      dfi_Finfo->Component,
+                      dfi_TSlice->SliceList[i].avr_mode,
+                      dfi_TSlice->SliceList[i].AveragedStep,
+                      dfi_TSlice->SliceList[i].AveragedTime);
+  }
+  if ( t_Slice->Write(fp, 1) != CIO::E_CIO_SUCCESS )
+  {
+    fclose(fp);
+    return CIO::E_CIO_ERROR_WRITE_TIMESLICE;
+  }
+  return CIO::E_CIO_SUCCESS;
+}
 

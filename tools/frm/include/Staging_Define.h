@@ -70,6 +70,25 @@ enum stg_EGlobalVoxel
 , STG_E_OTHER
 };
 
+//FCONV 20140116.s
+/** コンバート形式 */
+enum stg_E_OUTPUT_CONV
+{
+  STG_E_OUTPUT_Mx1 = 0  ///Mx1
+, STG_E_OUTPUT_MxN      ///MxN
+, STG_E_OUTPUT_MxM      ///MxM
+};
+
+/** ファイル割振り方法 */
+enum stg_E_OUTPUT_TYPE
+{
+  STG_E_OUTPUT_TYPE_UNKNOWN = -1, //未定義
+  STG_E_OUTPUT_TYPE_STEP    = 0,  //step基準
+  STG_E_OUTPUT_TYPE_RANK          //rank基準
+};
+
+//FCONV 20140116.e
+
 typedef std::map<int,int> headT;
 
 #endif //_STAGING_DEFINE_H

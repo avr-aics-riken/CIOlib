@@ -16,6 +16,11 @@
 #include <unistd.h> // for gethostname() of FX10/K
 #include "cio_DFI_SPH.h"
 #include "cio_DFI_BOV.h"
+//FCONV 20131122.s
+#include "cio_DFI_AVS.h"
+#include "cio_DFI_PLOT3D.h"
+#include "cio_DFI_VTK.h"
+//FCONV 20131122.e
 
 // #################################################################
 // コンストラクタ
@@ -24,6 +29,9 @@ cio_DFI::cio_DFI()
 
  m_read_type = CIO::E_CIO_READTYPE_UNKNOWN;
  m_RankID = 0;
+
+ m_output_type = CIO::E_CIO_OUTPUT_TYPE_DEFAULT;
+ m_output_fname = CIO::E_CIO_FNAME_DEFAULT;
 
 }
 
@@ -222,6 +230,13 @@ cio_FileInfo* cio_DFI::GetcioFileInfo()
 }
 
 // #################################################################
+void 
+cio_DFI::SetcioFilePath(cio_FilePath FPath)
+{
+  DFI_Fpath = FPath;
+}
+
+// #################################################################
 // cio_FilePathクラスのポインタ取得
 const
 cio_FilePath* cio_DFI::GetcioFilePath()
@@ -238,12 +253,28 @@ cio_Unit* cio_DFI::GetcioUnit()
 }
 
 // #################################################################
+//
+void cio_DFI::SetcioUnit(cio_Unit unit)
+{
+  DFI_Unit = unit;
+}
+
+// #################################################################
 // cio_Domainクラスのポインタ取得
 const
 cio_Domain* cio_DFI::GetcioDomain()
 {
   return &DFI_Domain;
 }
+
+// #################################################################
+//
+void 
+cio_DFI::SetcioDomain(cio_Domain domain)
+{
+  DFI_Domain = domain;
+}
+
 
 // #################################################################
 // cio_MPIクラスのポインタ取得
@@ -254,6 +285,14 @@ cio_MPI* cio_DFI::GetcioMPI()
 }
 
 // #################################################################
+//
+void 
+cio_DFI::SetcioMPI(cio_MPI mpi)
+{
+  DFI_MPI = mpi;
+}
+
+// #################################################################
 // cio_TimeSliceクラスのポインタ取得
 const
 cio_TimeSlice* cio_DFI::GetcioTimeSlice()
@@ -261,6 +300,12 @@ cio_TimeSlice* cio_DFI::GetcioTimeSlice()
   return &DFI_TimeSlice;
 }
 
+// #################################################################
+void
+cio_DFI::SetcioTimeSlice(cio_TimeSlice TSlice)
+{
+  DFI_TimeSlice = TSlice;
+}
 
 // #################################################################
 // cio_Processクラスのポインタ取得
@@ -268,6 +313,14 @@ const
 cio_Process* cio_DFI::GetcioProcess()
 {
   return &DFI_Process;
+}
+
+// #################################################################
+//
+void
+cio_DFI::SetcioProcess(cio_Process Process)
+{
+  DFI_Process = Process;
 }
 
 // #################################################################
@@ -408,9 +461,19 @@ cio_DFI* cio_DFI::WriteInit(const MPI_Comm comm,
     dfi = new cio_DFI_SPH(out_F_info, out_F_path, out_unit, out_domain, out_mpi,
                           out_TSlice, out_Process);
   } else if( out_F_info.FileFormat == CIO::E_CIO_FMT_BOV ) {
-
     dfi = new cio_DFI_BOV(out_F_info, out_F_path, out_unit, out_domain, out_mpi,
                           out_TSlice, out_Process);
+//FCONV 20131122.s
+  } else if( out_F_info.FileFormat == CIO::E_CIO_FMT_AVS ) {
+    dfi = new cio_DFI_AVS(out_F_info, out_F_path, out_unit, out_domain, out_mpi,
+                          out_TSlice, out_Process);
+  } else if( out_F_info.FileFormat == CIO::E_CIO_FMT_PLOT3D ) {
+    dfi = new cio_DFI_PLOT3D(out_F_info, out_F_path, out_unit, out_domain, out_mpi,
+                          out_TSlice, out_Process);
+  } else if( out_F_info.FileFormat == CIO::E_CIO_FMT_VTK ) {
+    dfi = new cio_DFI_VTK(out_F_info, out_F_path, out_unit, out_domain, out_mpi,
+                          out_TSlice, out_Process);
+//FCONV 20131122.e
   } else return NULL;
 
 
@@ -453,11 +516,40 @@ CIO::E_CIO_DTYPE cio_DFI::GetDataType()
   return (CIO::E_CIO_DTYPE)DFI_Finfo.DataType;
 }
 
+//FCONV 20140123.s
+// #################################################################
+// FileFormatの取り出し(文字列)
+std::string cio_DFI::GetFileFormatString()
+{
+  if( DFI_Finfo.FileFormat == CIO::E_CIO_FMT_UNKNOWN ) return "";
+  if( DFI_Finfo.FileFormat == CIO::E_CIO_FMT_SPH ) return "sph";
+  if( DFI_Finfo.FileFormat == CIO::E_CIO_FMT_BOV ) return "bov";
+  if( DFI_Finfo.FileFormat == CIO::E_CIO_FMT_AVS ) return "avs";
+  if( DFI_Finfo.FileFormat == CIO::E_CIO_FMT_PLOT3D ) return "plot3d";
+  if( DFI_Finfo.FileFormat == CIO::E_CIO_FMT_VTK ) return "vtk";
+  return "";
+}
+
+// #################################################################
+// FileFormatの取り出し(e_num)
+CIO::E_CIO_FORMAT cio_DFI::GetFileFormat()
+{
+  return (CIO::E_CIO_FORMAT)DFI_Finfo.FileFormat;
+}
+
+
 // #################################################################
 // 成分数の取り出し
 int cio_DFI::GetNumComponent()
 {
   return DFI_Finfo.Component;
+}
+
+// #################################################################
+// 仮想セル数の取り出し
+int cio_DFI::GetNumGuideCell()
+{
+  return DFI_Finfo.GuideCell;
 }
 
 // #################################################################
@@ -689,7 +781,7 @@ void cio_DFI::CreateReadStartEnd(bool isSame,
 }
 
 // #################################################################
-// ファイル名を作成
+// ファイル名を作成(ディレクトリパス付加）
 std::string cio_DFI::Generate_FieldFileName(int RankID, 
                                        int step, 
                                        const bool mio)
@@ -703,6 +795,15 @@ std::string cio_DFI::Generate_FieldFileName(int RankID,
     fmt=D_CIO_EXT_SPH;
   } else if( DFI_Finfo.FileFormat == CIO::E_CIO_FMT_BOV ) {
     fmt=D_CIO_EXT_BOV;
+//FCONV 20131122.s
+  } else if( DFI_Finfo.FileFormat == CIO::E_CIO_FMT_AVS ) {
+    //fmt=D_CIO_EXT_SPH;
+    fmt=D_CIO_EXT_BOV;
+  } else if( DFI_Finfo.FileFormat == CIO::E_CIO_FMT_VTK ) {
+    fmt=D_CIO_EXT_VTK;
+  } else if( DFI_Finfo.FileFormat == CIO::E_CIO_FMT_PLOT3D ) {
+    fmt=D_CIO_EXT_FUNC;
+//FCONV 20131122.e
   }
 
   int len = DFI_Finfo.DirectoryPath.size() + DFI_Finfo.Prefix.size() + fmt.size() + 25; 
@@ -735,6 +836,68 @@ std::string cio_DFI::Generate_FieldFileName(int RankID,
 
   return fname;
 }
+
+//FCONV 20131128.s
+// #################################################################
+// ファイル名のみの生成（static 関数）
+std::string cio_DFI::Generate_FileName(std::string prefix,
+                                       int RankID,
+                                       int step,
+                                       std::string ext,
+                                       CIO::E_CIO_OUTPUT_FNAME output_fname,
+                                       bool mio,
+                                       CIO::E_CIO_ONOFF TimeSliceDirFlag)
+{
+
+  int len = prefix.size()+ext.size()+100;
+  char* tmp = new char[len];
+  memset(tmp, 0, sizeof(char)*len);
+
+  //step出力なしのファイル名生成
+  if( step < 0 ) 
+  {
+    if( mio ) {
+      sprintf(tmp,"%s_id%06d.%s",prefix.c_str(),RankID,ext.c_str());
+    } else {
+      sprintf(tmp,"%s.%s",prefix.c_str(),ext.c_str());
+    }
+    std::string fname(tmp);
+    if( tmp ) delete [] tmp;
+    return fname;
+  }
+
+  //RankID出力なしのファイル名生成
+  if( !mio ) {
+    sprintf(tmp,"%s_%010d.%s",prefix.c_str(),step,ext.c_str());
+    std::string fname(tmp);
+    if( tmp ) delete [] tmp;
+    return fname;
+  }
+
+  //step_rank
+  if( output_fname != CIO::E_CIO_FNAME_RANK_STEP ) 
+  {
+    if( TimeSliceDirFlag == CIO::E_CIO_ON ) {
+      sprintf(tmp,"%010d/%s_%010d_id%06d.%s",step,prefix.c_str(),step,RankID,ext.c_str());
+    } else {
+      sprintf(tmp,"%s_%010d_id%06d.%s",prefix.c_str(),step,RankID,ext.c_str());
+    }
+  } else if( output_fname == CIO::E_CIO_FNAME_RANK_STEP ) 
+  {
+  //rank_step
+    if( TimeSliceDirFlag == CIO::E_CIO_ON ) {
+      sprintf(tmp,"%010d/%s_id%06d_%010d.%s",step,prefix.c_str(),RankID,step,ext.c_str());
+    } else {
+      sprintf(tmp,"%s_id%06d_%010d.%s",prefix.c_str(),RankID,step,ext.c_str());
+    }
+  }
+
+  std::string fname(tmp);
+  if( tmp ) delete [] tmp;
+  return fname;
+
+}
+//FCONV 20131128.s
 
 
 // #################################################################

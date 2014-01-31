@@ -19,6 +19,8 @@
 // コンストラクタ
 cio_FileInfo::cio_FileInfo()
 {
+  DFIType          = CIO::E_CIO_DFITYPE_UNKNOWN;
+  FieldFilenameFormat = CIO::E_CIO_FNAME_DEFAULT;
   DirectoryPath    ="";
   TimeSliceDirFlag =CIO::E_CIO_OFF;
   Prefix           ="";
@@ -32,7 +34,9 @@ cio_FileInfo::cio_FileInfo()
 
 // #################################################################
 // コンストラクタ
-cio_FileInfo::cio_FileInfo(const std::string _DirectoryPath, 
+cio_FileInfo::cio_FileInfo(const CIO::E_CIO_DFITYPE _DFIType,
+                           const CIO::E_CIO_OUTPUT_FNAME _FieldFilenameFormat,
+                           const std::string _DirectoryPath, 
                            const CIO::E_CIO_ONOFF _TimeSliceDirFlag, 
                            const std::string _Prefix,
                            const CIO::E_CIO_FORMAT _FileFormat,
@@ -42,6 +46,10 @@ cio_FileInfo::cio_FileInfo(const std::string _DirectoryPath,
                            const CIO::E_CIO_ARRAYSHAPE _ArrayShape, 
                            const int _Component)
 {
+//FCONV 20140116.s
+  DFIType          =_DFIType;
+  FieldFilenameFormat =_FieldFilenameFormat;
+//FCONV 20140116.e
   DirectoryPath    =_DirectoryPath;
   Prefix           =_Prefix;
   TimeSliceDirFlag =_TimeSliceDirFlag;
@@ -82,7 +90,6 @@ std::string cio_FileInfo::getComponentVariable(int pcomp)
   if(ComponentVariable.size()<pcomp+1) return CompName;
   return ComponentVariable[pcomp];
 }
-   
 
 // #################################################################
 // FileInfo 読込み関数
@@ -95,6 +102,35 @@ cio_FileInfo::Read(cio_TextParser tpCntl)
   int ct;
 
   int ncnt=0;
+
+//FCONV 20140116.s
+  //DFIType
+  label = "/FileInfo/DFIType";
+  if( !(tpCntl.GetValue(label, &str )) ) {
+    DFIType = CIO::E_CIO_DFITYPE_CARTESIAN;
+  } else {
+    if( !strcasecmp(str.c_str(),"Cartesian" ) ) {
+      DFIType = CIO::E_CIO_DFITYPE_CARTESIAN;
+    } else {
+      printf("\tCIO Parsing error : fail to get '%s'\n",label.c_str());
+      return CIO::E_CIO_ERROR_READ_DFI_DFITYPE;
+    }
+  }
+
+  //FieldFilenameFormat
+  label = "/FileInfo/FieldFilenameFormat";
+  if( !(tpCntl.GetValue(label, &str )) ) {
+    FieldFilenameFormat = CIO::E_CIO_FNAME_DEFAULT;
+  } else {
+    if( !strcasecmp(str.c_str(),"step_rank" ) ) {
+      FieldFilenameFormat = CIO::E_CIO_FNAME_STEP_RANK;
+    }else if( !strcasecmp(str.c_str(),"rank_step" ) ) {
+      FieldFilenameFormat = CIO::E_CIO_FNAME_RANK_STEP;
+    }else {
+      printf("\tCIO Parsing error : fail to get '%s'\n",label.c_str());
+      return CIO::E_CIO_ERROR_READ_DFI_FIELDFILENAMEFORMAT;
+    }
+  }
 
   //Directorypath
   label = "/FileInfo/DirectoryPath";
@@ -270,6 +306,11 @@ cio_FileInfo::Write(FILE* fp,
   fprintf(fp, "FileInfo {\n");
   fprintf(fp, "\n");
 
+//FCONV 20140116.s
+  _CIO_WRITE_TAB(fp, tab+1);
+  fprintf(fp, "DFIType            = \"Cartesian\"\n");
+//FCONV 20140116.s
+
   _CIO_WRITE_TAB(fp, tab+1);
   fprintf(fp, "DirectoryPath      = \"%s\"\n", DirectoryPath.c_str());
 
@@ -289,6 +330,15 @@ cio_FileInfo::Write(FILE* fp,
   } else if( FileFormat == CIO::E_CIO_FMT_BOV ) {
     fprintf(fp, "FileFormat         = \"bov\"\n");
   }
+
+//FCONV 20140116.s
+  _CIO_WRITE_TAB(fp, tab+1);
+  if( FieldFilenameFormat == CIO::E_CIO_FNAME_RANK_STEP ) {
+    fprintf(fp, "FieldFilenameFormat= \"rank_step\"\n");
+  } else {
+    fprintf(fp, "FieldFilenameFormat= \"step_rank\"\n");
+  }
+//FCONV 20140116.e
 
   _CIO_WRITE_TAB(fp, tab+1);
   fprintf(fp, "GuideCell          = %d\n", GuideCell);

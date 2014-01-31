@@ -13,13 +13,13 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.57])
-AC_INIT([CIOlib],[1.4.4],[keno@riken.jp],[CIOlib])
+AC_INIT([CIOlib],[1.5.0],[keno@riken.jp],[CIOlib])
 AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR([src/cio_DFI.C])
 AM_CONFIG_HEADER([config.h])
 
 # revision No.
-CIO_REVISION="20140121_1430"
+CIO_REVISION="20140131_1300"
 AC_SUBST(CIO_REVISION)
 
 #
@@ -103,7 +103,23 @@ if test "$with_MPI" = "yes" ; then
 fi
 
 
-
+#
+# CPMlib
+#
+AC_ARG_WITH(cpm, [AC_HELP_STRING([--with-cpm=dir],[Specify CPMlib installed directory])], , with_cpm=none)
+AC_SUBST(CPM_DIR)
+AC_SUBST(CPM_CFLAGS)
+AC_SUBST(CPM_LDFLAGS)
+if test "$with_cpm" != "none" ; then
+  CPM_DIR=$with_cpm;
+  CPM_CFLAGS=`$CPM_DIR/bin/cpm-config --cflags`
+  CPM_LDFLAGS=`$CPM_DIR/bin/cpm-config --libs`
+  if test "$enable_mpi" = "none" ; then
+    echo "  Error: MPI library is not specified."
+    echo "         --with-cpm option used MPI."
+    exit 1
+  fi
+fi
 
 #
 # TextParser environment
@@ -148,7 +164,11 @@ MAKE_SUB_DIRS="src doc"
 
 # K/FX
 if test "$host" != "sparc64-unknown-linux-gnu" ; then
-  MAKE_SUB_DIRS="$MAKE_SUB_DIRS"" tools/frm/src"
+  if test "$with_cpm" != "none" ; then
+    MAKE_SUB_DIRS="$MAKE_SUB_DIRS"" tools/frm/src tools/fconv/src"
+  else
+    MAKE_SUB_DIRS="$MAKE_SUB_DIRS"" tools/frm/src"
+  fi
 fi
 
 
@@ -190,7 +210,11 @@ AC_CONFIG_FILES([Makefile \
 
 # K/FX
 if test "$host" != "sparc64-unknown-linux-gnu" ; then
-  AC_CONFIG_FILES([tools/frm/src/Makefile])
+  AC_CONFIG_FILES([tools/frm/src/Makefile \
+                  ])
+  if test "$with_cpm" != "none" ; then
+    AC_CONFIG_FILES([tools/fconv/src/Makefile ])
+  fi
 fi
 
 

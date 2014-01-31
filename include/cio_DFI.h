@@ -65,6 +65,11 @@ protected :
   vector<int>m_readRankList;         ///< 読込みランクリスト
 
 
+  bool m_bgrid_interp_flag;               ///< 節点への補間フラグ
+  CIO::E_CIO_OUTPUT_TYPE  m_output_type;  ///< 出力形式(ascii,binary,FortarnBinary)
+  CIO::E_CIO_OUTPUT_FNAME m_output_fname; ///< 出力ファイル命名規約(step_rank,rank_step)   
+
+
 public:
   /** コンストラクタ */
   cio_DFI();
@@ -101,10 +106,21 @@ public:
   const cio_FilePath* GetcioFilePath();  
 
   /**
+   * @brief cio_FilePathクラスのセット
+   */
+  void SetcioFilePath(cio_FilePath FPath); 
+
+  /**
    * @brief cio_Unitクラスのポインタを取得
    * @return cio_Unitクラスポインタ
    */
   const cio_Unit* GetcioUnit(); 
+
+  /**
+   * @brief cio_Unitクラスのセット
+   */
+  void SetcioUnit(cio_Unit unit); 
+
 
   /**
    * @brief cio_Domainクラスのポインタ取得
@@ -113,10 +129,20 @@ public:
   const cio_Domain* GetcioDomain(); 
 
   /**
+   * @brief cio_Domainクラスのセット
+   */
+  void SetcioDomain(cio_Domain domain); 
+
+  /**
    * @brief cio_MPIクラスのポインタ取得
    * @return cio_MPIクラスポインタ 
    */
   const cio_MPI* GetcioMPI();
+
+  /**
+   * @brief cio_MPIクラスセット
+   */
+  void SetcioMPI(cio_MPI mpi);
 
   /**
    * @brief cio_TimeSliceクラスのポインタ取得
@@ -125,10 +151,20 @@ public:
   const cio_TimeSlice* GetcioTimeSlice(); 
 
   /**
+   * @brief cio_TimeSlice クラスセット
+   */
+  void SetcioTimeSlice(cio_TimeSlice TSlice);
+ 
+  /**
    * @brief cio_Processクラスのポインタ取得
    * @return cio_Processクラスポインタ
    */
   const cio_Process* GetcioProcess(); 
+
+  /**
+   * @brief cio_Processクラスセット
+   */
+  void SetcioProcess(cio_Process Process);
 
   /**
    * @brief 出力DFIファイル名を作成する
@@ -139,7 +175,7 @@ public:
   Generate_DFI_Name(const std::string prefix);
 
   /**
-   * @brief フィールドデータ（SPH,BOV)ファイル名の作成
+   * @brief フィールドデータ（SPH,BOV)ファイル名の作成(ディレクトリパスが付加されている）
    * @param [in] RankID ランク番号
    * @param [in] step   読込みステップ番号
    * @param [in] mio    並列判定フラグ（逐次or並列の判定用）
@@ -148,6 +184,27 @@ public:
   std::string Generate_FieldFileName(int RankID,
                                 int step, 
                                 const bool mio);
+
+  /**
+   * @brief ファイル名生成
+   * @param [in] prefix ベースファイル名
+   * @param [in] RankID ランク番号  
+   * @param [in] step   出力ステップ番号（負のとき、ステップ番号が付加されない）
+   * @param [in] ext    拡張子
+   * @param [in] output_fname step_rank,rank_step指示
+   * @param [in] mio    並列判定フラグ
+   * @param [in] TimeSliceDirFlag Time Slice 毎の出力指示
+   * @return 生成されたファイル名
+   */
+  static
+  std::string Generate_FileName(std::string prefix,
+                                int RankID,
+                                int step,
+                                std::string ext,
+                                CIO::E_CIO_OUTPUT_FNAME output_fname,
+                                bool mio,
+                                CIO::E_CIO_ONOFF TimeSliceDirFlag);
+
   /**
    * @brief write インスタンス float型
    * @param [in] comm        MPIコミュニケータ
@@ -231,6 +288,36 @@ public:
             const int tail[3],
             const std::string hostname,
             const CIO::E_CIO_ONOFF TSliceOnOff);
+
+
+  /**
+   * @brief RankIDをセットする
+   * @param[in] rankID RankID
+   */
+  void set_RankID(const int rankID)
+  { m_RankID = rankID; };
+  /**
+   * @brief 出力形式(ascii,binary,FortranBinary)をセット
+   * @param [in] output_type 出力形式
+   */
+  void set_output_type(CIO::E_CIO_OUTPUT_TYPE output_type)
+  {  m_output_type = output_type; };
+
+  /**
+   * @brief 出力ファイル命名規約(step_rank,rank_step)をセット
+   * @param [in] output_fname 出力ファイル命名規約
+   */
+  void set_output_fname(CIO::E_CIO_OUTPUT_FNAME output_fname)
+  { m_output_fname = output_fname; };
+
+  /**
+   * @brief DFIファイル名の取り出し
+   * @return dfiファイル名
+   */ 
+  std::string get_dfi_fname()
+  { return m_indexDfiName; };
+
+
 
   /**
    * @brief read field data record (template function)
@@ -385,28 +472,24 @@ public:
    * @brief proc DFIファイル出力コントロール (float)
    * @param [in] comm      MPIコミュニケータ
    * @param [in] out_host  ホスト名出力フラグ　　　　
-   * @param [in] org       原点座標値
-   * @details orgがNULLのときは、WriteInitで渡した、G_originを出力
    * @return true:出力成功 false:出力失敗
    */
+/*
   CIO::E_CIO_ERRORCODE
   WriteProcDfiFile(const MPI_Comm comm, 
-                   bool out_host=false,
+                   bool out_host=false);
                    float* org=NULL);
-
+*/
   /**
-   * @brief proc DFIファイル出力コントロール (double 版)
+   * @brief proc DFIファイル出力コントロール
    * @param [in] comm          MPIコミュニケータ
    * @param [in] out_host      ホスト名出力フラグ　　　　
-   * @param [in] org           原点座標値
-   * @details orgがNULLのときは、WriteInitで渡した、G_originを出力
-   * @return true:出力成功 false:出力失敗
    * @return true:出力成功 false:出力失敗
    */
   CIO::E_CIO_ERRORCODE
   WriteProcDfiFile(const MPI_Comm comm, 
-                   bool out_host=false,
-                   double* org=NULL);
+                   bool out_host=false);
+                   //double* org=NULL);
 
   /**
    * @brief 配列形状を文字列で返す
@@ -436,12 +519,35 @@ public:
   CIO::E_CIO_DTYPE 
   GetDataType();
 
+
+  /** 
+   * @brief get FileFormat （FileFormatの取り出し関数） 
+   * @return FileFormat(文字列)
+   */
+  std::string
+  GetFileFormatString();
+
+  /** @brief get FileFormat (FileFormatの取り出し関数）
+   *  @return FileFormat(e_num番号)
+   */
+  CIO::E_CIO_FORMAT
+  GetFileFormat();
+
+
   /**
    * @brief get Number of Component （成分数の取り出し関数）
    * @return 成分数
    */
   int 
   GetNumComponent();
+
+
+  /*
+   * @brief get Number of GuideCell (仮想セル数の取り出し関数)
+   * @return 仮想セル数
+   */
+  int
+  GetNumGuideCell();
 
   /**
    * @brief データタイプを文字列からe_num番号に変換 
@@ -790,6 +896,19 @@ protected :
                  const unsigned step_avr,
                  const double time_avr)=0;
 
+
+//FEAST 20131125.s
+  /**
+   * @brief ascii ヘッダーレコード出力(bov,avs)
+   * @param [in] step step番号
+   * @param [in] time time
+   */
+  virtual
+  bool 
+  write_ascii_header(const unsigned step,
+                     const double time)
+  { return true; }; 
+
   /**
    * @brief データタイプ毎のサイズを取得
    * @param [in] Dtype データタイプ(Int8,Int16,,,,etc)
@@ -860,6 +979,28 @@ protected :
    */
   CIO::E_CIO_ERRORCODE
   WriteIndexDfiFile(const std::string dfi_name);
+
+
+public:
+
+  /**
+   * @brief セル中心データを格子点に値をセット
+   * @param [out]  P 格子点データ
+   * @param [in]   S セル中心data
+   */
+  template<class T1, class T2>
+  bool setGridData(
+                   cio_TypeArray<T1>* P,
+                   cio_TypeArray<T2>* S);
+
+  /**
+   * @brief 内部の格子点のデータを重み付けでで割る
+   * @param[out] P  格子点data
+   */
+  template<class T>
+  void VolumeDataDivide(cio_TypeArray<T> *P);
+
+
 
 public:
 

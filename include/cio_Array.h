@@ -345,6 +345,14 @@ public:
   /// 範囲指定での配列コピー(自信をdstにコピー。head/tailを考慮した重複範囲をコピー)
   virtual int copyArray( int sta[3], int end[3], cio_Array *dst ) = 0;
 
+//FCONV 20131216.s
+  /// 指定成分の配列コピー(自信をdstにコピー。head/tailを考慮した重複範囲をコピー)
+  virtual int copyArrayNcomp( cio_Array *dst, int comp, bool ignoreGc=false ) = 0;
+
+  /// 指定成分の範囲指定での配列コピー(自信をdstにコピー。head/tailを考慮した重複範囲をコピー)
+  virtual int copyArrayNcomp( int sta[3], int end[3], cio_Array *dst, int comp ) = 0;
+//FCONV 20131216.e
+
   /// 粗密データの補間処理を行う
   static cio_Array* interp_coarse( cio_Array *src, int &err, bool head0start=true );
 
@@ -353,6 +361,12 @@ public:
 
   /// 配列サイズ分のバイナリデータを書き出す(戻り値は読み込んだ要素数)
   virtual size_t writeBinary( FILE *fp ) = 0;
+
+//20131213.s
+  /// 配列サイズ分のasciiデータを書き出す(戻り値は読み込んだ要素数)
+  virtual size_t writeAscii( FILE *fp ) = 0;
+//20131213.e
+
 protected:
   /// デフォルトコンストラクタ
   cio_Array()

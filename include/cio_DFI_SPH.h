@@ -57,6 +57,7 @@ public:
     DFI_MPI        = mpi;
     DFI_TimeSlice  = TSlice;
     DFI_Process    = process;
+    m_bgrid_interp_flag = false;
   };
   
   /**　デストラクタ */

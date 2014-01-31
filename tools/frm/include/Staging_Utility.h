@@ -39,6 +39,15 @@ class Staging {
 
 public:
 
+  /** FCONV用処理リスト */
+  struct step_rank_info{
+   cio_DFI* dfi;
+   int stepStart;
+   int stepEnd;
+   int rankStart;
+   int rankEnd;
+  };
+  
   /** staging 用 info.txt ファイルの Process */
   struct Rank
   {
@@ -61,8 +70,8 @@ public:
 
 public:
   
-  //cio_DFI CIO;
-  cio_DFI *DFI;
+  //cio_DFI *DFI;
+  vector<cio_DFI *> DFI;
 
   const cio_FileInfo  *dfi_Finfo;   ///< DFI cio_FileInfoのポインタ
   const cio_FilePath  *dfi_Fpath;   ///< DFI cio_FilePathのポインタ
@@ -83,6 +92,15 @@ public:
   int m_NumberOfRank;         ///< Staging用並列数
   vector<Rank> m_GRankInfo;   ///< Staging用並列情報テーブル 
   vector<string> m_dfi_fname; ///<STaging用DFIファイル名
+//FCONV 20140116.s
+  bool   m_fconv_inputfile;   ///< FCONV 入力ファイルフラグ
+  int    m_fconv_numproc;     ///< FCONV 実行並列数
+  stg_E_OUTPUT_CONV m_ConvType; ///< FCONV コンバートタイプ
+  int    m_CropStart[3];      ///< FCONV 入力領域スタート位置
+  int    m_CropEnd[3];        ///< FCONV 入力領域エンド位置
+  int    m_outList;           ///< FCONV ファイル割振り方法
+  std::vector<step_rank_info> m_StepRankList; ///< ファイル割振りリスト
+//FCONV 20140116.e 
 
   std::vector<ActiveSubDomain> m_subDomainInfo; ///< 活性サブドメイン情報
 
@@ -100,18 +118,39 @@ public:
 
   /** 初期化、ファイルの読込み
    * @param[in] infofname ステージング用procファイル名 
-   * @param[in] dfifname　dfiファイル名
    * @retval    true  ファイル読込み成功
    * @retval    false ファイル読込み失敗 
    */
-  bool Initial(string infofname, string dfifname);
+  //bool Initial(string infofname, string dfifname);
+  bool Initial(string infofname);
 
   /** ステージング用procファイルの読込み
-   * @param[in] infofile ステージング用procファイル名
-   * @retval   true     ファイル読込み成功 
-   * @retval   false    ファイル読込み失敗
+   * @param[in]  infofile ステージング用procファイル名
+   * @param[out] fconvfile FCONV入力ファイル名
+   * @retval     true     ファイル読込み成功 
+   * @retval     false    ファイル読込み失敗
    */ 
-  bool ReadInfo(string infofile);
+  bool ReadInfo(string infofile, string &fconvfile);
+
+//FCONV 20140116.s
+  /** FCONV 入力ファイルの読込み
+   * @param[in] fconvfile FCONV入力ファイル名 
+   * @retval    true      FCONV入力失敗
+   * @retval    false     FCONV入力成功
+   */
+  bool ReadFconvInputFile(string fconvfile);
+
+  /** step基準のリスト作成
+   * @param[in] myID 処理ランク 
+   */
+  void makeStepList(int myID);
+
+  /** rank基準のリスト生成
+   * @param[in] myID 処理ランク 
+   */
+  void makeRankList(int myID); 
+
+//FCONV 20140116.e
 
   /** 領域分割数の取得
    * @return 領域分割数整数配列のポインタ
@@ -246,10 +285,19 @@ public:
 
   /** ファイルをステージング用のディレクトリにコピー
    * @param [in] readRankList 読込みランクリスト
+   * @param [in] myRank 処理するランク番号 
    * @retval true  正常終了
    * @retval false エラー
    */
   bool FileCopy(vector<int> readRankList, int myRank);
+
+  /** ファイルをステージング用のディレクトリにコピー(FCONV用)
+   * @param [in] myRank 処理するランク番号 
+   * @param [in] info 処理リスト
+   * @retval true  正常終了
+   * @retval false エラー
+   */
+  bool FileCopy(step_rank_info info, int myRank);
 
   /** dfi ファイル出力
    * @param [in] DFIファイル名
@@ -258,9 +306,19 @@ public:
    */
   bool OutputDFI(string fname, int* rankMap);
 
+  /** index.dfiファイルの生成、出力
+   * @param [in] dfi_name index dfi ファイル名
+   */ 
   CIO::E_CIO_ERRORCODE
   WriteIndexDfiFile(const std::string dfi_name);
  
+  /** index.dfiファイルの生成、出力（FCONV用）
+   * @param [in] dfi_name index dfi ファイル名
+   * @param [in] info 処理リスト
+   */
+  CIO::E_CIO_ERRORCODE
+  WriteIndexDfiFile(const std::string dfi_name, const step_rank_info info);
+
   /** ファイル名の作成
    * @param [in] RankID ランク番号
    * @param [in] step   読込みステップ番号

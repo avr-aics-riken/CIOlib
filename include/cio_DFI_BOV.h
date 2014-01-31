@@ -48,6 +48,7 @@ public:
     DFI_MPI        = mpi;
     DFI_TimeSlice  = TSlice;
     DFI_Process    = process;
+    m_bgrid_interp_flag = false;
   };
 
   /**　デストラクタ */
@@ -153,6 +154,15 @@ protected:
                  const unsigned step_avr,
                  const double time_avr);
 
+ 
+  /**
+   * @brief ヘッダーデータファイルの出力
+   * @param [in] step step番号
+   * @param [in] time time
+   */
+  bool
+  write_ascii_header(const unsigned step,
+                     const double time);
   
 };
 

@@ -35,17 +35,57 @@ int main( int argc, char **argv )
   //引数の取り出し＆セット
   set_arg(STG,argc,argv);
 
+  //初期化、ファイルの読込み、DFIのインスタンス 
+  if( !STG.Initial(STG.m_infofile) ) {
+    printf("ERROR Initial()\n");
+    return 0;
+  }
+
+  //Mx1,MxMの処理
+  if( STG.m_ConvType == STG_E_OUTPUT_Mx1 || STG.m_ConvType == STG_E_OUTPUT_MxM ) {
+    for(int myID=0; myID<STG.m_fconv_numproc; myID++) {
+      if(     STG.m_outList == STG_E_OUTPUT_TYPE_STEP ) STG.makeStepList(myID);
+      else if(STG.m_outList == STG_E_OUTPUT_TYPE_RANK ) STG.makeRankList(myID);
+
+      //処理するdfiのループ
+      for(int i=0; i<STG.m_StepRankList.size(); i++) {
+        STG.FileCopy(STG.m_StepRankList[i],myID);
+      }
+
+    }
+
+    if(      STG.m_ConvType == STG_E_OUTPUT_Mx1 ) {
+      printf("####### Mx1 normal end ######\n");
+    } else if( STG.m_ConvType == STG_E_OUTPUT_MxM ) {
+      printf("####### MxM normal end ######\n");
+    }
+    return 1;
+  }
+
+  //MxNの処理
   CIO::E_CIO_ERRORCODE ret;
   vector<int> readRankList; ///< 読込みランクリスト
 
   //読込みDFIファイルのループ
   for( int i=0; i<STG.m_dfi_fname.size(); i++ ) {
 
-    //初期化、ファイルの読込み、DFIのインスタンス  
+    //初期化、ファイルの読込み、DFIのインスタンス 
+    /* 
     if( !STG.Initial(STG.m_infofile, STG.m_dfi_fname[i]) ) {
       printf("ERROR Initial()\n");
       return 0;
     }
+    */
+
+    if( STG.m_NumberOfRank == 0 ) STG.m_GRankInfo.clear();
+
+    STG.dfi_Finfo = STG.DFI[i]->GetcioFileInfo();
+    STG.dfi_Fpath = STG.DFI[i]->GetcioFilePath();
+    STG.dfi_Unit  = STG.DFI[i]->GetcioUnit();
+    STG.dfi_Domain= STG.DFI[i]->GetcioDomain();
+    STG.dfi_MPI   = STG.DFI[i]->GetcioMPI();
+    STG.dfi_TSlice= STG.DFI[i]->GetcioTimeSlice();
+    STG.dfi_Process=(cio_Process *)STG.DFI[i]->GetcioProcess();
 
     //DFIのdirectory path get
     STG.m_inPath = CIO::cioPath_DirName(STG.m_dfi_fname[i]);

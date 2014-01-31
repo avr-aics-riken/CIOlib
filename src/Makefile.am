@@ -25,6 +25,9 @@ libCIO_a_SOURCES = \
     cio_Process.C \
     cio_DFI_BOV.C \
     cio_DFI_SPH.C \
+    cio_DFI_AVS.C \
+    cio_DFI_PLOT3D.C \
+    cio_DFI_VTK.C \
     cio_DFI_Read.C \
     cio_DFI_Write.C \
     cio_TextParser.C \
@@ -47,6 +50,9 @@ CIO_include_HEADERS = \
     $(top_builddir)/include/cio_Process.h \
     $(top_builddir)/include/cio_DFI_BOV.h \
     $(top_builddir)/include/cio_DFI_SPH.h \
+    $(top_builddir)/include/cio_DFI_AVS.h \
+    $(top_builddir)/include/cio_DFI_PLOT3D.h \
+    $(top_builddir)/include/cio_DFI_VTK.h \
     $(top_builddir)/include/cio_Define.h \
     $(top_builddir)/include/cio_Version.h \
     $(top_builddir)/include/cio_TextParser.h \
@@ -56,6 +62,7 @@ CIO_include_HEADERS = \
 CIO_inline_includedir = $(includedir)/inline
 CIO_inline_include_HEADERS = \
     $(top_builddir)/include/inline/cio_Array_inline.h \
-    $(top_builddir)/include/inline/cio_DFI_inline.h
+    $(top_builddir)/include/inline/cio_DFI_inline.h \
+    $(top_builddir)/include/inline/cio_Plot3d_inline.h
 
 

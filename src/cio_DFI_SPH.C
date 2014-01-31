@@ -339,12 +339,17 @@ cio_DFI_SPH::write_HeaderRecord(FILE* fp,
   //origin
   if( fwrite(&dmy, sizeof(int), 1, fp) != 1 ) return CIO::E_CIO_ERROR_WRITE_SPH_REC3;
   if( dType == 1 ) {
+    float pch[3];
+    for(int i=0; i<3; i++ ) pch[i]=(float)DFI_Domain.GlobalRegion[i]/DFI_Domain.GlobalVoxel[i];
     float org[3];
-    for(int i=0; i<3; i++ ) org[i]=(float)DFI_Domain.GlobalOrigin[i];
+    //for(int i=0; i<3; i++ ) org[i]=(float)DFI_Domain.GlobalOrigin[i];
+    for(int i=0; i<3; i++ ) org[i]=(float)DFI_Domain.GlobalOrigin[i]+0.5*pch[i];
     if( fwrite(org, sizeof(float), 3, fp) !=3 ) return CIO::E_CIO_ERROR_WRITE_SPH_REC3;
   } else {
+    double pch[3];
+    for(int i=0; i<3; i++ ) pch[i]=(double)DFI_Domain.GlobalRegion[i]/DFI_Domain.GlobalVoxel[i];
     double org[3];
-    for(int i=0; i<3; i++ ) org[i]=(double)DFI_Domain.GlobalOrigin[i];
+    for(int i=0; i<3; i++ ) org[i]=(double)DFI_Domain.GlobalOrigin[i]+0.5*pch[i];
     if( fwrite(org, sizeof(double), 3, fp) !=3 ) return CIO::E_CIO_ERROR_WRITE_SPH_REC3;
   }
   if( fwrite(&dmy, sizeof(int), 1, fp) != 1 ) return CIO::E_CIO_ERROR_WRITE_SPH_REC3;

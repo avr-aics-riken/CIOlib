@@ -20,6 +20,11 @@
 class cio_FileInfo {
 
 public:
+
+  //FCONV 20140116.s
+  CIO::E_CIO_DFITYPE    DFIType;          ///<dfi種別
+  CIO::E_CIO_OUTPUT_FNAME FieldFilenameFormat; ///<ファイル命名基準
+  //FCONV 20140116.e
  
   std::string           DirectoryPath;    ///<フィールデータの存在するディレクトリパス
                                           ///< index.dfiからの相対パスまたは絶対パス
@@ -38,6 +43,8 @@ public:
 
   /** 
    * @brief コンストラクタ 
+   * @param [in] _DFIType          dfi種別
+   * @param [in] _FieldFilenameFormat ファイル命名基準
    * @param [in] _DirectoryPath    ディレクトリパス
    * @param [in] _TimeSliceDirFlag TimeSlice on or off
    * @param [in] _Prefix           ファイル接頭文字
@@ -48,7 +55,9 @@ public:
    * @param [in] _ArrayShape       配列形状
    * @param [in] _Component        成分数
    */
-  cio_FileInfo(const std::string _DirectoryPath, 
+  cio_FileInfo(const CIO::E_CIO_DFITYPE _DFIType,
+               const CIO::E_CIO_OUTPUT_FNAME _FieldFilenameFormat,
+               const std::string _DirectoryPath, 
                const CIO::E_CIO_ONOFF _TimeSliceDirFlag, 
                const std::string _Prefix, 
                const CIO::E_CIO_FORMAT _FileFormat,

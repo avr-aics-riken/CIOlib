@@ -21,9 +21,12 @@
  #include "mpi.h"
 #endif
 
+#define D_CIO_DFITYPE_CARTESIAN "Cartesian"
 
 #define D_CIO_EXT_SPH "sph"
 #define D_CIO_EXT_BOV "dat"
+#define D_CIO_EXT_FUNC "func"
+#define D_CIO_EXT_VTK  "vtk"
 
 #define D_CIO_ON  "on"
 #define D_CIO_OFF "off"
@@ -39,6 +42,11 @@
 #define D_CIO_FLOAT32 "Float32"
 #define D_CIO_FLOAT64 "Float64"
 
+#define D_CIO_BYTE   "BYTE"
+#define D_CIO_INT    "INT"
+#define D_CIO_FLOAT  "FLOAT"
+#define D_CIO_DOUBLE "DOUBLE"
+
 #define D_CIO_IJNK "ijkn"
 #define D_CIO_NIJK "nijk"
 
@@ -51,12 +59,25 @@
 namespace CIO
 {
 
+
+  enum E_CIO_DFITYPE
+  {
+    E_CIO_DFITYPE_UNKNOWN = -1, ///< 未定
+    E_CIO_DFITYPE_CARTESIAN,    ///< Cartesian
+  };
+
+
 /** File 形式 */
   enum E_CIO_FORMAT
   {
     E_CIO_FMT_UNKNOWN = -1,  ///< 未定
     E_CIO_FMT_SPH,           ///< sph format
-    E_CIO_FMT_BOV            ///< bov format
+
+    //E_CIO_FMT_BOV            ///< bov format
+    E_CIO_FMT_BOV,           ///< bov format
+    E_CIO_FMT_AVS,           ///< avs format
+    E_CIO_FMT_PLOT3D,        ///< plot3d format
+    E_CIO_FMT_VTK            ///< vtk format
   };
 
 /** スイッチ　on or off */
@@ -108,6 +129,24 @@ namespace CIO
     E_CIO_READTYPE_UNKNOWN,      ///<error
   };
 
+
+/** 出力形式 */
+  enum E_CIO_OUTPUT_TYPE
+  {
+    E_CIO_OUTPUT_TYPE_DEFAULT=-1, ///<デフォルト（binary)
+    E_CIO_OUTPUT_TYPE_ASCII=0,    ///<ascii形式での出力
+    E_CIO_OUTPUT_TYPE_BINARY,     ///<binary形式での出力
+    E_CIO_OUTPUT_TYPE_FBINARY     ///<Fortran Binaryでの出力
+  };
+
+  enum E_CIO_OUTPUT_FNAME
+  {
+    E_CIO_FNAME_DEFAULT=-1,  ///<出力ファイル命名規約デフォルト(step_rank)
+    E_CIO_FNAME_STEP_RANK=0, ///<step_rank
+    E_CIO_FNAME_RANK_STEP    ///<rank_step
+  };
+
+
 /** CIOのエラーコード */
   enum E_CIO_ERRORCODE
   {
@@ -139,6 +178,8 @@ namespace CIO
 ,   E_CIO_ERROR_READ_DFI_NO_MINMAX          = 1023 ///< DFI MinMax要素なし
 ,   E_CIO_ERROR_READ_DFI_MIN                = 1024 ///< DFI Min 読込みエラー
 ,   E_CIO_ERROR_READ_DFI_MAX                = 1025 ///< DFI Max 読込みエラー
+,   E_CIO_ERROR_READ_DFI_DFITYPE            = 1026 ///< DFI DFIType 読込みエラー
+,   E_CIO_ERROR_READ_DFI_FIELDFILENAMEFORMAT= 1027 ///< DFI FieldfilenameFormat 読込みエラー
 ,   E_CIO_ERROR_READ_INDEXFILE_OPENERROR    = 1050 ///< Indexファイルオープンエラー
 ,   E_CIO_ERROR_TEXTPARSER                  = 1051 ///< TextParserエラー
 ,   E_CIO_ERROR_READ_FILEINFO               = 1052 ///< FileInfo読込みエラー

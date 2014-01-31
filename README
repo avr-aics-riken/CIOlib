@@ -34,3 +34,4 @@ doc/        Documents
 include/    header files
 src/        Source files
 tools/frm   File Rank Mapper
+tools/fconv File Converter

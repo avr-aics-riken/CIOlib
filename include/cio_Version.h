@@ -1,7 +1,7 @@
 /*
  * CIOlib - Cartesian Input / Output library
  *
- * Copyright (C) 2013 2013-2014 Advanced Institute for Computational Science, RIKEN.
+ * Copyright (C) 2013 2013 Advanced Institute for Computational Science, RIKEN.
  * All rights reserved.
  *
  */
@@ -15,10 +15,10 @@
 #define _CIO_VERSION_H_
 
 /** CIOライブラリのバージョン */
-#define CIO_VERSION_NO  "1.4.4"
+#define CIO_VERSION_NO  "1.5.0"
 
 /** CIOライブラリのリビジョン */
-#define CIO_REVISION    "20140121_1430"
+#define CIO_REVISION    "20140131_1300"
 
 #endif /* _CIO_VERSION_H_ */
 

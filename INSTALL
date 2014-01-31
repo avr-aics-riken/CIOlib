@@ -12,6 +12,7 @@ SOFTWARE REQUIREMENT
 
 - MPI library
 - Text parsing library
+- CPM library
 
 
 
@@ -43,6 +44,9 @@ Configure options:
  --with-parser=TEXTPARSER_PATH
     Specify the directory path that TextParser library is installed.
 
+ --with-cpm=CPM_PATH
+    Specify the directory path that CPM library is installed.
+
  --without-MPI=(yes|no)
     If you compile CIO library for parallel environment with MPI library, specify 'yes',
     otherwise 'no'.
@@ -69,6 +73,7 @@ Here is examples.
 
   $ ./configure --with-ompi=/opt/openmpi \
                 --with-parser=/usr/local/FFV/TextParser \
+                --with-cpm=/usr/local/FFV/CPMlib \
                 CXX=icpc \
                 CXXFLAGS="-O3 -Wall" \
                 F90=ifort \
@@ -77,13 +82,18 @@ Here is examples.
 
 ## OpenMPI with wrapper compiler, assume that mpicxx is a wrapper compiler for OpenMPI.
 
-  $ ./configure --with-parser=/usr/local/FFV/TextParser --prefix=/usr/local/FFV/CIOlib CXX=mpicxx CXXFLAGS=-O3
+  $ ./configure --prefix=/usr/local/FFV/CIOlib \
+                --with-parser=/usr/local/FFV/TextParser \
+                --with-cpm=/usr/local/FFV/CPMlib \
+                CXX=mpicxx \
+                CXXFLAGS=-O3
 
 
 ## K-computer
 
   $ ./configure --prefix=$1 \
                 --with-parser=hoge \
+                --with-cpm=hogehoge \
                 --host=sparc64-unknown-linux-gnu \
                 CXX=mpiFCCpx \
                 CXXFLAGS=-Kfast \
