@@ -396,6 +396,15 @@ cio_DFI* cio_DFI::WriteInit(const MPI_Comm comm,
                             const CIO::E_CIO_ONOFF TSliceOnOff)
 {
 
+//FCONV 20140131.s
+  if( format == CIO::E_CIO_FMT_SPH ) {
+    if( nComp > 1 && ArrayShape == CIO::E_CIO_IJKN ) {
+      printf("\tCIO error sph file undefined ijkn component>1.\n");
+      return NULL;
+    }
+  }
+//FCONV 20140131.e
+
   cio_DFI *dfi = NULL;
 
   int RankID;

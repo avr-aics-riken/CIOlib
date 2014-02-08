@@ -13,21 +13,21 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.57])
-AC_INIT([CIOlib],[1.5.0],[keno@riken.jp],[CIOlib])
+AC_INIT([CIOlib],[1.5.1],[keno@riken.jp],[CIOlib])
 AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR([src/cio_DFI.C])
 AM_CONFIG_HEADER([config.h])
 
 # revision No.
-CIO_REVISION="20140131_1300"
+CIO_REVISION="20140208_1400"
 AC_SUBST(CIO_REVISION)
 
 #
 # default prefix setting
 #
-AC_PREFIX_DEFAULT([/usr/local/CIOlib])
+AC_PREFIX_DEFAULT([/usr/local/FFV/CIOlib])
 if test "$prefix" = "NONE" ; then
-  CIO_INST_DIR=/usr/local/CIOlib
+  CIO_INST_DIR=/usr/local/FFV/CIOlib
 else
   CIO_INST_DIR="$prefix"
 fi

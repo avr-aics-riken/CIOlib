@@ -34,6 +34,21 @@ int main( int argc, char **argv )
 
   //引数の取り出し＆セット
   set_arg(STG,argc,argv);
+  if( STG.m_infofile.empty() && STG.m_fconvfile.empty() ) {
+    printf("ERROR undefined input file\n");
+    return 0;
+  }else if( !STG.m_infofile.empty() && !STG.m_fconvfile.empty() ) {
+    printf("ERROR duplicate input file (infofile & fconvfile)\n");
+    return 0;
+  }
+  if( STG.m_fconvfile.empty() && STG.m_dfi_fname.size()<1 ) {
+    printf("ERROR undefined input dfi file\n");
+    return 0;
+  }
+  if( !STG.m_fconvfile.empty() && STG.m_dfi_fname.size()>0 ) {
+    printf("WARN input dfi file name is ignore\n");
+    STG.m_dfi_fname.clear();
+  }
 
   //初期化、ファイルの読込み、DFIのインスタンス 
   if( !STG.Initial(STG.m_infofile) ) {
@@ -188,9 +203,19 @@ int main( int argc, char **argv )
        }
        domain.ActiveSubdomainFile = STG.dfi_Domain->ActiveSubdomainFile;
 
+       int head[3];
+       int tail[3];
+       STG.UpdateHeadTail((const int*)STG.m_GRankInfo[j].HeadIndex,
+                          (const int*)STG.m_GRankInfo[j].TailIndex,
+                          head, tail);
+       /*
        ret=STG.dfi_Process->CheckReadRank(domain,
            (const int *)STG.m_GRankInfo[j].HeadIndex,
            (const int *)STG.m_GRankInfo[j].TailIndex,readflag,readRankList);
+       */
+       ret=STG.dfi_Process->CheckReadRank(domain,
+           (const int *)head,
+           (const int *)tail,readflag,readRankList);
 
        if( ret != CIO::E_CIO_SUCCESS ) return 0;
 
@@ -230,6 +255,14 @@ void set_arg(Staging &STG, int argc, char **argv)
         case 'o' :
          STG.m_outPath = argv[i++];
          break;
+//FCONV 20140127.s
+        case 'f' :
+         STG.m_fconvfile = argv[i++];
+         break;
+        case 'n' :
+         STG.m_fconv_numproc = atoi(argv[i++]);
+         break;
+//FCONV 20140127.e
       }
       i--;
     } else {
@@ -238,6 +271,8 @@ void set_arg(Staging &STG, int argc, char **argv)
   }
 
   printf("input proc file : %s\n",STG.m_infofile.c_str());
+  printf("fconv input file: %s\n",STG.m_fconvfile.c_str());
+  printf("fconv numProc   : %d\n",STG.m_fconv_numproc);
   printf("m_step          : %d\n",STG.m_step);
   printf("m_outPath       : %s\n",STG.m_outPath.c_str());
   printf("dfi_fname size  : %d\n",(int)STG.m_dfi_fname.size());

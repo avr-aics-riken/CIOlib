@@ -73,7 +73,6 @@ Here is examples.
 
   $ ./configure --with-ompi=/opt/openmpi \
                 --with-parser=/usr/local/FFV/TextParser \
-                --with-cpm=/usr/local/FFV/CPMlib \
                 CXX=icpc \
                 CXXFLAGS="-O3 -Wall" \
                 F90=ifort \

@@ -35,7 +35,7 @@ convOutput_PLOT3D::~convOutput_PLOT3D()
 
 // #################################################################
 // grid 出力
-void convOutput_PLOT3D::WriteGridData(
+void convOutput_PLOT3D::WriteGridData(std::string prefix,
                                       int step,
                                       int myRank,
                                       int dType,
@@ -60,12 +60,12 @@ void convOutput_PLOT3D::WriteGridData(
 
   if( outDtype == CIO::E_CIO_FLOAT64 ) {
     double* x = new double[maxsize];
-    OutputPlot3D_xyz(step, myRank, guide, org, pit, sz, &x[0], &x[outsize] , 
-                     &x[outsize*2] );
+    OutputPlot3D_xyz(prefix, step, myRank, guide, org, pit, sz, &x[0], 
+                     &x[outsize] , &x[outsize*2] );
   }else if( outDtype == CIO::E_CIO_FLOAT32 ) {
     float* x = new float[maxsize];
-    OutputPlot3D_xyz(step, myRank, guide, org, pit, sz, &x[0], &x[outsize] , 
-                     &x[outsize*2] );
+    OutputPlot3D_xyz(prefix, step, myRank, guide, org, pit, sz, &x[0], 
+                     &x[outsize] , &x[outsize*2] );
   }
 }
 

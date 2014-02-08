@@ -106,6 +106,18 @@ bool CONV::copyArray(cio_TypeArray<T1> *buf,
 
   CIO::E_CIO_ARRAYSHAPE src_shape = src->getArrayShape();
 
+  //入力指示領域の取得
+  int IndexStart[3];
+  if( m_param->Get_CropIndexStart_on() ) {
+    const int *cropIndexStart = m_param->Get_CropIndexStart();
+    for(int i=0; i<3; i++) IndexStart[i]=cropIndexStart[i];
+  } else {
+    //for(int i=0; i<3; i++) IndexStart[i]=sta[i]+1;
+    for(int i=0; i<3; i++) IndexStart[i]=1;
+  }
+
+  const int* headS = src->getHeadIndex();
+
   //間引き数の取得
   int thin_count = m_param->Get_ThinOut();
 
@@ -113,12 +125,14 @@ bool CONV::copyArray(cio_TypeArray<T1> *buf,
   if( buf_shape == CIO::E_CIO_IJKN && src_shape == CIO::E_CIO_IJKN )
   {
     for( int k=sta[2];k<=end[2];k++ ){
-    if( k%thin_count != 0 ) continue;
+    if( (k-(IndexStart[2]-1))%thin_count != 0 ) continue;
+
     for( int j=sta[1];j<=end[1];j++ ){
-    if( j%thin_count != 0 ) continue;
+    if( (j-(IndexStart[1]-1))%thin_count != 0 ) continue;
+
     for( int i=sta[0];i<=end[0];i++ ){
-      if( i%thin_count != 0 ) continue;
-      //src->hval(i/thin_count,j/thin_count,k/thin_count,n) = (T2)buf->hval(i,j,k,n);
+      if( (i-(IndexStart[0]-1))%thin_count != 0 ) continue;
+
       src->hval(i/thin_count,j/thin_count,k/thin_count,n) = buf->hval(i,j,k,n);
     }}}
   }
@@ -126,38 +140,44 @@ bool CONV::copyArray(cio_TypeArray<T1> *buf,
   //NIJK&NIJK
   {
     for( int k=sta[2];k<=end[2];k++ ){
-    if( k%thin_count != 0 ) continue;
+    if( (k-(IndexStart[2]-1))%thin_count != 0 ) continue;
+
     for( int j=sta[1];j<=end[1];j++ ){
-    if( j%thin_count != 0 ) continue;
+    if( (j-(IndexStart[1]-1))%thin_count != 0 ) continue;
+
     for( int i=sta[0];i<=end[0];i++ ){
-      if( i%thin_count != 0 ) continue;
-      //src->hval(n,i/thin_count,j/thin_count,k/thin_count) = (T2)buf->hval(n,i,j,k);
+      if( (i-(IndexStart[0]-1))%thin_count != 0 ) continue;
+
       src->hval(n,i/thin_count,j/thin_count,k/thin_count) = buf->hval(n,i,j,k);
     }}}
   }
   else if( buf_shape == CIO::E_CIO_IJKN && src_shape == CIO::E_CIO_NIJK )
   //IJNK&NIJK
   {
+
     for( int k=sta[2];k<=end[2];k++ ){
-    if( k%thin_count != 0 ) continue;
+    if( (k-(IndexStart[2]-1))%thin_count != 0 ) continue;
     for( int j=sta[1];j<=end[1];j++ ){
-    if( j%thin_count != 0 ) continue;
+    if( (j-(IndexStart[1]-1))%thin_count != 0 ) continue;
     for( int i=sta[0];i<=end[0];i++ ){
-      if( i%thin_count != 0 ) continue;
-      //src->hval(n,i/thin_count,j/thin_count,k/thin_count) = (T2)buf->hval(i,j,k,n);
+      if( (i-(IndexStart[0]-1))%thin_count != 0 ) continue;
+
       src->hval(n,i/thin_count,j/thin_count,k/thin_count) = buf->hval(i,j,k,n);
+
     }}}
   }
   else if( buf_shape == CIO::E_CIO_NIJK && src_shape == CIO::E_CIO_IJKN )
   //NIJK&IJKN
   {
     for( int k=sta[2];k<=end[2];k++ ){
-    if( k%thin_count != 0 ) continue;
+    if( (k-(IndexStart[2]-1))%thin_count != 0 ) continue;
+
     for( int j=sta[1];j<=end[1];j++ ){
-    if( j%thin_count != 0 ) continue;
+    if( (j-(IndexStart[1]-1))%thin_count != 0 ) continue;
+
     for( int i=sta[0];i<=end[0];i++ ){
-      if( i%thin_count != 0 ) continue;
-      //src->hval(i/thin_count,j/thin_count,k/thin_count,n) = (T2)buf->hval(n,i,j,k);
+      if( (i-(IndexStart[0]-1))%thin_count != 0 ) continue;
+
       src->hval(i/thin_count,j/thin_count,k/thin_count,n) = buf->hval(n,i,j,k);
     }}}  
   }

@@ -26,20 +26,22 @@
 
 /**
  * @brief xyzファイルの出力
- * @param [in] step     ステップ
- * @param [in] rank     ランク
- * @param [in] guide      ガイドセル数
- * @param [in] origin     基点座標
- * @param [in] pitch      ピッチ
- * @param [in] size       セルサイズ
- * @param [in] x          x方向座標ワーク
- * @param [in] y          y方向座標ワーク
- * @param [in] z          z方向座標ワーク
+ * @param [in] prefix ファイル接頭文字 
+ * @param [in] step   ステップ
+ * @param [in] rank   ランク
+ * @param [in] guide  ガイドセル数
+ * @param [in] origin 基点座標
+ * @param [in] pitch  ピッチ
+ * @param [in] size   セルサイズ
+ * @param [in] x      x方向座標ワーク
+ * @param [in] y      y方向座標ワーク
+ * @param [in] z      z方向座標ワーク
  */
 template<class T1, class T2>
 CONV_INLINE
 void 
-convOutput_PLOT3D::OutputPlot3D_xyz(int step, 
+convOutput_PLOT3D::OutputPlot3D_xyz(std::string prefix,
+                                    int step, 
                                     int rank, 
                                     int guide, 
                                     T1* origin, 
@@ -90,12 +92,13 @@ convOutput_PLOT3D::OutputPlot3D_xyz(int step,
     
   // 出力ファイル名
   std::string tmp;
-  std::string t_prefix="PLOT3DoutputGrid";
+  //std::string t_prefix=prefix+"_Grid";
   int fnameformat = m_InputCntl->Get_OutputFilenameFormat();
   tmp = m_InputCntl->Get_OutputDir() +"/"+ 
-        cio_DFI::Generate_FileName(t_prefix,
+        cio_DFI::Generate_FileName(prefix,
                                    rank,
-                                   step,
+                                   //step,
+                                   -1,
                                    "xyz",
                                    (CIO::E_CIO_OUTPUT_FNAME)fnameformat,
                                    false,

@@ -64,11 +64,9 @@ protected :
 
   vector<int>m_readRankList;         ///< 読込みランクリスト
 
-
   bool m_bgrid_interp_flag;               ///< 節点への補間フラグ
   CIO::E_CIO_OUTPUT_TYPE  m_output_type;  ///< 出力形式(ascii,binary,FortarnBinary)
   CIO::E_CIO_OUTPUT_FNAME m_output_fname; ///< 出力ファイル命名規約(step_rank,rank_step)   
-
 
 public:
   /** コンストラクタ */
@@ -289,7 +287,6 @@ public:
             const std::string hostname,
             const CIO::E_CIO_ONOFF TSliceOnOff);
 
-
   /**
    * @brief RankIDをセットする
    * @param[in] rankID RankID
@@ -316,7 +313,6 @@ public:
    */ 
   std::string get_dfi_fname()
   { return m_indexDfiName; };
-
 
 
   /**
@@ -519,7 +515,6 @@ public:
   CIO::E_CIO_DTYPE 
   GetDataType();
 
-
   /** 
    * @brief get FileFormat （FileFormatの取り出し関数） 
    * @return FileFormat(文字列)
@@ -533,14 +528,12 @@ public:
   CIO::E_CIO_FORMAT
   GetFileFormat();
 
-
   /**
    * @brief get Number of Component （成分数の取り出し関数）
    * @return 成分数
    */
   int 
   GetNumComponent();
-
 
   /*
    * @brief get Number of GuideCell (仮想セル数の取り出し関数)
@@ -999,7 +992,6 @@ public:
    */
   template<class T>
   void VolumeDataDivide(cio_TypeArray<T> *P);
-
 
 
 public:

@@ -352,32 +352,66 @@ cio_DFI::WriteFieldData(std::string fname,
                             szOut,
                             0,
                             nComp);
+    //unsigned char
+    if( val->getDataType() == CIO::E_CIO_UINT8 ) {
+      cio_TypeArray<unsigned char> *V = dynamic_cast<cio_TypeArray<unsigned char>*>(val);
+      cio_TypeArray<unsigned char> *P = dynamic_cast<cio_TypeArray<unsigned char>*>(outArray);
+      setGridData(P,V);
 
     //char
-    if( val->getDataType() == CIO::E_CIO_INT8 ) {
+    }else if( val->getDataType() == CIO::E_CIO_INT8 ) {
       cio_TypeArray<char> *V = dynamic_cast<cio_TypeArray<char>*>(val);
       cio_TypeArray<char> *P = dynamic_cast<cio_TypeArray<char>*>(outArray);
       setGridData(P,V);
+
+    //unsigned short
+    } else if( val->getDataType() == CIO::E_CIO_UINT16 ) {
+      cio_TypeArray<unsigned short> *V = dynamic_cast<cio_TypeArray<unsigned short>*>(val);
+      cio_TypeArray<unsigned short> *P = dynamic_cast<cio_TypeArray<unsigned short>*>(outArray);
+      setGridData(P,V);
+
     //short
     } else if( val->getDataType() == CIO::E_CIO_INT16 ) {
       cio_TypeArray<short> *V = dynamic_cast<cio_TypeArray<short>*>(val);
       cio_TypeArray<short> *P = dynamic_cast<cio_TypeArray<short>*>(outArray);
       setGridData(P,V);
+
+    //uint
+    } else if( val->getDataType() == CIO::E_CIO_UINT32 ) {
+      cio_TypeArray<unsigned int> *V = dynamic_cast<cio_TypeArray<unsigned int>*>(val);
+      cio_TypeArray<unsigned int> *P = dynamic_cast<cio_TypeArray<unsigned int>*>(outArray);
+      setGridData(P,V);
+
     //int
     } else if( val->getDataType() == CIO::E_CIO_INT32 ) {
       cio_TypeArray<int> *V = dynamic_cast<cio_TypeArray<int>*>(val);
       cio_TypeArray<int> *P = dynamic_cast<cio_TypeArray<int>*>(outArray);
       setGridData(P,V);
+
+    //ulong
+    } else if( val->getDataType() == CIO::E_CIO_UINT64 ) {
+      cio_TypeArray<unsigned long long> *V = dynamic_cast<cio_TypeArray<unsigned long long>*>(val);
+      cio_TypeArray<unsigned long long> *P = dynamic_cast<cio_TypeArray<unsigned long long>*>(outArray);
+      setGridData(P,V);
+
+    //long
+    } else if( val->getDataType() == CIO::E_CIO_INT64 ) {
+      cio_TypeArray<long long> *V = dynamic_cast<cio_TypeArray<long long>*>(val);
+      cio_TypeArray<long long> *P = dynamic_cast<cio_TypeArray<long long>*>(outArray);
+      setGridData(P,V);
+
     //float
     } else if( val->getDataType() == CIO::E_CIO_FLOAT32 ) {
       cio_TypeArray<float> *V = dynamic_cast<cio_TypeArray<float>*>(val);
       cio_TypeArray<float> *P = dynamic_cast<cio_TypeArray<float>*>(outArray);
       setGridData(P,V);
+
     //double
     } else if( val->getDataType() == CIO::E_CIO_FLOAT64 ) {
       cio_TypeArray<double> *V = dynamic_cast<cio_TypeArray<double>*>(val);
       cio_TypeArray<double> *P = dynamic_cast<cio_TypeArray<double>*>(outArray);
       setGridData(P,V);
+
     }
 
   } 

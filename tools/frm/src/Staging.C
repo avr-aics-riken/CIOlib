@@ -23,13 +23,17 @@
 bool Staging::Initial( string infofile )
 {
 
-  string fconvfile; //FCONV 入力ファイル名
+  //string fconvfile; //FCONV 入力ファイル名
 
   //infoファイル読込み
-  if( !ReadInfo(infofile, fconvfile) ) return false;
+  //if( !ReadInfo(infofile, fconvfile) ) return false;
+  if( !ReadInfo() ) return false;
 
   //FCONV入力ファイルの読込み
-  if( !ReadFconvInputFile(fconvfile) ) return false;
+  //if( !ReadFconvInputFile(fconvfile) ) return false;
+  if( !ReadFconvInputFile() ) return false;
+
+  if( !FconvInputCheck() ) return false;
 
   DFI.clear();
 
@@ -37,7 +41,20 @@ bool Staging::Initial( string infofile )
   CIO::E_CIO_ERRORCODE ret;
   for(int i=0; i<m_dfi_fname.size(); i++) {
     cio_DFI* dfi_in = cio_DFI::ReadInit(MPI_COMM_WORLD, m_dfi_fname[i], m_GVoxel, m_Gdiv, ret);
+
+    if( dfi_in == NULL ) return ret;
+    if( ret != CIO::E_CIO_SUCCESS && ret != CIO::E_CIO_ERROR_INVALID_DIVNUM ) return ret;
+
     DFI.push_back(dfi_in);
+  }
+
+  if( m_GVoxel[0] == 0 || m_GVoxel[1] == 0 || m_GVoxel[2] == 0 ) {
+    dfi_Domain = DFI[0]->GetcioDomain();
+    for(int i=0; i<3; i++) m_GVoxel[i]=dfi_Domain->GlobalVoxel[i]; 
+  }
+  if( m_Gdiv[0] == 0 || m_Gdiv[1] == 0 || m_Gdiv[2] == 0 ) {
+    dfi_Domain = DFI[0]->GetcioDomain();
+    for(int i=0; i<3; i++) m_Gdiv[i]=dfi_Domain->GlobalDivision[i];
   }
 
   //dfi情報が格納されたクラスポインタの取得
@@ -69,23 +86,26 @@ bool Staging::Initial( string infofile )
 
 ///////////////////////////////////////////////////////////////////
 // infoファイルの読込み
-bool Staging::ReadInfo(string infofile, string &fconvfile)
+//bool Staging::ReadInfo(string infofile, string &fconvfile)
+bool Staging::ReadInfo()
 {
+
+  if( m_infofile.empty() ) return true;
 
   //実行プログラム情報ローダのインスタンス生成
   cio_TextParser tp_stg;
   tp_stg.getTPinstance();
 
   FILE* fp = NULL;
-  if( !(fp=fopen(infofile.c_str(),"rb")) ) {
-    printf("Can't open file. (%s)\n",infofile.c_str());
+  if( !(fp=fopen(m_infofile.c_str(),"rb")) ) {
+    printf("Can't open file. (%s)\n",m_infofile.c_str());
     return false;
   }
   fclose(fp);
 
-  int ierr = tp_stg.readTPfile(infofile);
+  int ierr = tp_stg.readTPfile(m_infofile);
   if( ierr ) {
-    printf("\tinput file not found '%s'\n",infofile.c_str());
+    printf("\tinput file not found '%s'\n",m_infofile.c_str());
     return false;
   }
 
@@ -121,6 +141,7 @@ bool Staging::ReadInfo(string infofile, string &fconvfile)
   }
 
 //FCONV 20140116.s
+/*
   //InputFile
   label = "/FCONVInfo/InputFile";
   if( !(tp_stg.GetValue(label, &str )) ) {
@@ -136,7 +157,7 @@ bool Staging::ReadInfo(string infofile, string &fconvfile)
   } else {
     m_fconv_numproc=ct;
   }
-
+*/
   m_ConvType = STG_E_OUTPUT_MxN;
 
   for(int i=0; i<3; i++) {
@@ -221,10 +242,11 @@ bool Staging::ReadInfo(string infofile, string &fconvfile)
 
 ///////////////////////////////////////////////////////////////////
 // FCONV 入力ファイルの読込み
-bool Staging::ReadFconvInputFile(string fconvfile)
+//bool Staging::ReadFconvInputFile(string fconvfile)
+bool Staging::ReadFconvInputFile()
 {
 
-  if( fconvfile == "" ) {
+  if( m_fconvfile.empty() ) {
     m_fconv_inputfile = false;
     return true;
   }
@@ -232,23 +254,55 @@ bool Staging::ReadFconvInputFile(string fconvfile)
   string label;
   string str;
   int v[3];
+  int ct;
 
   //実行プログラム情報ローダのインスタンス生成
-  cio_TextParser tp_stg;
-  tp_stg.getTPinstance();
+  //cio_TextParser tp_stg;
+  TextParser tp_stg;
+  //tp_stg.getTPinstance();
 
+  /*
   FILE* fp = NULL;
-  if( !(fp=fopen(fconvfile.c_str(),"rb")) ) {
-    printf("Can't open file. (%s)\n",fconvfile.c_str());
+  if( !(fp=fopen(m_fconvfile.c_str(),"rb")) ) {
+    printf("Can't open file. (%s)\n",m_fconvfile.c_str());
     return false;
   }
   fclose(fp);
+  */
 
-  int ierr = tp_stg.readTPfile(fconvfile);
+  //int ierr = tp_stg.readTPfile(m_fconvfile);
+  int ierr = tp_stg.read(m_fconvfile);
+
+  int nnode=0;
+  string label_base = "/ConvData/InputDFI";
+  if( tp_stg.chkNode(label_base) ) {
+    nnode = tp_stg.countLabels(label_base);
+  } else return false;
+
+  int ncnt=0;
+  label_base = "/ConvData";
+  ncnt++;
+  //dfiのファイル名の読込み
+  for (int i=0; i<nnode; i++) {
+    if(!tp_stg.getNodeStr(label_base, ncnt, str)) {
+      printf("\tParsing error : No Elem name\n");
+      return false;
+    }
+    if( !strcasecmp(str.substr(0,8).c_str(), "InputDFI") ) {
+      label = label_base+"/"+str;
+      if( !(tp_stg.getInspectedValue(label, str )) ) {
+        printf("\tParsing error : fail to get '%s'\n", label.c_str());
+        return false;
+      }
+      m_dfi_fname.push_back(str);
+      ncnt++;
+    }
+  }
 
   //コンバートタイプの読込み
   label = "/ConvData/ConvType";
-  if( (tp_stg.GetValue(label,&str)) ) {
+  //if( (tp_stg.GetValue(label,&str)) ) {
+  if( (tp_stg.getInspectedValue(label,str)) ) {
     if     ( !strcasecmp(str.c_str(), "Mx1") )  m_ConvType = STG_E_OUTPUT_Mx1;
     else if( !strcasecmp(str.c_str(), "MxN") )  m_ConvType = STG_E_OUTPUT_MxN;
     else if( !strcasecmp(str.c_str(), "MxM") )  m_ConvType = STG_E_OUTPUT_MxM;
@@ -259,9 +313,24 @@ bool Staging::ReadFconvInputFile(string fconvfile)
     }
   }
 
+  //MxN用出力分割情報の取得
+  label = "/ConvData/OutputDivision";
+  if( (tp_stg.getInspectedVector(label, v, 3 )) ) {
+    for(int i=0; i<3; i++) m_Gdiv[i]=v[i];
+  }
+
+  //出力ガイドセル数
+  label = "/ConvData/OutputGuideCell";
+  if( !(tp_stg.getInspectedValue(label,ct)) ) {
+    m_outGc=0;
+  } else {
+    m_outGc=ct;
+  }
+
   //ファイル割振り方法の取得
   label = "/ConvData/MultiFileCasting";
-  if( (tp_stg.GetValue(label,&str)) ) {
+  //if( (tp_stg.GetValue(label,&str)) ) {
+  if( (tp_stg.getInspectedValue(label,str)) ) {
     if     ( !strcasecmp(str.c_str(), "step") ) m_outList = STG_E_OUTPUT_TYPE_STEP;
     else if( !strcasecmp(str.c_str(), "rank") ) m_outList = STG_E_OUTPUT_TYPE_RANK;
   } else m_outList = STG_E_OUTPUT_TYPE_STEP;
@@ -269,19 +338,47 @@ bool Staging::ReadFconvInputFile(string fconvfile)
 
   //入力指示の読込み
   label = "/ConvData/CropIndexStart";
-  if( (tp_stg.GetVector(label, v, 3 )) ) {
-    for(int i=0; i<3; i++) m_CropStart[i]=v[i]; 
+  if( (tp_stg.getInspectedVector(label, v, 3 )) ) {
+    for(int i=0; i<3; i++) m_CropStart[i]=v[i];
+    m_cropIndexStart_on=true; 
   }
   label = "/ConvData/CropIndexEnd";
-  if( (tp_stg.GetVector(label, v, 3 )) ) {
+  if( (tp_stg.getInspectedVector(label, v, 3 )) ) {
     for(int i=0; i<3; i++) m_CropEnd[i]=v[i];
+    m_cropIndexEnd_on=true;
   }
 
   tp_stg.remove();
 
   m_fconv_inputfile = true;
+
   return true;
 
+}
+
+///////////////////////////////////////////////////////////////////
+// FCONVファイルの入力チェック
+//
+bool Staging::FconvInputCheck()
+{
+
+  if( m_ConvType == STG_E_OUTPUT_Mx1 && m_outList == STG_E_OUTPUT_TYPE_RANK ) {
+    printf("\tInvalid MultiFileCasting \"rank\"\n");
+    return false;
+  }
+  
+  if( m_ConvType == STG_E_OUTPUT_MxM ) {
+    if( m_cropIndexStart_on || m_cropIndexEnd_on ) {
+      printf("\tInvalid CropIndexStart or CropIndexEnd\n");
+      return false;
+    }
+  }
+
+  if( m_ConvType != STG_E_OUTPUT_MxN ) {
+    for(int i=0; i<3; i++) m_Gdiv[i]=0;
+  }
+
+  return true; 
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -301,7 +398,7 @@ void Staging::makeStepList(int myID)
     }
   }
 
-  //各ランクで担当するステップ数を
+  //各ランクで担当するステップ数を求める
   int nStep = Total_step/m_fconv_numproc;
   if( Total_step%m_fconv_numproc != 0 ) {
     for(int i=0; i<Total_step%m_fconv_numproc; i++) {
@@ -902,8 +999,52 @@ bool Staging::CreateHeadTail(int* rankMap)
   if( !div ) return false;
 
   //全体ボクセル数
-  const int *gvox = GetVoxNum();
-  if( !gvox ) return false;
+  const int *tvox = GetVoxNum();
+  if( !tvox ) return false;
+  int gvox[3];
+  for(int i=0; i<3; i++) gvox[i]=tvox[i];
+
+/*
+  int outGc = m_outGc;
+  if( outGc > 0 ) {
+    if( dfi_Finfo->GuideCell < outGc ) outGc=dfi_Finfo->GuideCell;
+  }
+*/
+
+  int CropStart[3];
+  int CropEnd[3];
+
+  if( !m_cropIndexStart_on ) {
+    for(int i=0; i<3; i++ ) CropStart[i]=1;
+  } else {
+     for(int i=0; i<3; i++ ) CropStart[i]=m_CropStart[i];
+  }
+
+  if( !m_cropIndexEnd_on ) {
+    for(int i=0; i<3; i++ ) CropEnd[i]=dfi_Domain->GlobalVoxel[i];
+  } else {
+    for(int i=0; i<3; i++ ) CropEnd[i]=m_CropEnd[i];
+  }
+
+/*
+  if( outGc > 0 ) {
+    for(int i=0; i<3; i++) {
+      if( CropStart[i]>1 ) CropStart[i]=CropStart[i]-outGc;
+      if( CropEnd[i]<dfi_Domain->GlobalVoxel[i] ) CropEnd[i]=CropEnd[i]+outGc;
+    }
+  }
+*/
+
+  //MxNの入力指示あれている場合のボクセル数を更新
+  //if( m_cropIndexStart_on || m_cropIndexEnd_on ) {
+    gvox[0] = CropEnd[0]-CropStart[0]+1;
+    gvox[1] = CropEnd[1]-CropStart[1]+1;
+    gvox[2] = CropEnd[2]-CropStart[2]+1;
+  //} else {
+  //  for(int i=0; i<3; i++) m_CropStart[i]=1;
+  //  for(int i=0; i<3; i++) m_CropEnd[i]=gvox[i];
+  //}
+
 
   // ローカルのVOXEL数
   int *nvX = new int[div[0]];
@@ -936,7 +1077,8 @@ bool Staging::CreateHeadTail(int* rankMap)
   {
     int *nvd = nv[n];
     int *hd = head[n];
-    hd[0] = 1;
+    //hd[0] = 1;
+    hd[0] = CropStart[n];
 
     for( int i=1;i<div[n];i++ )
     {
@@ -983,6 +1125,33 @@ bool Staging::CreateHeadTail(int* rankMap)
 
   return true;
 }
+
+///////////////////////////////////////////////////////////////////
+// head&tailをガイドセルで更新
+void Staging::UpdateHeadTail(const int* mst_head, const int* mst_tail,
+                             int* head,int* tail)
+{
+
+  //コピー元のヘッドとテイルをコピー
+  for(int i=0; i<3; i++) {
+    head[i]=mst_head[i];
+    tail[i]=mst_tail[i];
+  }
+
+  //出力ガイドセル数がDFIより大きいときはDFIのガイドセルに更新
+  int outGc = m_outGc;
+  if( dfi_Finfo->GuideCell < outGc ) outGc=dfi_Finfo->GuideCell;
+  
+  //出力ガイドセルが無いときはリターン
+  if( outGc < 1 ) return;
+
+  for(int i=0; i<3; i++) {
+    if( head[i]>1 ) head[i]=head[i]-outGc;
+    if( tail[i]<dfi_Domain->GlobalVoxel[i] ) tail[i]=tail[i]+outGc;
+  }
+
+}
+
 
 ///////////////////////////////////////////////////////////////////
 // head&tail の生成
@@ -1118,6 +1287,37 @@ bool Staging::FileCopy(step_rank_info info, int myRank)
   string dfi_fname = info.dfi->get_dfi_fname();
   m_inPath = CIO::cioPath_DirName(dfi_fname);
 
+  int outGc=m_outGc;
+  if( outGc > 0 ) {
+    if( dfi_Finfo->GuideCell < outGc ) outGc=dfi_Finfo->GuideCell;
+  }
+
+  int CropStart[3];
+  int CropEnd[3];
+
+  if( !m_cropIndexStart_on ) {
+    for(int i=0; i<3; i++ ) CropStart[i]=1;
+  } else {
+    for(int i=0; i<3; i++ ) CropStart[i]=m_CropStart[i];
+  }
+
+  if( !m_cropIndexEnd_on ) {
+    for(int i=0; i<3; i++ ) CropEnd[i]=dfi_Domain->GlobalVoxel[i];
+  } else {
+    for(int i=0; i<3; i++ ) CropEnd[i]=m_CropEnd[i];
+  }
+
+  if( outGc > 0 ) {
+    for(int i=0; i<3; i++) {
+      if( CropStart[i]>1 ) CropStart[i]=CropStart[i]-outGc;
+      if( CropEnd[i]<dfi_Domain->GlobalVoxel[i] ) CropEnd[i]=CropEnd[i]+outGc;
+    }
+  }
+
+
+  //printf("m_CropStart : %d %d %d\n",m_CropStart[0],m_CropStart[1],m_CropStart[2]);
+  //printf("m_CropEnd   : %d %d %d\n",m_CropEnd[0],m_CropEnd[1],m_CropEnd[2]);
+
   bool mio;
   if( dfi_Process->RankList.size()>1 ) mio = true;
   else mio=false;
@@ -1148,6 +1348,14 @@ bool Staging::FileCopy(step_rank_info info, int myRank)
       path2 = path;
     }
     for(int j=info.rankStart; j<=info.rankEnd; j++) {
+
+      if( CropStart[0] > dfi_Process->RankList[j].TailIndex[0] ||
+          CropEnd[0]   < dfi_Process->RankList[j].HeadIndex[0] ) continue;
+      if( CropStart[1] > dfi_Process->RankList[j].TailIndex[1] ||
+          CropEnd[1]   < dfi_Process->RankList[j].HeadIndex[1] ) continue;
+      if( CropStart[2] > dfi_Process->RankList[j].TailIndex[2] ||
+          CropEnd[2]   < dfi_Process->RankList[j].HeadIndex[2] ) continue;
+
       fname=CIO::cioPath_ConnectPath(m_inPath,Generate_FileName(j,step,mio));
       memset(cmd, 0, sizeof(char)*512 );
       sprintf(cmd,"cp %s %s\n",fname.c_str(),path2.c_str());
@@ -1365,6 +1573,9 @@ Staging::WriteIndexDfiFile(const std::string dfi_name)
 
   //FileInfo {} の出力
   cio_FileInfo *t_Finfo = (cio_FileInfo *)dfi_Finfo;
+//FEAST 20140203.s
+  t_Finfo->DirectoryPath="./";
+//FEAST 20140203.s
   if( t_Finfo->Write(fp, 0) != CIO::E_CIO_SUCCESS )
   {
     fclose(fp);
@@ -1445,11 +1656,14 @@ Staging::WriteIndexDfiFile(const std::string dfi_name, const step_rank_info info
 
   //FileInfo {} の出力
   cio_FileInfo *t_Finfo = (cio_FileInfo *)dfi_Finfo;
+  std::string tmp = t_Finfo->DirectoryPath;
+  t_Finfo->DirectoryPath="./";
   if( t_Finfo->Write(fp, 0) != CIO::E_CIO_SUCCESS )
   {
     fclose(fp);
     return CIO::E_CIO_ERROR_WRITE_FILEINFO;
   }
+  t_Finfo->DirectoryPath=tmp;
 
   //FilePath {} の出力
   cio_FilePath t_Fpath;

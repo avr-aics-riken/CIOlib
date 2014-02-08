@@ -112,18 +112,22 @@ CIO::E_CIO_ERRORCODE CONV::ReadDfiFiles()
     }
   }
   
-  // dfi毎の成分数、出力ガイドセルのチェックと更新
+  // dfi毎の成分数、出力ガイドセルのチェックと更新、等
   if( !CheckDFIdata() ) return CIO::E_CIO_ERROR;
 
-  return ret;
+  return CIO::E_CIO_SUCCESS;
 }
 
 // #################################################################
-// dfi毎の成分数、出力ガイドセルのチェックと更新
+// dfi毎の成分数、出力ガイドセルのチェックと更新、等
 bool CONV::CheckDFIdata()
 {
 
   bool ierr=true;
+  bool upsta=true;
+  bool upend=true;
+  int *sta;
+  int *end;
 
   for( int i=0; i<m_in_dfi.size(); i++) {
     //コンバート成分数のチェック
@@ -142,6 +146,68 @@ bool CONV::CheckDFIdata()
       }
     }
 
+    //入力指示範囲のチェック
+    if( m_param->Get_CropIndexStart_on() ) {
+      sta = m_param->Get_CropIndexStart();
+      for(int j=0; j<3; j++) {
+        if( sta[j]<1 ) {
+          sta[j]=1;
+          upsta=false;
+        }
+      }
+    }
+    if( m_param->Get_CropIndexEnd_on() ) {
+      const cio_Domain* DFI_Domian = m_in_dfi[i]->GetcioDomain();
+      end = m_param->Get_CropIndexEnd();
+      for(int j=0; j<3; j++) {
+        if( end[j]>DFI_Domian->GlobalVoxel[j] ) {
+          end[j]=DFI_Domian->GlobalVoxel[j];
+          upend=false;
+        }
+      }
+    }
+
+    //Prefixの重複チェック
+    const cio_FileInfo* Finfo1 = m_in_dfi[i]->GetcioFileInfo();
+    for(int j=i+1; j<m_in_dfi.size(); j++) {
+      const cio_FileInfo* Finfo2 = m_in_dfi[j]->GetcioFileInfo();
+      if( Finfo1->Prefix == Finfo2->Prefix ) {
+        printf("\tCan't duplicate Prefix \"%s\" dfi : %s dfi : %s\n",
+                Finfo1->Prefix.c_str(),m_in_dfi[i]->get_dfi_fname().c_str(),
+                m_in_dfi[j]->get_dfi_fname().c_str());
+        ierr=false;
+      } 
+    }
+
+    //voxel size のチェック
+    if( m_param->Get_ConvType() == E_CONV_OUTPUT_MxN ) {
+      const cio_Domain* domain1 = m_in_dfi[i]->GetcioDomain();
+      for(int j=i+1; j<m_in_dfi.size(); j++) {
+        const cio_Domain* domain2 = m_in_dfi[j]->GetcioDomain();
+        if( domain1->GlobalVoxel[0] != domain2->GlobalVoxel[0] ||
+            domain1->GlobalVoxel[1] != domain2->GlobalVoxel[1] ||
+            domain1->GlobalVoxel[2] != domain2->GlobalVoxel[2]   ) {
+          printf("\tCan't mismatch ClobalVoxel size %s (%d,%d,%d) \n"
+                 "\t                                %s (%d,%d,%d) \n",
+            m_in_dfi[i]->get_dfi_fname().c_str(),
+            domain1->GlobalVoxel[0],domain1->GlobalVoxel[1],domain1->GlobalVoxel[2],
+            m_in_dfi[j]->get_dfi_fname().c_str(),
+            domain2->GlobalVoxel[0],domain2->GlobalVoxel[1],domain2->GlobalVoxel[2]);
+
+          ierr=false;
+        }
+      }
+    }
+  }
+
+  //入力指示範囲の更新
+  if( !upsta ) {
+    m_param->Set_CropIndexStart(sta);
+    printf("\tupdate input CropIndexStart : %d %d %d\n",sta[0],sta[1],sta[2]);
+  }
+  if( !upend ) {
+    m_param->Set_CropIndexEnd(end);
+    printf("\tupdate input CropIndexEnd   : %d %d %d\n",end[0],end[1],end[2]);
   }
 
   return ierr;
@@ -562,7 +628,10 @@ bool CONV::convertXY(
                      int tailS[3],
                      int n)
 {
-  
+ 
+  //debug
+  const int *tmp = src->getHeadIndex();
+ 
   //copy
   int gcB          = buf->getGcInt();
   const int *headB = buf->getHeadIndex();
@@ -605,6 +674,16 @@ bool CONV::convertXY(
   //int32
   else if( buf_dtype == CIO::E_CIO_INT32 ) {
     cio_TypeArray<int> *B = dynamic_cast<cio_TypeArray<int>*>(buf);
+    return copyArray(B, src, sta, end, n);
+  }
+  //uint64
+  else if( buf_dtype == CIO::E_CIO_UINT64 ) {
+    cio_TypeArray<unsigned long long> *B = dynamic_cast<cio_TypeArray<unsigned long long>*>(buf);
+    return copyArray(B, src, sta, end, n);
+  }
+  //int64
+  else if( buf_dtype == CIO::E_CIO_INT64 ) {
+    cio_TypeArray<long long> *B = dynamic_cast<cio_TypeArray<long long>*>(buf);
     return copyArray(B, src, sta, end, n);
   }
   //float32
@@ -951,6 +1030,10 @@ bool CONV::makeProcInfo(cio_DFI* dfi,
     IndexStart[i]=1;
     IndexEnd[i]=Gvoxel[i];
   }
+
+  //pitを計算
+  double pit[3];
+  for(int i=0; i<3; i++) pit[i]=Gregion[i]/(double)Gvoxel[i];
  
   //入力領域指示ありのときボクセルサイズを更新
   if( m_param->Get_CropIndexStart_on() ) {
@@ -967,6 +1050,9 @@ bool CONV::makeProcInfo(cio_DFI* dfi,
     Gvoxel[1]=Gvoxel[1]-(dfi_domain->GlobalVoxel[1]-IndexEnd[1]);
     Gvoxel[2]=Gvoxel[2]-(dfi_domain->GlobalVoxel[2]-IndexEnd[2]);
   }
+
+  //Gregionの更新
+  for(int i=0; i<3; i++) Gregion[i]=(double)Gvoxel[i]*pit[i];
 
   //間引きありのときボクセルサイズを更新
   if( thin_count > 1 ) {
@@ -996,9 +1082,13 @@ bool CONV::makeProcInfo(cio_DFI* dfi,
       if( thin_count > 1 ) {
         for(int j=0; j<3; j++) {
           if( rank.VoxelSize[j]%thin_count != 0 ) rank.VoxelSize[j]=rank.VoxelSize[j]/thin_count+1;
-          else                                    rank.VoxelSize[j]=rank.VoxelSize[j];
-          if( rank.HeadIndex[j]%thin_count != 0 ) rank.HeadIndex[j]=rank.HeadIndex[j]/thin_count+1;
-          else                                    rank.HeadIndex[j]=rank.HeadIndex[j];
+          else                                    rank.VoxelSize[j]=rank.VoxelSize[j]/thin_count;
+          if( (rank.HeadIndex[j]-1)%thin_count != 0 ) {
+             rank.HeadIndex[j]=(rank.HeadIndex[j]-1)/thin_count+1;
+          } else {
+             rank.HeadIndex[j]=(rank.HeadIndex[j]-1)/thin_count;
+          }
+          rank.HeadIndex[j]=rank.HeadIndex[j]+1;
           rank.TailIndex[j]=rank.HeadIndex[j]+rank.VoxelSize[j]-1;
         }
       }  

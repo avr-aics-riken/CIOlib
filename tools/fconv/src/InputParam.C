@@ -30,7 +30,8 @@ InputParam::InputParam(cpm_ParaManager* paraMngr)
   m_outputArrayShape=CIO::E_CIO_ARRAYSHAPE_UNKNOWN;
   m_outputFilenameFormat=CIO::E_CIO_FNAME_STEP_RANK;
   m_conv_type=E_CONV_OUTPUT_UNKNOWN;
-
+  m_outputGuideCell=0;
+  m_output_data_type = CIO::E_CIO_DTYPE_UNKNOWN;
   //m_in_dfi_name.clear();
   //m_out_dfi_name.clear();
   //m_out_proc_name.clear();
@@ -430,9 +431,21 @@ bool InputParam::InputParamCheck()
 
   bool ierr=true;
 
+  //読込むDFIファイル名指示のチェック
+  if( m_dfiList.size() < 1 ) {
+    printf("\tundefined input dfi file name\n");
+    ierr=false;
+  }
+
   //コンバートタイプのチェック
   if( m_conv_type == E_CONV_OUTPUT_UNKNOWN ) {
     printf("\tundefine Converter Type\n");
+    ierr=false;
+  }
+
+  //出力先ディレクトリのチェック
+  if( m_outdir_name.empty() ) {
+    printf("\tundefine OutputDir\n");
     ierr=false;
   }
 
@@ -518,8 +531,14 @@ bool InputParam::InputParamCheck()
 
   //出力ガイドセル数のチェック
   if( m_outputGuideCell > 0 ) {
+    //sph,bov以外は出力指定不可
     if( m_out_format != CIO::E_CIO_FMT_SPH && m_out_format != CIO::E_CIO_FMT_BOV ) {
       printf("\tCan't output guide cell : %s\n",Get_OutputFormat_string().c_str());
+      ierr=false;
+    }
+    //間引きありとガイドセル出力を両方指定は不可
+    if( m_thin_count > 1 ) {
+      printf("\tCan't output guide cell and thinning out\n");
       ierr=false;
     }
   }

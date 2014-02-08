@@ -119,8 +119,56 @@ cio_DFI_VTK::write_DataRecord(FILE* fp,
 
   if( m_output_type == CIO::E_CIO_OUTPUT_TYPE_BINARY ) {
 
+    //出力実数タイプがuint8のとき
+    if( val->getDataType() == CIO::E_CIO_UINT8 ) {
+      unsigned char *data = (unsigned char*)val->getData();
+      BSWAPVEC(data,dLen);
+      fwrite( data, sizeof(unsigned char), dLen, fp );
+
+    //出力実数タイプがint8のとき
+    }else if( val->getDataType() == CIO::E_CIO_INT8 ) {
+      char *data = (char*)val->getData();
+      BSWAPVEC(data,dLen);
+      fwrite( data, sizeof(char), dLen, fp );
+
+    //出力実数タイプがuint16のとき
+    }else if( val->getDataType() == CIO::E_CIO_UINT16 ) {
+      unsigned short *data = (unsigned short*)val->getData();
+      BSWAPVEC(data,dLen);
+      fwrite( data, sizeof(unsigned short), dLen, fp );
+
+    //出力実数タイプがint16のとき
+    }else if( val->getDataType() == CIO::E_CIO_INT16 ) {
+      short *data = (short*)val->getData();
+      BSWAPVEC(data,dLen);
+      fwrite( data, sizeof(short), dLen, fp );
+
+    //出力実数タイプがuint32のとき
+    }else if( val->getDataType() == CIO::E_CIO_UINT32 ) {
+      unsigned int *data = (unsigned int*)val->getData();
+      BSWAPVEC(data,dLen);
+      fwrite( data, sizeof(unsigned int), dLen, fp );
+
+    //出力実数タイプがint32のとき
+    }else if( val->getDataType() == CIO::E_CIO_INT32 ) {
+      int *data = (int*)val->getData();
+      BSWAPVEC(data,dLen);
+      fwrite( data, sizeof(int), dLen, fp );
+
+    //出力実数タイプがuint64のとき
+    }else if( val->getDataType() == CIO::E_CIO_UINT64 ) {
+      unsigned long long *data = (unsigned long long*)val->getData();
+      BSWAPVEC(data,dLen);
+      fwrite( data, sizeof(unsigned long long), dLen, fp );
+
+    //出力実数タイプがint64のとき
+    }else if( val->getDataType() == CIO::E_CIO_INT64 ) {
+      long long *data = (long long*)val->getData();
+      BSWAPVEC(data,dLen);
+      fwrite( data, sizeof(long long), dLen, fp );
+
     //出力実数タイプがfloatのとき
-    if( val->getDataType() == CIO::E_CIO_FLOAT32 ) {
+    }else if( val->getDataType() == CIO::E_CIO_FLOAT32 ) {
       float *data = (float*)val->getData();
       BSWAPVEC(data,dLen);
       fwrite( data, sizeof(float), dLen, fp );

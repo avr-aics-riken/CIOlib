@@ -242,7 +242,6 @@ bool convMxM::mxmsolv(std::string dfiname,
   if( (DFI_Process->RankList[RankID].HeadIndex[0]-1)%thin_count != 0 ) head[0]++;
   if( (DFI_Process->RankList[RankID].HeadIndex[1]-1)%thin_count != 0 ) head[1]++;
   if( (DFI_Process->RankList[RankID].HeadIndex[2]-1)%thin_count != 0 ) head[2]++;
-
   //間引き後のオリジンを求める
   double l_dorg[3];
   l_dorg[0]= DFI_Domain->GlobalOrigin[0]+head[0]*out_dpit[0];
@@ -306,6 +305,7 @@ bool convMxM::mxmsolv(std::string dfiname,
     }
     buf->setHeadIndex( headS );
     src->setHeadIndex( head );
+
     for(int n=0; n<dfi->GetNumComponent(); n++) convertXY(buf,src,headS,tailS,n);
     //delete buf;
   }
@@ -344,7 +344,23 @@ bool convMxM::mxmsolv(std::string dfiname,
 
   out_dfi->set_RankID(RankID);
   out_dfi->SetcioMPI(*DFI_MPI);
-  out_dfi->SetcioProcess(*DFI_Process);
+
+  //cio_Processの作成＆更新
+  cio_Process out_Process;
+  cio_Rank out_Rank;
+  for(int i=0; i<DFI_Process->RankList.size(); i++) {
+    out_Rank.RankID = DFI_Process->RankList[i].RankID;
+    out_Rank.HostName = "";
+    for(int j=0; j<3; j++) {
+      out_Rank.HeadIndex[j]=head[j];
+      out_Rank.TailIndex[j]=tail[j];
+      out_Rank.VoxelSize[j]=tail[j]-head[j]+1;
+    }
+    out_Process.RankList.push_back(out_Rank);
+  }
+
+  //out_dfi->SetcioProcess(*DFI_Process);
+  out_dfi->SetcioProcess(out_Process);
   out_dfi->SetcioTimeSlice(*TSlice);
 
   //出力

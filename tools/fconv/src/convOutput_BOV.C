@@ -134,7 +134,8 @@ bool convOutput_BOV::WriteHeaderRecord(int step,
   else if( cdumy[0] == 0x00 ) endian = "BIG";
   fprintf( fp, "DATA_ENDIAN: %s\n",endian.c_str());
   fprintf( fp, "CENTERING: zonal\n");
-  fprintf( fp, "BRICK_ORIGIN: %e %e %e\n",org[0]-0.5*pit[0],org[1]-0.5*pit[1],org[2]-0.5*pit[2]); 
+  //fprintf( fp, "BRICK_ORIGIN: %e %e %e\n",org[0]-0.5*pit[0],org[1]-0.5*pit[1],org[2]-0.5*pit[2]); 
+  fprintf( fp, "BRICK_ORIGIN: %e %e %e\n",org[0],org[1],org[2] ); 
   fprintf( fp, "BRICK_SIZE: %e %e %e\n",pit[0]*imax,pit[1]*jmax,pit[2]*kmax);
 
   std::string arrayShape;

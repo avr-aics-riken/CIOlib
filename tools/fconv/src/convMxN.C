@@ -38,29 +38,9 @@ void convMxN::VoxelInit()
   int iret=0;
   const cio_Domain *DFI_Domain = m_in_dfi[0]->GetcioDomain();
 
-
-  //出力領域の分割数の取得
-  int* Gdiv = m_param->Get_OutputDivision();
-
-  if( Gdiv[0]>0 && Gdiv[1]>0 && Gdiv[2]>0 ) {
-    //分割数が指示されている場合
-    iret = m_paraMngr->VoxelInit(Gdiv, (int *)DFI_Domain->GlobalVoxel,
-                              (double *)DFI_Domain->GlobalOrigin,
-                              (double *)DFI_Domain->GlobalRegion, 0, 0);
-    if( iret != 0 ) {
-       printf("\tVoxelInit Error cpm_ErrorCode : %d\n",iret);
-       Exit(0);
-    }
-  } else {
-    //分割数が指示されていない場合
-    iret =  m_paraMngr->VoxelInit((int *)DFI_Domain->GlobalVoxel,
-                               (double *)DFI_Domain->GlobalOrigin,
-                               (double *)DFI_Domain->GlobalRegion, 0, 0);
-    if( iret != 0 ) {
-       printf("\tVoxelInit Error cpm_ErrorCode : %d\n",iret);
-       Exit(0);
-    }
-  }
+  //ピッチのセット
+  double dfi_pit[3];
+  for(int i=0; i<3; i++) dfi_pit[i]=DFI_Domain->GlobalRegion[i]/(double)DFI_Domain->GlobalVoxel[i];
 
   //入力領域指示のセット
   int IndexStart[3];
@@ -79,7 +59,71 @@ void convMxN::VoxelInit()
   //全体のサイズをセット
   int voxel[3];
   for(int i=0; i<3; i++) voxel[i]=IndexEnd[i]-IndexStart[i]+1;
+
+  //リージョンのセット
+  double region[3];
+  for(int i=0; i<3; i++) region[i]=voxel[i]*dfi_pit[i];
+
+  //出力領域の分割数の取得
+  int* Gdiv = m_param->Get_OutputDivision();
+
+  if( Gdiv[0]>0 && Gdiv[1]>0 && Gdiv[2]>0 ) {
+    //分割数が指示されている場合
+    /*
+    iret = m_paraMngr->VoxelInit(Gdiv, (int *)DFI_Domain->GlobalVoxel,
+                              (double *)DFI_Domain->GlobalOrigin,
+                              (double *)DFI_Domain->GlobalRegion, 0, 0);
+    */
+    iret = m_paraMngr->VoxelInit(Gdiv, voxel,
+                                 (double *)DFI_Domain->GlobalOrigin,
+                                 region, 0, 0);
+    if( iret != 0 ) {
+       printf("\tVoxelInit Error cpm_ErrorCode : %d\n",iret);
+       Exit(0);
+    }
+  } else {
+    //分割数が指示されていない場合
+    /*
+    iret =  m_paraMngr->VoxelInit((int *)DFI_Domain->GlobalVoxel,
+                               (double *)DFI_Domain->GlobalOrigin,
+                               (double *)DFI_Domain->GlobalRegion, 0, 0);
+    */
+    iret =  m_paraMngr->VoxelInit(voxel,
+                                  (double *)DFI_Domain->GlobalOrigin,
+                                  region, 0, 0);
+    if( iret != 0 ) {
+       printf("\tVoxelInit Error cpm_ErrorCode : %d\n",iret);
+       Exit(0);
+    }
+  }
+
+
+  const int* tmp;
+  /*
+  tmp = m_paraMngr->GetGlobalVoxelSize();
+  for(int i=0; i<3; i++) m_Gvoxel[i]=tmp[i];
+  */
+  for(int i=0; i<3; i++) m_Gvoxel[i]=DFI_Domain->GlobalVoxel[i];
   
+  tmp = m_paraMngr->GetVoxelHeadIndex();
+  for(int i=0; i<3; i++) m_Head[i]=tmp[i]+1;
+  tmp = m_paraMngr->GetVoxelTailIndex();
+  for(int i=0; i<3; i++) m_Tail[i]=tmp[i]+1;
+  tmp = m_paraMngr->GetDivNum();
+  for(int i=0; i<3; i++) m_Gdiv[i]=tmp[i];
+
+  //入力指示を考慮したヘッド、テイルに更新
+ 
+  tmp = m_paraMngr->GetLocalVoxelSize();
+ 
+  for(int i=0; i<3; i++) {
+    //if( m_Head[i] < IndexStart[i] ) m_Head[i]=IndexStart[i];
+    if( m_Head[i] < IndexStart[i] ) {
+      m_Head[i]=m_Head[i]+IndexStart[i]-1;
+      m_Tail[i]=m_Head[i]+tmp[i]-1;
+    }
+    if( m_Tail[i] > IndexEnd[i]   ) m_Tail[i]=IndexEnd[i];
+  }
 
   //間引き数のセット
   int thin_count = m_param->Get_ThinOut();
@@ -91,21 +135,6 @@ void convMxN::VoxelInit()
     if( voxel[i]%thin_count != 0 ) voxel_thin[i]++;
   }
 
-  const int* tmp;
-  tmp = m_paraMngr->GetGlobalVoxelSize();
-  for(int i=0; i<3; i++) m_Gvoxel[i]=tmp[i];
-  tmp = m_paraMngr->GetVoxelHeadIndex();
-  for(int i=0; i<3; i++) m_Head[i]=tmp[i]+1;
-  tmp = m_paraMngr->GetVoxelTailIndex();
-  for(int i=0; i<3; i++) m_Tail[i]=tmp[i]+1;
-  tmp = m_paraMngr->GetDivNum();
-  for(int i=0; i<3; i++) m_Gdiv[i]=tmp[i];
-
-  //入力指示を考慮したヘッド、テイルに更新
-  for(int i=0; i<3; i++) {
-    if( m_Head[i] < IndexStart[i] ) m_Head[i]=IndexStart[i];
-    if( m_Tail[i] > IndexEnd[i]   ) m_Tail[i]=IndexEnd[i];
-  }
 
   //間引きを考慮したヘッド、テイルインデックスの作成
   int head[3],tail[3];
@@ -117,12 +146,24 @@ void convMxN::VoxelInit()
 
   const double* dtmp;
   double pit[3],org[3];
-  dtmp = m_paraMngr->GetPitch();
-  for(int i=0; i<3; i++) pit[i]=dtmp[i];
-  for(int i=0; i<3; i++) pit[i]=dtmp[i]*double(thin_count);
+  //dtmp = m_paraMngr->GetPitch();
+  //for(int i=0; i<3; i++) pit[i]=dtmp[i];
+  //for(int i=0; i<3; i++) pit[i]=dtmp[i]*double(thin_count);
+  pit[0]=region[0]/voxel_thin[0];
+  pit[1]=region[1]/voxel_thin[1];
+  pit[2]=region[2]/voxel_thin[2];
+
   dtmp = m_paraMngr->GetGlobalOrigin();
   for(int i=0; i<3; i++) org[i]=dtmp[i];
-  //for(int i=0; i<3; i++) org[i]=dtmp[i]+0.5*pit[i];
+
+  const int *tmp_head = m_paraMngr->GetVoxelHeadIndex();
+  const int *tmp_tail = m_paraMngr->GetVoxelTailIndex();
+  for(int i=0; i<3; i++) {
+    head[i]=tmp_head[i]/thin_count;
+    if( tmp_head[i]%thin_count != 0 ) head[i]++;
+    tail[i]=tmp_tail[i]/thin_count;
+  }
+
   for(int i=0; i<3; i++) org[i]+=double(head[i])*pit[i];
 
   for(int i=0; i<3; i++) {
@@ -130,18 +171,12 @@ void convMxN::VoxelInit()
     tail[i]=tail[i]+1;
   }
 
-  //出力ファイル名の取得
-  //vector<std::string> out_dfi_name = m_InputCntl->Get_OutdfiNameList();
-  //vector<std::string> out_proc_name = m_InputCntl->Get_OutprocNameList();
-
   //出力DFIの初期化
   for(int i=0; i<m_in_dfi.size(); i++) {
     const cio_FileInfo* DFI_FInfo = m_in_dfi[i]->GetcioFileInfo();
 
     std::string outdfifname="";
     std::string outprocfname="";
-    //if( out_dfi_name.size()>1 ) outdfifname=out_dfi_name[i];
-    //if( out_proc_name.size()>1 ) outprocfname=out_proc_name[i];
     if( m_param->Get_Outputdfi_on() ) {
        outdfifname =m_param->m_dfiList[i].out_dfi_name;
        outprocfname=m_param->m_dfiList[i].out_proc_name;
@@ -193,11 +228,7 @@ void convMxN::VoxelInit()
     }
 
     //Procファイル出力
-    //if( out_proc_name.size()>1 ) dfi->WriteProcDfiFile(MPI_COMM_WORLD,false);
     if( m_param->Get_Outputdfi_on() ) dfi->WriteProcDfiFile(MPI_COMM_WORLD,false);
-
-    //printf("head : %d %d %d tail : %d %d %d\n",head[0],head[1],head[2],
-    //        tail[0],tail[1],tail[2]);
 
     //出力形式（ascii,binary,Fbinary)のセット
     dfi->set_output_type(m_param->Get_OutputFormatType());
@@ -233,6 +264,7 @@ bool convMxN::exec()
   if( m_myRank == 0 ) {
     printf("Convert M x N\n");
   }
+
 
   // 出力ファイル形式クラスのインスタンス
   convOutput *ConvOut = convOutput::OutputInit(m_param->Get_OutputFormat());
@@ -296,13 +328,20 @@ bool convMxN::exec()
 
   //出力workareaのサイズ
   int szS[3];
+  const int *cropIndexStart = m_param->Get_CropIndexStart();
   for(int i=0; i<3; i++) {
     szS[i]=sz[i]/thin_count; 
     if( szS[i] < 1 ) {
       printf("\toutput domain size error\n");
       return false;
     }
-    if( sz[i]%thin_count != 0 ) szS[i]++;
+    if( m_param->Get_CropIndexStart_on() ) {
+      if( IndexStart[i] == cropIndexStart[i] ) {
+        if( sz[i]%thin_count != 0 ) szS[i]++;
+      }
+    } else {
+      if( sz[i]%thin_count != 0 ) szS[i]++;
+    }
   }
 
   int head[3],tail[3];
@@ -323,6 +362,8 @@ bool convMxN::exec()
 
   //dfiのループ
   for (int i=0; i<m_in_dfi.size(); i++) {
+
+
     int nComp = m_in_dfi[i]->GetNumComponent();
 
     int outGc=0;
@@ -374,6 +415,7 @@ bool convMxN::exec()
 
     //ステップ数のループ
     for ( int j=0; j<TSlice->SliceList.size(); j++ ) {
+
       //MxNの読込み
       ret = m_in_dfi[i]->ReadData(buf,
                                 (unsigned)TSlice->SliceList[j].step,
@@ -397,7 +439,6 @@ bool convMxN::exec()
       for(int k=0; k<3; k++) headB[k]=m_Head[k]-1;
       buf->setHeadIndex( headB );
 
-
       //間引き及び型変換がない場合
       if( thin_count == 1 && buf->getDataType() == src->getDataType() &&
           buf->getArrayShape() == src->getArrayShape() ) {
@@ -412,11 +453,19 @@ bool convMxN::exec()
         }
         //出力バッファのHeadIndexセット
         int headS0[3];
-        for(int k=0; k<3; k++) {
-          headS0[k]=headS[k]/thin_count;
-          if( headS[k]%thin_count != 0 ) headS0[k]++;
+        if( m_param->Get_CropIndexStart_on() ) {
+          for(int k=0; k<3; k++) {
+            headS0[k]=headS[k]/thin_count;
+          }
+        } else {
+          for(int k=0; k<3; k++) {
+            headS0[k]=headS[k]/thin_count;
+            if( headS[k]%thin_count != 0 ) headS0[k]++;
+          }
         }
+
         src->setHeadIndex( headS0 );
+
         for(int n=0; n<nComp; n++) convertXY(buf,src,headS,tailS,n);
       }
 

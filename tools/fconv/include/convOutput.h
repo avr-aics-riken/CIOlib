@@ -87,6 +87,7 @@ public:
 
   /**
    * @brief grid 出力(plot3d用)
+   * @param [in] prefix ファイル接頭文字
    * @param [in] step   step番号
    * @param [in] myRank ランク番号
    * @param [in] dType  dfiのデータタイプ
@@ -96,7 +97,7 @@ public:
    * @param [in] sz     ボクセルサイズ
    */
   virtual void
-  WriteGridData( 
+  WriteGridData(std::string prefix, 
                 int step,
                 int myRank,
                 int dType,

@@ -63,15 +63,20 @@ bool convMx1::exec()
   int xsize,ysize,zsize,asize,vsize;
   int dim;
   
+  int div[3];
   int l_imax_th, l_jmax_th, l_kmax_th;
 
   //間引き数のセット
   int thin_count = m_param->Get_ThinOut();
  
-  // 出力モード
+  // 入力モード
   bool mio = false;
-  const cio_MPI* DFI_MPI = m_in_dfi[0]->GetcioMPI();
-  if( DFI_MPI->NumberOfRank > 1) mio=true;
+  //const cio_MPI* DFI_MPI = m_in_dfi[0]->GetcioMPI();
+  //if( DFI_MPI->NumberOfRank > 1) mio=true;
+
+  headT mapHeadX;
+  headT mapHeadY;
+  headT mapHeadZ;
 
   //step基準のリスト生成
   makeStepList(m_StepRankList);
@@ -91,27 +96,6 @@ bool convMx1::exec()
     minmaxList.push_back(MinMax);
   }
 
-  cio_Domain* DFI_Domian = (cio_Domain *)m_in_dfi[0]->GetcioDomain();
-  cio_Process* DFI_Process = (cio_Process *)m_in_dfi[0]->GetcioProcess();
-
-  int div[3];
-  div[0]=DFI_Domian->GlobalDivision[0];
-  div[1]=DFI_Domian->GlobalDivision[1];
-  div[2]=DFI_Domian->GlobalDivision[2];
-
-  //sphのオリジンとピッチを作成
-  l_dpit[0]=DFI_Domian->GlobalRegion[0]/(double)DFI_Domian->GlobalVoxel[0];
-  l_dpit[1]=DFI_Domian->GlobalRegion[1]/(double)DFI_Domian->GlobalVoxel[1];
-  l_dpit[2]=DFI_Domian->GlobalRegion[2]/(double)DFI_Domian->GlobalVoxel[2];
-  l_dorg[0]=DFI_Domian->GlobalOrigin[0]+0.5*l_dpit[0];
-  l_dorg[1]=DFI_Domian->GlobalOrigin[1]+0.5*l_dpit[1];
-  l_dorg[2]=DFI_Domian->GlobalOrigin[2]+0.5*l_dpit[2];
-     
-  //全体サイズのキープ
-  l_imax= DFI_Domian->GlobalVoxel[0];
-  l_jmax= DFI_Domian->GlobalVoxel[1];
-  l_kmax= DFI_Domian->GlobalVoxel[2];
-
   //入力領域指示を考慮
   int IndexStart[3];
   int IndexEnd[3];
@@ -121,54 +105,70 @@ bool convMx1::exec()
     IndexStart[i]=cropIndexStart[i];
     IndexEnd[i]=cropIndexEnd[i];
   }
-  if( !m_param->Get_CropIndexStart_on() ) {
-    IndexStart[0] = 1;
-    IndexStart[1] = 1;
-    IndexStart[2] = 1;
-  }
-  if( !m_param->Get_CropIndexEnd_on() ) {
-    IndexEnd[0] = l_imax;
-    IndexEnd[1] = l_jmax;
-    IndexEnd[2] = l_kmax;
-  }
-  l_imax = IndexEnd[0]-IndexStart[0]+1;
-  l_jmax = IndexEnd[1]-IndexStart[1]+1;
-  l_kmax = IndexEnd[2]-IndexStart[2]+1;
-      
-  //間引きを考慮
-  l_imax_th=l_imax/thin_count;//間引き後のxサイズ
-  l_jmax_th=l_jmax/thin_count;//間引き後のyサイズ
-  l_kmax_th=l_kmax/thin_count;//間引き後のzサイズ
-  if(l_imax%thin_count != 0) l_imax_th++;
-  if(l_jmax%thin_count != 0) l_jmax_th++;
-  if(l_kmax%thin_count != 0) l_kmax_th++;
-
-  //GRID データ 出力
-  const cio_FileInfo* DFI_FInfo = m_in_dfi[0]->GetcioFileInfo();
-  int sz[3];
-  sz[0]=l_imax;
-  sz[1]=l_jmax;
-  sz[2]=l_kmax;
-  ConvOut->WriteGridData(0, m_myRank, m_in_dfi[0]->GetDataType(),
-                         DFI_FInfo->GuideCell, l_dorg, l_dpit, sz);
-
-
-  //mapHeadX,Y,Zの生成
-  headT mapHeadX;
-  headT mapHeadY;
-  headT mapHeadZ;
-  DFI_Process->CreateRankList(*DFI_Domian,
-                              mapHeadX,
-                              mapHeadY,
-                              mapHeadZ);
-
   //dfi*stepのループ 
   for (int i=0;i<m_StepRankList.size();i++) {
+
+    cio_Domain* DFI_Domian = (cio_Domain *)m_StepRankList[i].dfi->GetcioDomain();
+    cio_Process* DFI_Process = (cio_Process *)m_StepRankList[i].dfi->GetcioProcess();
+    //全体サイズのキープ
+    l_imax= DFI_Domian->GlobalVoxel[0];
+    l_jmax= DFI_Domian->GlobalVoxel[1];
+    l_kmax= DFI_Domian->GlobalVoxel[2];
+
+    //オリジナルのピッチを計算
+    double o_pit[3];
+    for(int j=0; j<3; j++) o_pit[j]=DFI_Domian->GlobalRegion[j]/DFI_Domian->GlobalVoxel[j];
+
+    //入力領域指示を考慮
+    if( !m_param->Get_CropIndexStart_on() ) {
+      IndexStart[0] = 1;
+      IndexStart[1] = 1;
+      IndexStart[2] = 1;
+    }
+    if( !m_param->Get_CropIndexEnd_on() ) {
+      IndexEnd[0] = l_imax;
+      IndexEnd[1] = l_jmax;
+      IndexEnd[2] = l_kmax;
+    }
+    l_imax = IndexEnd[0]-IndexStart[0]+1;
+    l_jmax = IndexEnd[1]-IndexStart[1]+1;
+    l_kmax = IndexEnd[2]-IndexStart[2]+1;
+
+    //入力領域を考慮したリージョンの作成
+    double region[3];
+    region[0]=l_imax*o_pit[0];
+    region[1]=l_jmax*o_pit[1];
+    region[2]=l_kmax*o_pit[2];
+      
+    //間引きを考慮
+    l_imax_th=l_imax/thin_count;//間引き後のxサイズ
+    l_jmax_th=l_jmax/thin_count;//間引き後のyサイズ
+    l_kmax_th=l_kmax/thin_count;//間引き後のzサイズ
+    if(l_imax%thin_count != 0) l_imax_th++;
+    if(l_jmax%thin_count != 0) l_jmax_th++;
+    if(l_kmax%thin_count != 0) l_kmax_th++;
+
+    //sphのオリジンとピッチを作成
+    l_dpit[0]=region[0]/(double)l_imax_th;
+    l_dpit[1]=region[1]/(double)l_jmax_th;
+    l_dpit[2]=region[2]/(double)l_kmax_th;
+    l_dorg[0]=DFI_Domian->GlobalOrigin[0]+0.5*l_dpit[0];
+    l_dorg[1]=DFI_Domian->GlobalOrigin[1]+0.5*l_dpit[1];
+    l_dorg[2]=DFI_Domian->GlobalOrigin[2]+0.5*l_dpit[2];
+
+    //GRID データ 出力
+    const cio_FileInfo* DFI_FInfo = m_StepRankList[i].dfi->GetcioFileInfo();
+    int sz[3];
+    sz[0]=l_imax;
+    sz[1]=l_jmax;
+    sz[2]=l_kmax;
+    ConvOut->WriteGridData(DFI_FInfo->Prefix,0, m_myRank, m_in_dfi[0]->GetDataType(),
+                           DFI_FInfo->GuideCell, l_dorg, l_dpit, sz);
 
     //dfiファイルのディレクトリの取得
     inPath = CIO::cioPath_DirName(m_StepRankList[i].dfi->get_dfi_fname());
 
-    const cio_FileInfo* DFI_FInfo = m_StepRankList[i].dfi->GetcioFileInfo();
+    //const cio_FileInfo* DFI_FInfo = m_StepRankList[i].dfi->GetcioFileInfo();
     prefix=DFI_FInfo->Prefix;
     LOG_OUTV_ fprintf(m_fplog,"  COMBINE SPH START : %s\n", prefix.c_str());
     STD_OUTV_ printf("  COMBINE SPH START : %s\n", prefix.c_str());
@@ -177,6 +177,20 @@ bool convMx1::exec()
     dim=m_StepRankList[i].dfi->GetNumComponent();
 
     const cio_TimeSlice* TSlice = m_StepRankList[i].dfi->GetcioTimeSlice();
+
+    div[0]=DFI_Domian->GlobalDivision[0];
+    div[1]=DFI_Domian->GlobalDivision[1];
+    div[2]=DFI_Domian->GlobalDivision[2];
+    //mapHeadX,Y,Zの生成
+    DFI_Process->CreateRankList(*DFI_Domian,
+                                mapHeadX,
+                                mapHeadY,
+                                mapHeadZ);
+
+    //入力ファイルの並列フラグセット
+    const cio_MPI* DFI_MPI = m_StepRankList[i].dfi->GetcioMPI();
+    if( DFI_MPI->NumberOfRank > 1) mio=true;
+    else mio=false;
 
     //step Loop
     for(int j=m_StepRankList[i].stepStart; j<=m_StepRankList[i].stepEnd; j++) {
@@ -215,19 +229,21 @@ bool convMx1::exec()
       }
 
       //ヘッダーレコードを出力
-      double out_dpit[3];
-
       int outGc=0;
       if( m_param->Get_OutputGuideCell() > 1 ) outGc = m_param->Get_OutputGuideCell();
+      double t_org[3];
+      for(int n=0; n<3; n++) t_org[n]=l_dorg[n];
+
+      //出力ガイドセルによるオリジンの更新
       if( outGc > 0 ) {
         if( outGc > DFI_FInfo->GuideCell ) outGc=DFI_FInfo->GuideCell;
+        for(int n=0; n<3; n++) t_org[n]=t_org[n]-(double)outGc*l_dpit[n];
       }
       if( thin_count > 1 || m_bgrid_interp_flag ) outGc-0;
 
-      for(int ic=0;ic<3;ic++) out_dpit[ic]=l_dpit[ic]*double(thin_count);
       if( !(ConvOut->WriteHeaderRecord(l_step, dim, d_type, 
                                        l_imax_th+2*outGc, l_jmax_th+2*outGc, l_kmax_th+2*outGc,
-                                       l_time, l_dorg, out_dpit, prefix, fp)) ) {
+                                       l_time, t_org, l_dpit, prefix, fp)) ) {
         printf("\twrite header error\n");
         return false;
       }
@@ -433,7 +449,8 @@ convMx1::convMx1_out_nijk(FILE* fp,
                            double* min, double* max)
 {
 
-  cio_Domain* DFI_Domian = (cio_Domain *)m_in_dfi[0]->GetcioDomain();
+  //cio_Domain* DFI_Domian = (cio_Domain *)m_in_dfi[0]->GetcioDomain();
+  cio_Domain* DFI_Domian = (cio_Domain *)dfi->GetcioDomain();
 
   int thin_count = m_param->Get_ThinOut();
 
@@ -463,24 +480,24 @@ convMx1::convMx1_out_nijk(FILE* fp,
   const int* CorpIndexEnd = m_param->Get_CropIndexEnd();
   int IndexStart[3],IndexEnd[3];
   for(int i=0;i<3; i++) {
-    IndexStart[i]=CorpIndexStart[i];
-    IndexEnd[i]=CorpIndexEnd[i];
+    IndexStart[i]=CorpIndexStart[i]-outGc;
+    IndexEnd[i]=CorpIndexEnd[i]+outGc;
   }
   if( !m_param->Get_CropIndexStart_on() ) {
-    IndexStart[0]=1;
-    IndexStart[1]=1;
-    IndexStart[2]=1;
+    IndexStart[0]=1-outGc;
+    IndexStart[1]=1-outGc;
+    IndexStart[2]=1-outGc;
   }
   if( !m_param->Get_CropIndexEnd_on() ) {
-    IndexEnd[0]=DFI_Domian->GlobalVoxel[0];
-    IndexEnd[1]=DFI_Domian->GlobalVoxel[1];
-    IndexEnd[2]=DFI_Domian->GlobalVoxel[2];
+    IndexEnd[0]=DFI_Domian->GlobalVoxel[0]+outGc;
+    IndexEnd[1]=DFI_Domian->GlobalVoxel[1]+outGc;
+    IndexEnd[2]=DFI_Domian->GlobalVoxel[2]+outGc;
   }
   
-  headS[0]=(IndexStart[0]-1)-outGc;
-  headS[1]=(IndexStart[1]-1)-outGc;
-  tailS[0]=IndexEnd[0]+outGc-1;
-  tailS[1]=IndexEnd[1]+outGc-1;
+  headS[0]=IndexStart[0]-1;
+  headS[1]=IndexStart[1]-1;
+  tailS[0]=IndexEnd[0]-1;
+  tailS[1]=IndexEnd[1]-1;
 
   //成分数の取り出し
   int nComp = dfi->GetNumComponent();
@@ -555,7 +572,8 @@ convMx1::convMx1_out_nijk(FILE* fp,
 
       int kk = kp-1;
       //間引きの層のときスキップ
-      if( kk%thin_count != 0 ) continue;
+      //if( kk%thin_count != 0 ) continue;
+      if( (kp-IndexStart[2])%thin_count != 0 ) continue;
 
       //y方向の分割数のループ
       for( headT::iterator ity=mapHeadY.begin(); ity!= mapHeadY.end(); ity++ ) {
@@ -614,6 +632,10 @@ convMx1::convMx1_out_nijk(FILE* fp,
                                               DFI_Process->RankList[RankID].HeadIndex,
                                               DFI_Process->RankList[RankID].TailIndex,
                                               true, avr_step, avr_time, ret);
+          if( ret != CIO::E_CIO_SUCCESS ) {
+            printf("\tCan't Read Field Data Record %s\n",infile.c_str());
+            return false;
+          } 
           //headIndexを０スタートにしてセット
           int headB[3];
           headB[0]=read_sta[0]-1;
@@ -622,11 +644,15 @@ convMx1::convMx1_out_nijk(FILE* fp,
           buf->setHeadIndex( headB );
 
           int headS0[3];
-          headS0[0]=headS[0];
-          headS0[1]=headS[1];
+          //headS0[0]=headS[0];
+          //headS0[1]=headS[1];
+          headS0[0]=headS[0]/thin_count;
+          headS0[1]=headS[1]/thin_count;
           headS0[2]=kk/thin_count;
           src->setHeadIndex( headS0 );
 
+          headS0[0]=headS[0];
+          headS0[1]=headS[1];
           headS0[2]=kk;
           tailS[2]=headS0[2];
 
@@ -656,6 +682,7 @@ convMx1::convMx1_out_nijk(FILE* fp,
         if( ConvOut->WriteFieldData(fp,
                                     outArray,
                                     dLen ) != true ) return false;
+
       }
 
       //minmaxを求める
@@ -714,7 +741,8 @@ convMx1::convMx1_out_ijkn(FILE* fp,
                            double* min, double* max)
 {
 
-  cio_Domain* DFI_Domian = (cio_Domain *)m_in_dfi[0]->GetcioDomain();
+  //cio_Domain* DFI_Domian = (cio_Domain *)m_in_dfi[0]->GetcioDomain();
+  cio_Domain* DFI_Domian = (cio_Domain *)dfi->GetcioDomain();
 
   int thin_count = m_param->Get_ThinOut();
 
@@ -744,27 +772,33 @@ convMx1::convMx1_out_ijkn(FILE* fp,
   const int* CorpIndexEnd = m_param->Get_CropIndexEnd();
   int IndexStart[3],IndexEnd[3];
   for(int i=0;i<3; i++) {
-    IndexStart[i]=CorpIndexStart[i];
-    IndexEnd[i]=CorpIndexEnd[i];
+    IndexStart[i]=CorpIndexStart[i]-outGc;
+    IndexEnd[i]=CorpIndexEnd[i]+outGc;
   }
   if( !m_param->Get_CropIndexStart_on() ) {
-    IndexStart[0]=1;
-    IndexStart[1]=1;
-    IndexStart[2]=1;
+    IndexStart[0]=1-outGc;
+    IndexStart[1]=1-outGc;
+    IndexStart[2]=1-outGc;
   }
   if( !m_param->Get_CropIndexEnd_on() ) {
-    IndexEnd[0]=DFI_Domian->GlobalVoxel[0];
-    IndexEnd[1]=DFI_Domian->GlobalVoxel[1];
-    IndexEnd[2]=DFI_Domian->GlobalVoxel[2];
+    IndexEnd[0]=DFI_Domian->GlobalVoxel[0]+outGc;
+    IndexEnd[1]=DFI_Domian->GlobalVoxel[1]+outGc;
+    IndexEnd[2]=DFI_Domian->GlobalVoxel[2]+outGc;
   }
 
-  headS[0]=(IndexStart[0]-1)-outGc;
-  headS[1]=(IndexStart[1]-1)-outGc;
-  tailS[0]=IndexEnd[0]+outGc-1;
-  tailS[1]=IndexEnd[1]+outGc-1;
+  headS[0]=IndexStart[0]-1;
+  headS[1]=IndexStart[1]-1;
+  tailS[0]=IndexEnd[0]-1;
+  tailS[1]=IndexEnd[1]-1;
 
   //成分数の取り出し
   int nComp = dfi->GetNumComponent();
+
+  //セル中心出力のときガイドセル数を考慮してサイズ更新
+  if( !m_bgrid_interp_flag ) {
+    sz[0]=sz[0]+2*outGc;
+    sz[1]=sz[1]+2*outGc;
+  }
 
   //出力バッファのインスタンス(読込み配列形状でのDFIでインスタンス）
   cio_Array* src = cio_Array::instanceArray
@@ -826,7 +860,8 @@ convMx1::convMx1_out_ijkn(FILE* fp,
 
         int kk = kp-1;
         //間引きの層のときスキップ
-        if( kk%thin_count != 0 ) continue;
+        //if( kk%thin_count != 0 ) continue;
+        if( (kp-IndexStart[2])%thin_count != 0 ) continue;
 
         //y方向の分割数のループ
         for( headT::iterator ity=mapHeadY.begin(); ity!= mapHeadY.end(); ity++ ) {
@@ -884,6 +919,11 @@ convMx1::convMx1_out_ijkn(FILE* fp,
                                                 DFI_Process->RankList[RankID].HeadIndex,
                                                 DFI_Process->RankList[RankID].TailIndex,
                                                 true, avr_step, avr_time, ret);
+
+            if( ret != CIO::E_CIO_SUCCESS ) {
+              printf("\tCan't Read Field Data Record %s\n",infile.c_str());
+              return false;
+            } 
             //headIndexを０スタートにしてセット
             int headB[3];
             headB[0]=read_sta[0]-1;
@@ -1073,8 +1113,7 @@ convMx1::nijk_to_ijk(cio_Array* src, int ivar)
                        ( d_type
                        , CIO::E_CIO_IJKN
                        , (int *)sz
-                       //, 0 
-                       , m_param->Get_OutputGuideCell()
+                       , 0 
                        , 1 );
   //unsigned char
   if( d_type == CIO::E_CIO_UINT8 ) {

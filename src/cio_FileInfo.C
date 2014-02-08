@@ -115,7 +115,9 @@ cio_FileInfo::Read(cio_TextParser tpCntl)
       printf("\tCIO Parsing error : fail to get '%s'\n",label.c_str());
       return CIO::E_CIO_ERROR_READ_DFI_DFITYPE;
     }
+    ncnt++;
   }
+
 
   //FieldFilenameFormat
   label = "/FileInfo/FieldFilenameFormat";
@@ -130,7 +132,9 @@ cio_FileInfo::Read(cio_TextParser tpCntl)
       printf("\tCIO Parsing error : fail to get '%s'\n",label.c_str());
       return CIO::E_CIO_ERROR_READ_DFI_FIELDFILENAMEFORMAT;
     }
+    ncnt++;
   }
+
 
   //Directorypath
   label = "/FileInfo/DirectoryPath";
@@ -293,6 +297,15 @@ cio_FileInfo::Read(cio_TextParser tpCntl)
     }
   }
 
+//FCONV 20140131.s
+  if( FileFormat == CIO::E_CIO_FMT_SPH ) {
+    if( Component > 1 && ArrayShape == CIO::E_CIO_IJKN ) {
+      printf("\tCIO error sph file undefined ijkn component>1.\n");
+      return CIO::E_CIO_ERROR_READ_DFI_ARRAYSHAPE;
+    }
+  }
+//FCONV 20140131.e
+
   return CIO::E_CIO_SUCCESS;
 }
 
@@ -364,6 +377,7 @@ cio_FileInfo::Write(FILE* fp,
   _CIO_WRITE_TAB(fp, tab+1);
   fprintf(fp, "Component          = %d\n",Component);
 
+/*
   if( ComponentVariable.size()>0 ) {
     _CIO_WRITE_TAB(fp, tab+1);
     fprintf(fp, "Variable[@]{ name  = \"%s\" }\n",ComponentVariable[0].c_str());
@@ -371,6 +385,11 @@ cio_FileInfo::Write(FILE* fp,
     fprintf(fp, "Variable[@]{ name  = \"%s\" }\n",ComponentVariable[1].c_str());
     _CIO_WRITE_TAB(fp, tab+1);
     fprintf(fp, "Variable[@]{ name  = \"%s\" }\n",ComponentVariable[2].c_str());
+  }
+*/
+  for(int i=0; i<ComponentVariable.size(); i++) {
+    _CIO_WRITE_TAB(fp, tab+1);
+    fprintf(fp, "Variable[@]{ name  = \"%s\" }\n",ComponentVariable[i].c_str());
   }
 
   fprintf(fp, "\n");

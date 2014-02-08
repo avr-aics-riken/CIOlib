@@ -163,15 +163,71 @@ bool convOutput_VTK::WriteFieldData(FILE* fp, cio_Array* src, size_t dLen)
   //バイナリー出力のとき
   if( m_InputCntl->Get_OutputFormatType() == CIO::E_CIO_OUTPUT_TYPE_BINARY ) {
 
-    //出力タイプがfloat
-    if( out->getDataType() == CIO::E_CIO_FLOAT32 ) {
+    //出力タイプごとにポインターを取得して出力
+    if( out->getDataType() == CIO::E_CIO_UINT8 ) {
+      //UINT8
+      unsigned char *data = (unsigned char*)out->getData();
+      BSWAPVEC(data,dLen);
+      fwrite( data, sizeof(unsigned char), dLen, fp);
+
+    } else if( out->getDataType() == CIO::E_CIO_INT8 ) {
+      //INT8
+      char *data = (char*)out->getData();
+      BSWAPVEC(data,dLen);
+      fwrite( data, sizeof(char), dLen, fp);
+
+    } else if( out->getDataType() == CIO::E_CIO_UINT16 ) {
+      //UINT16
+      unsigned short *data = (unsigned short*)out->getData();
+      BSWAPVEC(data,dLen);
+      fwrite( data, sizeof(unsigned short), dLen, fp);
+
+    } else if( out->getDataType() == CIO::E_CIO_INT16 ) {
+      //INT16
+      short *data = (short*)out->getData();
+      BSWAPVEC(data,dLen);
+      fwrite( data, sizeof(short), dLen, fp);
+
+    } else if( out->getDataType() == CIO::E_CIO_UINT32 ) {
+      //UINT32
+      unsigned int *data = (unsigned int*)out->getData();
+      BSWAPVEC(data,dLen);
+      fwrite( data, sizeof(unsigned int), dLen, fp);
+
+    } else if( out->getDataType() == CIO::E_CIO_INT32 ) {
+      //INT32
+      int *data = (int*)out->getData();
+      BSWAPVEC(data,dLen);
+      fwrite( data, sizeof(int), dLen, fp);
+
+    } else if( out->getDataType() == CIO::E_CIO_UINT64 ) {
+      //UINT64
+      unsigned long long *data = (unsigned long long*)out->getData();
+      BSWAPVEC(data,dLen);
+      fwrite( data, sizeof(unsigned long long), dLen, fp);
+
+    } else if( out->getDataType() == CIO::E_CIO_INT64 ) {
+      //INT64
+      long long *data = (long long*)out->getData();
+      BSWAPVEC(data,dLen);
+      fwrite( data, sizeof(long long), dLen, fp);
+
+    } else if( out->getDataType() == CIO::E_CIO_FLOAT32 ) {
+      //FLOAT32
       float *data = (float*)out->getData();
       BSWAPVEC(data,dLen);
       fwrite( data, sizeof(float), dLen, fp );
+
     } else if( out->getDataType() == CIO::E_CIO_FLOAT64 ) {
+      //FLOAT 64
       double *data = (double*)out->getData();
       DBSWAPVEC(data,dLen);
       fwrite( data, sizeof(double), dLen, fp );
+
+    } else {
+      printf("\tIllegal datatype\n");
+      delete out;
+      Exit(0);
     }
 
   //アスキー出力のとき

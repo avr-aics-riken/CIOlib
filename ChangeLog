@@ -11,6 +11,11 @@ REVISION HISTORY
 ================
 
 ------------------
+2014-02-08
+ r39 update Fconv tool [ver 1.5.1]
+
+
+------------------
 2014-01-31
 
  r38 FCONV tool [ver 1.5.0]
@@ -24,6 +29,7 @@ REVISION HISTORY
  r37 stop to install doxygen file [ver 1.4.4]
   - comment out 'dist_data_DATA' in doc/Makefile.am
   - increment year to 2014 in copyright 
+
 
 ------------------
 2013-11-06

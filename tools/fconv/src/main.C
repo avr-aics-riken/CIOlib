@@ -28,7 +28,6 @@ void usage(const char *progname)
     << "  -d dirname   : output directory name for combine (this option is given priority over input file) \n"
     << "  -v verbose   : print more info\n"
     << "  -l log out   : print out logfile\n"
-    << "  -s thin out  : thin out option\n"
     << "  -h           : Show usage and exit\n"
     << std::endl;
 }
@@ -71,19 +70,23 @@ int main( int argc, char **argv )
       fname = optarg;
       out_comb = true;
       break;
+/*
     case 'd':
       dname = optarg;
       break;
+*/
     case 'v':
       pflagv = 1;
       break;
     case 'l':
       out_log = true;
       break;
+/*
     case 's':
       thin_out = true;
       thin_count = atoi(optarg);
       break;
+*/
     case 'h': // Show usage and exit
       usage(progname);
       return 0;
@@ -160,7 +163,7 @@ int main( int argc, char **argv )
   cout << endl;
   cout << "ReadDfiFiles" << endl;
   t1 = cpm_Base::GetWTime();
-  if( !conv->ReadDfiFiles() ) return 0;
+  if( conv->ReadDfiFiles() != CIO::E_CIO_SUCCESS ) return 0;
  
   t2 = cpm_Base::GetWTime();
   // ##################################################################

@@ -30,6 +30,8 @@
 #include <set>
 #include <map>
 
+#include "TextParser.h"
+
 #include "ActiveSubDomain.h"
 #include "Staging_Define.h"
 #include "frm_EndianUtil.h"
@@ -60,9 +62,20 @@ public:
 
   /** コンストラクタ **/
   Staging(){
+    m_infofile="";
+    m_fconvfile="";
+    m_fconv_numproc=1;
     m_step=-1;
+    m_NumberOfRank=0;
     m_inPath="";
     m_outPath="";
+    m_cropIndexStart_on=false;
+    m_cropIndexEnd_on=false;
+    for(int i=0; i<3; i++) {
+      m_GVoxel[i]=0;
+      m_Gdiv[i]=0;
+    }
+    m_dfi_fname.clear();
   };
 
   /** デストラクタ **/
@@ -82,23 +95,27 @@ public:
   //const cio_Process   *dfi_Process; ///< DFI cio_Processのポインタ
         cio_Process   *dfi_Process; ///< DFI cio_Processのポインタ
 
-  int m_step;                 ///< Restart step番号
-  string m_inPath;            ///< DFIディレクトリ
-  string m_outPath;           ///< 出力ディレクトリ
-  string m_infofile;          ///< Staging用procファイル名
-  int m_GVoxel[3];            ///< Staging用ボクセルサイズ
-  int m_Gdiv[3];              ///< Staging用分割数
-  string m_ActiveSubdomain;   ///< ActiveSubdomainファイル名
-  int m_NumberOfRank;         ///< Staging用並列数
-  vector<Rank> m_GRankInfo;   ///< Staging用並列情報テーブル 
-  vector<string> m_dfi_fname; ///<STaging用DFIファイル名
+  int m_step;                   ///< Restart step番号
+  string m_inPath;              ///< DFIディレクトリ
+  string m_outPath;             ///< 出力ディレクトリ
+  string m_infofile;            ///< Staging用procファイル名
+  int m_GVoxel[3];              ///< Staging用ボクセルサイズ
+  int m_Gdiv[3];                ///< Staging用分割数
+  string m_ActiveSubdomain;     ///< ActiveSubdomainファイル名
+  int m_NumberOfRank;           ///< Staging用並列数
+  vector<Rank> m_GRankInfo;     ///< Staging用並列情報テーブル 
+  vector<string> m_dfi_fname;   ///<STaging用DFIファイル名
 //FCONV 20140116.s
-  bool   m_fconv_inputfile;   ///< FCONV 入力ファイルフラグ
-  int    m_fconv_numproc;     ///< FCONV 実行並列数
+  string m_fconvfile;           ///< FCONV 入力ファイル名
+  bool   m_fconv_inputfile;     ///< FCONV 入力ファイルフラグ
+  int    m_fconv_numproc;       ///< FCONV 実行並列数
   stg_E_OUTPUT_CONV m_ConvType; ///< FCONV コンバートタイプ
-  int    m_CropStart[3];      ///< FCONV 入力領域スタート位置
-  int    m_CropEnd[3];        ///< FCONV 入力領域エンド位置
-  int    m_outList;           ///< FCONV ファイル割振り方法
+  int    m_outGc;               ///< FCONV 出力ガイドセル数
+  bool   m_cropIndexStart_on;   ///< FCONV 入力領域のスタート指示フラグ
+  bool   m_cropIndexEnd_on;     ///< FCONV 入力領域のエンド位置
+  int    m_CropStart[3];        ///< FCONV 入力領域スタート位置
+  int    m_CropEnd[3];          ///< FCONV 入力領域エンド位置
+  int    m_outList;             ///< FCONV ファイル割振り方法
   std::vector<step_rank_info> m_StepRankList; ///< ファイル割振りリスト
 //FCONV 20140116.e 
 
@@ -125,20 +142,25 @@ public:
   bool Initial(string infofname);
 
   /** ステージング用procファイルの読込み
-   * @param[in]  infofile ステージング用procファイル名
-   * @param[out] fconvfile FCONV入力ファイル名
    * @retval     true     ファイル読込み成功 
    * @retval     false    ファイル読込み失敗
    */ 
-  bool ReadInfo(string infofile, string &fconvfile);
+  //bool ReadInfo(string infofile, string &fconvfile);
+  bool ReadInfo();
 
 //FCONV 20140116.s
   /** FCONV 入力ファイルの読込み
-   * @param[in] fconvfile FCONV入力ファイル名 
-   * @retval    true      FCONV入力失敗
-   * @retval    false     FCONV入力成功
+   * @retval    true      FCONV入力成功
+   * @retval    false     FCONV入力失敗
    */
-  bool ReadFconvInputFile(string fconvfile);
+  //bool ReadFconvInputFile(string fconvfile);
+  bool ReadFconvInputFile();
+
+  /** FCONV 入力ファイルのチェック
+   * @retval true 正常
+   * @retval false エラー
+   */
+  bool FconvInputCheck();
 
   /** step基準のリスト作成
    * @param[in] myID 処理ランク 
@@ -255,6 +277,14 @@ public:
   /** head&taileのセット
    */
    void SetHeadTail();
+
+  /** head&tailをガイドセルで更新
+   * @param[in]  mst_head 更新元のヘッドインデックス
+   * @param[in]  mst_tail 更新元のテイルインデックス 
+   * @param[out] head 更新したヘッドインデックス
+   * @param[out] tail 更新したテイルインデックス
+   */
+  void UpdateHeadTail(const int* mst_head, const int* mst_tail, int* head, int* tail); 
 
   /** Headマップの生成
    * @param[in] head head情報

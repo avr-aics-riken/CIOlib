@@ -59,9 +59,6 @@ public:
 
 protected:
   
-  //vector<std::string> m_in_dfi_name;   ///<読込みdfiファイルリスト
-  //vector<std::string> m_out_dfi_name;  ///<出力dfiファイルリスト
-  //vector<std::string> m_out_proc_name; ///<出力するprocファイルリスト
   bool m_output_dfi_on;      ///<dfi出力指示フラグ
   bool m_cropIndexStart_on;  ///<入力領域のスタート指示フラグ
   bool m_cropIndexEnd_on;    ///<入力領域のエンド指示フラグ
@@ -275,6 +272,24 @@ public:
    * @brief 入力領域のエンド位置取り出し
    */
   int* Get_CropIndexEnd() { return m_cropIndexEnd; }; 
+
+  /**
+   * @brief 入力領域のスタート位置の更新
+   * @param[in] sta
+   */
+  void Set_CropIndexStart(int sta[3])
+  {
+    for(int i=0; i<3; i++) m_cropIndexStart[i]=sta[i];
+  };
+
+  /**
+   * @brief 入力領域のエンド位置の更新
+   * @param[in] end
+   */
+  void Set_CropIndexEnd(int end[3])
+  {
+    for(int i=0; i<3; i++) m_cropIndexEnd[i]=end[i];
+  }; 
  
 };
 

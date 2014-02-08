@@ -59,20 +59,17 @@
 namespace CIO
 {
 
-
   enum E_CIO_DFITYPE
   {
     E_CIO_DFITYPE_UNKNOWN = -1, ///< 未定
     E_CIO_DFITYPE_CARTESIAN,    ///< Cartesian
   };
 
-
 /** File 形式 */
   enum E_CIO_FORMAT
   {
     E_CIO_FMT_UNKNOWN = -1,  ///< 未定
     E_CIO_FMT_SPH,           ///< sph format
-
     //E_CIO_FMT_BOV            ///< bov format
     E_CIO_FMT_BOV,           ///< bov format
     E_CIO_FMT_AVS,           ///< avs format
@@ -129,7 +126,6 @@ namespace CIO
     E_CIO_READTYPE_UNKNOWN,      ///<error
   };
 
-
 /** 出力形式 */
   enum E_CIO_OUTPUT_TYPE
   {
@@ -145,7 +141,6 @@ namespace CIO
     E_CIO_FNAME_STEP_RANK=0, ///<step_rank
     E_CIO_FNAME_RANK_STEP    ///<rank_step
   };
-
 
 /** CIOのエラーコード */
   enum E_CIO_ERRORCODE

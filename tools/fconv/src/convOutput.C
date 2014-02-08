@@ -68,6 +68,7 @@ convOutput::OutputInit(const CIO::E_CIO_FORMAT out_format)
 bool convOutput::WriteFieldData(FILE* fp, cio_Array* src, size_t dLen)
 {
   if( src->writeBinary(fp) != dLen ) Exit(0);
+  //if( src->writeAscii(fp) != dLen ) Exit(0);
   return true;
 }
 

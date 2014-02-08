@@ -36,6 +36,7 @@ public:
 
   /**
    * @brief GRID ファイル出力
+   * @param [in] prefix ファイル接頭文字
    * @param [in] step   step番号
    * @param [in] myRank ランク番号
    * @param [in] dType  dfiのデータタイプ
@@ -44,7 +45,7 @@ public:
    * @param [in] pit    ピッチ
    * @param [in] sz     ボクセルサイズ
    */
-  void WriteGridData(
+  void WriteGridData(std::string prefix,
                      int step,
                      int myRank,
                      int dType,
@@ -56,8 +57,9 @@ public:
 
   /**
    * @brief xyzファイルの出力(template 関数)
-   * @param [in] step ステップ
-   * @param [in] rank ランク
+   * @param [in] prefix ファイル接頭文字
+   * @param [in] step   ステップ
+   * @param [in] rank   ランク
    * @param [in] guide  ガイドセル数
    * @param [in] origin 基点座標
    * @param [in] pitch  ピッチ
@@ -67,7 +69,8 @@ public:
    * @param [in] z      z方向座標ワーク
    */
   template<class T1, class T2>
-  void OutputPlot3D_xyz(int step, 
+  void OutputPlot3D_xyz(std::string prefix,
+                        int step, 
                         int rank, 
                         int guide, 
                         T1* origin, 
