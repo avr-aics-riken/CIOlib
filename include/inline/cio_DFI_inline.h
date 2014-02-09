@@ -12,7 +12,7 @@
 /** 
  * @file   cio_DFI.h
  * @brief  cio_DFI Class Header
- * @author kero    
+ * @author aics    
  */
 
 #ifdef CIO_INLINE

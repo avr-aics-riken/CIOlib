@@ -12,7 +12,7 @@
 /**
  * @file   cio_TextParser.h 
  * @brief  TextParser Control class Header
- * @author kero
+ * @author aics
  */
 #include "cio_Define.h"
 

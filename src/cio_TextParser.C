@@ -9,7 +9,7 @@
 /**
  * @file   cio_TextParser.C
  * @brief  TextParser Control class
- * @author kero
+ * @author aics
  */
 
 #include "cio_TextParser.h"

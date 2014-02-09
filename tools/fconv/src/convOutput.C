@@ -11,7 +11,7 @@
 /**
  * @file   convOutput.C
  * @brief  convOutput Class
- * @author kero
+ * @author aics
  */
 
 #include "convOutput.h"

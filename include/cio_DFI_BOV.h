@@ -12,7 +12,7 @@
 /** 
  * @file   cio_DFI_BOV.h
  * @brief  cio_DFI_BOV Class Header
- * @author kero    
+ * @author aics    
  */
 
 #include "cio_DFI.h"

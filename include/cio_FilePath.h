@@ -12,7 +12,7 @@
 /** 
  * @file   cio_FilePath.h
  * @brief  cio_FilePath Class Header
- * @author kero    
+ * @author aics    
  */
 
 /** index.dfi ファイルの FilePath */

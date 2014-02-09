@@ -13,13 +13,13 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.57])
-AC_INIT([CIOlib],[1.5.1],[keno@riken.jp],[CIOlib])
+AC_INIT([CIOlib],[1.5.2],[keno@riken.jp],[CIOlib])
 AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR([src/cio_DFI.C])
 AM_CONFIG_HEADER([config.h])
 
 # revision No.
-CIO_REVISION="20140208_1400"
+CIO_REVISION="20140209_0800"
 AC_SUBST(CIO_REVISION)
 
 #
@@ -72,7 +72,7 @@ AC_SUBST(MPI_LIBS)
 # 
 # MPI library
 #
-AC_ARG_WITH(MPI, [AC_HELP_STRING([--without-MPI],[do not use MPI library])], , with_MPI=yes)
+AC_ARG_WITH(MPI, [AC_HELP_STRING([--with-MPI=(yes|no)],[use MPI library])], , with_MPI=yes)
 if test "$with_MPI" = "no" ; then
   CXXFLAGS=-D_CIO_WITHOUT_MPI_
 else
@@ -116,10 +116,12 @@ if test "$with_cpm" != "none" ; then
   CPM_LDFLAGS=`$CPM_DIR/bin/cpm-config --libs`
   if test "$enable_mpi" = "none" ; then
     echo "  Error: MPI library is not specified."
-    echo "         --with-cpm option used MPI."
+    echo "         --with-cpm option use MPI."
     exit 1
   fi
 fi
+
+
 
 #
 # TextParser environment
@@ -140,6 +142,16 @@ else
 fi
 
 
+# 
+# frm tools
+#
+AC_ARG_WITH(frm, [AC_HELP_STRING([--with-frm=(no|yes)],[install frm tool])], , with_frm=no)
+
+# if cross-compile, frm is not build >> only login node
+if test "x$host" != "x" ; then
+  echo "Warning : frm tool is not build due to cross-compilation."
+  with_frm=no
+fi
 
 
 #
@@ -162,14 +174,28 @@ AC_SUBST(CIO_LIBS)
 AC_SUBST(MAKE_SUB_DIRS)
 MAKE_SUB_DIRS="src doc"
 
-# K/FX
-if test "$host" != "sparc64-unknown-linux-gnu" ; then
-  if test "$with_cpm" != "none" ; then
-    MAKE_SUB_DIRS="$MAKE_SUB_DIRS"" tools/frm/src tools/fconv/src"
-  else
-    MAKE_SUB_DIRS="$MAKE_SUB_DIRS"" tools/frm/src"
+# install frm
+if test "x$with_frm" = "xyes" ; then
+  MAKE_SUB_DIRS="$MAKE_SUB_DIRS"" tools/frm/src"
+fi
+
+# install fconv
+if test "x$with_MPI" = "xyes" ; then
+  if test "x$with_cpm" != "xnone" ; then
+    MAKE_SUB_DIRS="$MAKE_SUB_DIRS"" tools/fconv/src"
   fi
 fi
+
+
+
+# login node of K/FX is Intel, (cpm != none) means compile on a login node
+#if test "$host" != "sparc64-unknown-linux-gnu" ; then
+#  if test "$with_cpm" != "none" ; then
+#    MAKE_SUB_DIRS="$MAKE_SUB_DIRS"" tools/frm/src tools/fconv/src"
+#  else
+#    MAKE_SUB_DIRS="$MAKE_SUB_DIRS"" tools/frm/src"
+#  fi
+#fi
 
 
 
@@ -208,15 +234,25 @@ AC_CONFIG_FILES([Makefile \
                  include/cio_Version.h \
                  ])
 
-# K/FX
-if test "$host" != "sparc64-unknown-linux-gnu" ; then
-  AC_CONFIG_FILES([tools/frm/src/Makefile \
-                  ])
-  if test "$with_cpm" != "none" ; then
-    AC_CONFIG_FILES([tools/fconv/src/Makefile ])
+if test "x$with_frm" = "xyes" ; then
+  AC_CONFIG_FILES([tools/frm/src/Makefile])
+fi
+
+if test "x$with_MPI" = "xyes" ; then
+  if test "x$with_cpm" != "xnone" ; then
+    AC_CONFIG_FILES([tools/fconv/src/Makefile])
   fi
 fi
 
+# For non-sparc architecture, i.e., login node on K/FX or Intel clusters
+#if test "$host" != "sparc64-unknown-linux-gnu" ; then
+#  AC_CONFIG_FILES([tools/frm/src/Makefile])
+#  
+# CPM library is specified
+#  if test "$with_cpm" != "none" ; then
+#    AC_CONFIG_FILES([tools/fconv/src/Makefile])
+#  fi
+#fi
 
 
 AC_OUTPUT

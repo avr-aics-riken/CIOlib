@@ -9,7 +9,7 @@
 /** 
  * @file   cio_Process.C
  * @brief  cio_Rank & cio_Process Class
- * @author kero    
+ * @author aics    
  */
 
 #include "cio_DFI.h"

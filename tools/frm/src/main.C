@@ -11,7 +11,7 @@
 /**
  * @file   main.C
  * @brief  Staging_Utility main関数
- * @author kero
+ * @author aics
  */
 
 #include "Staging_Utility.h"

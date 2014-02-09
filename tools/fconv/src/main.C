@@ -12,7 +12,7 @@
 /** 
  * @file main.C
  * @brief convのmain関数
- * @author kero
+ * @author aics
  */
 
 #include "InputParam.h"

@@ -14,7 +14,7 @@
 /**
  * @file   conv_plot3d_inline.h
  * @brief  convOutput_PLOT3D クラスのinline関数ヘッダーファイル
- * @author kero
+ * @author aics
  * @date   2013/11/7
  */
 

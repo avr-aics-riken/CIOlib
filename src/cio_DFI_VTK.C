@@ -9,7 +9,7 @@
 /** 
  * @file   cio_DFI_VTK.C
  * @brief  cio_DFI_VTK Class
- * @author kero    
+ * @author aics    
  */
 
 #include "cio_DFI.h"

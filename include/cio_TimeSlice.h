@@ -12,7 +12,7 @@
 /** 
  * @file   cio_TimeSlice.h
  * @brief  cio_Slice & cio_TimeSliceClass Header
- * @author kero    
+ * @author aics    
  */
 
 /** index.dfi ファイルの Slice */

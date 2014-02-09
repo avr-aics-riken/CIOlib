@@ -12,7 +12,7 @@
 /** 
  * @file   cio_Domain.h
  * @brief  cio_Domain Class Header
- * @author kero    
+ * @author aics    
  */
   
 /** proc.dfi ファイルの Domain */

@@ -14,7 +14,7 @@
 /**
  * @file   convOutput_SPH.h
  * @brief  convOutput_SPH Class Header
- * @author kero
+ * @author aics
  * @date   2013/11/7
  */
 

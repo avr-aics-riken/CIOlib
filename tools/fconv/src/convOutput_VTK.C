@@ -11,7 +11,7 @@
 /**
  * @file   convOutput_VTK.C
  * @brief  convOutput_VTK Class
- * @author kero
+ * @author aics
  */
 
 #include "convOutput.h"

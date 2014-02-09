@@ -12,7 +12,7 @@
 /** 
  * @file   cio_FileInfo.h
  * @brief  cio_FileInfo Class Header
- * @author kero    
+ * @author aics    
  */
 
 

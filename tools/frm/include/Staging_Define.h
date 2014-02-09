@@ -11,7 +11,7 @@
 /**
  * @file Staging_Define.h
  * Staging マクロ記述ヘッダーファイル
- * @author kero 
+ * @author aics 
  * @data 2013/4/25
  */
 

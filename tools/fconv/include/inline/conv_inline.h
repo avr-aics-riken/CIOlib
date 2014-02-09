@@ -14,7 +14,7 @@
 /**
  * @file   conv_inline.h
  * @brief  CONV クラスのinline関数ヘッダーファイル
- * @author kero
+ * @author aics
  * @date   2013/11/7
  */
 

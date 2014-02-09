@@ -9,7 +9,7 @@
 /**
  * @file  cio_ActiveSubDomain.C
  * @brief cio_ActiveSubDomain class 関数
- * @author kero
+ * @author aics
  */
 
 #include "cio_ActiveSubDomain.h"

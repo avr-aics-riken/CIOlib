@@ -9,7 +9,7 @@
 /*
  * @file ActiveSubDomain.h
  * @brif ActiveSubDomain Class Header
- * @author kero
+ * @author aics
  */
 
 #ifndef _CIO_ACTIVESUBDOMAIN_

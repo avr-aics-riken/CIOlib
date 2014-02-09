@@ -14,7 +14,7 @@
 /**
  * @file   convOutput_PLOT3D.h
  * @brief  convOutput_PLOT3D Class Header
- * @author kero
+ * @author aics
  * @date   2013/11/7
  */
 

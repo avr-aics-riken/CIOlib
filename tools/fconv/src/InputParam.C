@@ -11,7 +11,7 @@
 /**
  * @file   InputParam.C
  * @brief  InputParam Class
- * @author kero
+ * @author aics
  */
 
 #include "InputParam.h"

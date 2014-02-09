@@ -11,7 +11,7 @@
 /**
  * @file   Staging.C
  * @brief  Staging class 関数
- * @author kero
+ * @author aics
  */
 
 #include <stdlib.h>

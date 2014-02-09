@@ -12,7 +12,7 @@
 /**
  * @file   cio_Define.h
  * @brief  CIOの定義マクロ記述ヘッダーファイル
- * @author kero
+ * @author aics
  */
 
 #ifdef _CIO_WITHOUT_MPI_

@@ -11,7 +11,7 @@
 /**
  * @file   convOutput_PLOT3D.C
  * @brief  convOutput_PLOT3D Class
- * @author kero
+ * @author aics
  */
 
 #include "convOutput.h"

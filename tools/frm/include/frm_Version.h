@@ -10,7 +10,7 @@
 /**
  * @file frm_Version.h
  * frmのバージョン情報
- * @author kero 
+ * @author aics 
  * @data 2013/4/25
  */
 

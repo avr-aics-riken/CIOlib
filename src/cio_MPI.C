@@ -9,7 +9,7 @@
 /** 
  * @file   cio_MPI.C
  * @brief  cio_MPI Class
- * @author kero    
+ * @author aics    
  */
 
 #include "cio_DFI.h"

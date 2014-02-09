@@ -14,7 +14,7 @@
 /**
  * @file   convOutput_VTK.h
  * @brief  convOutput_VTK Class Header
- * @author kero
+ * @author aics
  * @date   2013/11/12
  */
 

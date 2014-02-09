@@ -17,7 +17,7 @@
 /**
  * @file   convMx1.h
  * @brief  convMx1 Class Header
- * @author kero
+ * @author aics
  * @date   2013/11/14
  */
 

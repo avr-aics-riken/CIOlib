@@ -12,7 +12,7 @@
  * Staging
  * @file ActiveSubDomain.h
  * @brif ActiveSubDomain Class Header
- * @author kero
+ * @author aics
  */
 
 #ifndef _ACTIVESUBDOMAIN_

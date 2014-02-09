@@ -12,7 +12,7 @@
 /** 
  * @file   cio_Unit.h
  * @brief  cio_UnitElem & cio_Unit Class Header
- * @author kero    
+ * @author aics    
  */
 
 class cio_UnitElem {

@@ -12,7 +12,7 @@
 /** 
  * @file   cio_DFI_VTK.h
  * @brief  cio_DFI_VTK Class Header
- * @author kero    
+ * @author aics    
  */
 
 #include "cio_DFI.h"

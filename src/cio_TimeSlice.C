@@ -9,7 +9,7 @@
 /** 
  * @file   cio_TimeSlice.C 
  * @brief  cio_Slice Class
- * @author kero    
+ * @author aics    
  */
 
 #include "cio_DFI.h"

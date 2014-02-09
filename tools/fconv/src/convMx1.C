@@ -11,7 +11,7 @@
 /**
  * @file   convMx1.C 
  * @brief  convMx1 Class
- * @author kero
+ * @author aics
  */
 
 #include "convMx1.h"

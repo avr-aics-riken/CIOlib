@@ -12,7 +12,7 @@
 /** 
  * @file   cio_MPI.h
  * @brief  cio_MPI Class Header
- * @author kero    
+ * @author aics    
  */
 
 /** proc.dfi ファイルの MPI */

@@ -9,7 +9,7 @@
 /** 
  * @file   cio_endianUtil.h
  * @brief  エンディアンユーティリティマクロ・関数ファイル
- * @author kero    
+ * @author aics    
  */
 #ifndef _CIO_ENDIAN_UTIL_H_
 #define _CIO_ENDIAN_UTIL_H_

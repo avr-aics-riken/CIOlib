@@ -9,7 +9,7 @@
 /** 
  * @file   cio_DFI_SPH.C
  * @brief  cio_DFI_SPH Class
- * @author kero    
+ * @author aics    
  */
 
 #include "cio_DFI.h"

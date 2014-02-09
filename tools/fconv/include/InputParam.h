@@ -14,7 +14,7 @@
 /**
  * @file   InputParam.h
  * @brief  InputParam Class Header
- * @author kero
+ * @author aics
  * @date   2013/11/13
  */
 

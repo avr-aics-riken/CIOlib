@@ -12,7 +12,7 @@
 /**
  * @file   conv.C
  * @brief  CONV Class
- * @author kero
+ * @author aics
  */
 
 #include "conv.h"

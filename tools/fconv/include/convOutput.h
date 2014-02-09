@@ -14,7 +14,7 @@
 /**
  * @file   convOutput.h
  * @brief  convOutput Class Header
- * @author kero
+ * @author aics
  * @date   2013/11/7
  */
 

@@ -11,7 +11,7 @@
 /**
  * @file  ActiveSubDomain.C
  * @brief ActiveSubDomain class 関数
- * @author kero
+ * @author aics
  */
 
 #include "ActiveSubDomain.h"

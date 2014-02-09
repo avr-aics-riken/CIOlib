@@ -12,7 +12,7 @@
 /**
  * @file   mpi_stub.h
  * @brief  stub for serial
- * @author kero
+ * @author aics
  */
 
 typedef int MPI_Comm;

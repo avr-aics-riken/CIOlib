@@ -14,7 +14,7 @@
 /**
  * @file   convMx1_inline.h
  * @brief  convMx1 クラスのinline関数ヘッダーファイル
- * @author kero
+ * @author aics
  * @date   2013/11/7
  */
 

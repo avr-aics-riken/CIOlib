@@ -9,7 +9,7 @@
 /** 
  * @file   cio_DFI_AVS.C
  * @brief  cio_DFI_AVS Class
- * @author kero    
+ * @author aics    
  */
 
 #include "cio_DFI.h"

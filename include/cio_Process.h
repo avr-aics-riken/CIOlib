@@ -12,7 +12,7 @@
 /** 
  * @file   cio_Process.h
  * @brief  cio_RANK & cio_Process Class Header
- * @author kero    
+ * @author aics    
  */
 
 /** proc.dfi ファイルの Rank */
