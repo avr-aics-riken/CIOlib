@@ -15,10 +15,10 @@
 #define _CIO_VERSION_H_
 
 /** CIOライブラリのバージョン */
-#define CIO_VERSION_NO  "1.5.2"
+#define CIO_VERSION_NO  "1.5.3"
 
 /** CIOライブラリのリビジョン */
-#define CIO_REVISION    "20140209_0800"
+#define CIO_REVISION    "20140211_1900"
 
 #endif /* _CIO_VERSION_H_ */
 

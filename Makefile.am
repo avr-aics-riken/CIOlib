@@ -13,7 +13,7 @@ SUBDIRS = @MAKE_SUB_DIRS@
 
 bin_SCRIPTS = cio-config
 CLEANFILES = $(bin_SCRIPTS)
-EXTRA_DIST = cio-config.in LICENSE include/mpi_stubs.h tools
+EXTRA_DIST = cio-config.in LICENSE include/mpi_stubs.h
 dist_data_DATA = AUTHORS COPYING ChangeLog README LICENSE
 dist_include_HEADERS = include/mpi_stubs.h
 

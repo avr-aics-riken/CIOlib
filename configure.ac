@@ -13,21 +13,21 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.57])
-AC_INIT([CIOlib],[1.5.2],[keno@riken.jp],[CIOlib])
+AC_INIT([CIOlib],[1.5.3],[keno@riken.jp],[CIOlib])
 AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR([src/cio_DFI.C])
 AM_CONFIG_HEADER([config.h])
 
 # revision No.
-CIO_REVISION="20140209_0800"
+CIO_REVISION="20140211_1900"
 AC_SUBST(CIO_REVISION)
 
 #
 # default prefix setting
 #
-AC_PREFIX_DEFAULT([/usr/local/FFV/CIOlib])
+AC_PREFIX_DEFAULT([/usr/local/CIOlib])
 if test "$prefix" = "NONE" ; then
-  CIO_INST_DIR=/usr/local/FFV/CIOlib
+  CIO_INST_DIR=/usr/local/CIOlib
 else
   CIO_INST_DIR="$prefix"
 fi
@@ -58,8 +58,11 @@ case "$CIO_CXX" in
   mpiCC)    enable_mpi="wrappermpi" ;;
   mpic++)   enable_mpi="wrappermpi" ;;
   mpiFCCpx) enable_mpi="wrappermpi" ;;
+  CC)       enable_mpi="wrappermpi" ;;
 esac
 
+# mpiFCCpx;  Fujitsu FX
+# CC      ;  NERSC Hopper
 
 
 

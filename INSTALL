@@ -54,9 +54,9 @@ Configure options:
     CPMlib, but file converter depends on. If not specified this option, file converter
     is not compiled.
 
- --install-frm=(no|yes)
+ --with-frm=(no|yes)
     Install frm tool. In case of cross-compilation, this option is invalid and frm is not
-    installed. In case of native compile environment, on the other hand, --install-frm=yes
+    installed. In case of native compile environment, on the other hand, '--with-frm=yes'
     indicates that frm is installed at the same time as CIOlib is compiled. Default is no.
 
 
@@ -89,11 +89,12 @@ Here is examples.
 
 
 ## OpenMPI with wrapper compiler, assume that mpicxx is a wrapper compiler for OpenMPI.
-   This option installs parallel CIOlib and file converter without frm.
+   This options installs parallel CIOlib, file converter and frm.
 
   $ ./configure --prefix=/usr/local/FFV/CIOlib \
                 --with-parser=/usr/local/FFV/TextParser \
                 --with-cpm=/usr/local/FFV/CPMlib \
+                --with-frm=yes \
                 CXX=mpicxx \
                 CXXFLAGS=-O3 \
                 F90=mpif90 \
