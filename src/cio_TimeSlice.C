@@ -47,7 +47,7 @@ CIO::E_CIO_ERRORCODE
 cio_Slice::Read(cio_TextParser tpCntl,
                         std::string label_leaf) 
 {
-
+#if 0
   std::string str;
   std::string label,label_leaf_leaf;
 
@@ -157,6 +157,105 @@ cio_Slice::Read(cio_TextParser tpCntl,
     }
 
   }
+#else
+  std::string str;
+  std::string label;
+  int ct;
+  double dt;
+
+  // カレントを移動
+  TextParser *tp = tpCntl.getTPPtr();
+  tp->changeNode(label_leaf);
+
+  //Step
+  label = "Step";
+  if ( !(tpCntl.GetValue(label, &ct, false )) ) {
+    printf("\tCIO Parsing error : fail to get '%s/%s'\n",label_leaf.c_str(),label.c_str());
+    return CIO::E_CIO_ERROR_READ_DFI_STEP;
+  }
+  else {
+    step=ct;
+  }
+
+  //Time
+  label = "Time";
+  if ( !(tpCntl.GetValue(label, &dt, false )) ) {
+    printf("\tCIO Parsing error : fail to get '%s/%s'\n",label_leaf.c_str(),label.c_str());
+    return CIO::E_CIO_ERROR_READ_DFI_TIME;
+  }
+  else {
+    time= dt;
+  }
+
+  //AveragedStep
+  label = "AveragedStep";
+  if ( !(tpCntl.GetValue(label, &ct, false )) ) {
+    AveragedStep=-1;
+  }
+  else {
+    AveragedStep= ct;
+  }
+
+  //AveragedTime
+  label = "AveragedTime";
+  if ( !(tpCntl.GetValue(label, &dt, false )) ) {
+    AveragedTime=0.0;
+  }
+  else {
+    AveragedTime= dt;
+  }
+
+  //VectorMinMax/Min
+  label = "VectorMinMax/Min";
+  if ( (tpCntl.GetValue(label, &dt, false )) )
+  {
+    VectorMin=dt;
+  }
+
+  //VectorMinMax/Max
+  label = "VectorMinMax/Max";
+  if ( (tpCntl.GetValue(label, &dt, false )) )
+  {
+    VectorMax=dt;
+  }
+
+  // 子のラベルを取得
+  vector<std::string> labels;
+  tp->getNodes(labels,1);
+
+  // 子のMinMaxを読み込み
+  Min.clear();
+  Max.clear();
+  for( size_t i=0;i<labels.size();i++ )
+  {
+    // MinMax要素かどうか確認
+    std::string label = labels[i];
+    if( strcasecmp(label.substr(0,6).c_str(), "MinMax") ) continue;
+
+    // MinMaxに移動
+    std::string leaf = label_leaf + "/" + label;
+    tp->changeNode(leaf);
+
+    // Min
+    label = "Min";
+    if ( !(tpCntl.GetValue(label, &dt, false )) ) {
+      printf("\tCIO Parsing error : fail to get '%s/%s'\n",leaf.c_str(),label.c_str());
+      return CIO::E_CIO_ERROR_READ_DFI_MIN;
+    }
+    else {
+      Min.push_back(dt);
+    }
+
+    label = "Max";
+    if ( !(tpCntl.GetValue(label, &dt, false )) ) {
+      printf("\tCIO Parsing error : fail to get '%s/%s'\n",leaf.c_str(),label.c_str());
+      return CIO::E_CIO_ERROR_READ_DFI_MAX;
+    }
+    else {
+      Max.push_back(dt);
+    }
+  }
+#endif
 
   return CIO::E_CIO_SUCCESS;
 }
@@ -226,7 +325,7 @@ cio_TimeSlice::~cio_TimeSlice()
 CIO::E_CIO_ERRORCODE
 cio_TimeSlice::Read(cio_TextParser tpCntl)
 {
-
+#if 0
   std::string str;
   std::string label_base,label_leaf;
 
@@ -264,6 +363,54 @@ cio_TimeSlice::Read(cio_TextParser tpCntl)
     } else return iret;
 
   }
+#else
+  CIO::E_CIO_ERRORCODE iret;
+
+  // TP
+  TextParser *tp = tpCntl.getTPPtr();
+  if( !tp )
+  {
+    return CIO::E_CIO_ERROR_TEXTPARSER;
+  }
+
+  // TimeSlice要素の存在チェック
+  std::string label_base = "/TimeSlice";
+  if( !tpCntl.chkNode(label_base) )
+  {
+    printf("\tCIO Parsing error : No Elem name [%s]\n", label_base.c_str());
+    return CIO::E_CIO_ERROR_READ_TIMESLICE;
+  }
+
+  // TimeSliceに移動
+  tp->changeNode(label_base);
+
+  // 子のラベルを取得
+  vector<std::string> labels;
+  tp->getNodes(labels,1);
+
+  // 子のSliceを読み込み
+  for( size_t i=0;i<labels.size();i++ )
+  {
+    // Slice要素かどうか確認
+    std::string label = labels[i];
+    if( strcasecmp(label.substr(0,5).c_str(), "Slice") ) continue;
+
+    //Slice要素の読込み
+    cio_Slice slice;
+    std::string leaf = label_base + "/" + label;
+    if( (iret = slice.Read(tpCntl,leaf)) == CIO::E_CIO_SUCCESS )
+    {
+      SliceList.push_back(slice);
+    }
+    else
+    {
+      return iret;
+    }
+  }
+
+  // 元のノードに戻る
+  tp->changeNode("/");
+#endif
 
   return CIO::E_CIO_SUCCESS;
 

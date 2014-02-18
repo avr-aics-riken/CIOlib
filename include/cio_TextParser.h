@@ -45,8 +45,9 @@ public:
    * @param [in] label 取得するベクトルのラベル（絶対パス）
    * @param [out] vec   ベクトル格納配列ポインタ
    * @param [in]  nvec  ベクトルサイズ
+   * @param [in]  checkPath true:ラベル存在チェックをフルパスで行う
    */
-  bool GetVector(const std::string label, int *vec, const int nvec);
+  bool GetVector(const std::string label, int *vec, const int nvec, bool checkPath=true);
   
   
   /**
@@ -54,8 +55,9 @@ public:
    * @param [in]  label  取得するベクトルのラベル（絶対パス）
    * @param [out] vec    ベクトル格納配列ポインタ
    * @param [in]  nvec   ベクトルサイズ
+   * @param [in]  checkPath true:ラベル存在チェックをフルパスで行う
    */
-  bool GetVector(const std::string label, double *vec, const int nvec);
+  bool GetVector(const std::string label, double *vec, const int nvec, bool checkPath=true);
 
   
   /**
@@ -63,39 +65,44 @@ public:
    * @param [in]  label  取得するベクトルのラベル（絶対パス）
    * @param [out] vec    ベクトル格納配列ポインタ
    * @param [in]  nvec   ベクトルサイズ
+   * @param [in]  checkPath true:ラベル存在チェックをフルパスで行う
    */
-  bool GetVector(const std::string label, std::string *vec, const int nvec);
+  bool GetVector(const std::string label, std::string *vec, const int nvec, bool checkPath=true);
   
   
   /**
    * @brief TextParser入力ファイルから変数を取得する（整数型）
    * @param [in]  label 取得する変数のラベル（絶対パス）
+   * @param [in]  checkPath true:ラベル存在チェックをフルパスで行う
    * @param [out] ct    変数格納ポインタ
    */
-  bool GetValue(const std::string label, int *ct);
+  bool GetValue(const std::string label, int *ct, bool checkPath=true);
   
   
   /**
    * @brief TextParser入力ファイルから変数を取得する（実数型）
    * @param [in]  label 取得する変数のラベル（絶対パス）
+   * @param [in]  checkPath true:ラベル存在チェックをフルパスで行う
    * @param [out] ct    変数格納ポインタ
    */
-  bool GetValue(const std::string label, double *ct);
+  bool GetValue(const std::string label, double *ct, bool checkPath=true);
   
   
   /**
    * @brief TextParser入力ファイルから変数を取得する（文字列型）
    * @param [in]  label 取得する変数のラベル（絶対パス）
+   * @param [in]  checkPath true:ラベル存在チェックをフルパスで行う
    * @param [out] ct    変数格納ポインタ
    */
-  bool GetValue(const std::string label, std::string *ct);
+  bool GetValue(const std::string label, std::string *ct, bool checkPath=true);
 
 	
   /**
    * @brief ラベルの有無をチェック
    * @param [in] label チェックするラベル（絶対パス）
+   * @param [in]  checkPath true:ラベル存在チェックをフルパスで行う
    */
-  bool chkLabel(const std::string label);
+  bool chkLabel(const std::string label, bool checkPath=true);
   
   
   /**
@@ -142,6 +149,12 @@ public:
     return tp->remove();
   }
 
+#if 1
+  TextParser* getTPPtr()
+  {
+    return tp;
+  }
+#endif
 };
 
 #endif // _CIO_TXETPARSER_H_

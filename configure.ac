@@ -13,13 +13,13 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.57])
-AC_INIT([CIOlib],[1.5.3],[keno@riken.jp],[CIOlib])
+AC_INIT([CIOlib],[1.5.4],[keno@riken.jp],[CIOlib])
 AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR([src/cio_DFI.C])
 AM_CONFIG_HEADER([config.h])
 
 # revision No.
-CIO_REVISION="20140211_1900"
+CIO_REVISION="20140218_1600"
 AC_SUBST(CIO_REVISION)
 
 #

@@ -181,8 +181,28 @@ bool Staging::ReadInfo()
   //Rank
   int nnode=0;
   label_base = "/Process";
-  if( tp_stg.chkNode(label_base) ) nnode = tp_stg.countLabels(label_base);
+  if( tp_stg.chkNode(label_base) ) {
+    nnode = tp_stg.countLabels(label_base);
+    if( m_NumberOfRank != nnode ) return false;
+  } else {
+    if( m_NumberOfRank > 0 ) return false;
+    return true;
+  }
 
+  TextParser *tp = tp_stg.getTPPtr();
+  if( !tp ) 
+  {
+    return false;
+  }
+
+  // /Processに移動
+  tp->changeNode(label_base);
+
+  // 子のラベルを取得
+  vector<std::string> labels;
+  tp->getNodes(labels,1);
+
+/*
   for (int i=0; i<nnode; i++) {
     if(!tp_stg.GetNodeStr(label_base,i+1,&str))
     {
@@ -191,10 +211,21 @@ bool Staging::ReadInfo()
     }
     if( strcasecmp(str.substr(0,4).c_str(), "Rank") ) continue;
     label_leaf=label_base+"/"+str;
+*/
+
+  //子のRankを読み込み
+  for( size_t i=0; i<labels.size(); i++) {
+    //Rank要素かどうか確認
+    label=labels[i];
+    if( strcasecmp(label.substr(0,4).c_str(), "Rank") ) continue;
+
+    //Rankに移動
+    label_leaf=label_base + "/" + label;
+    tp->changeNode(label_leaf);
 
     //ID
-    label = label_leaf + "/ID";
-    if ( !(tp_stg.GetValue(label, &ct )) ) {
+    label = "ID";
+    if ( !(tp_stg.GetValue(label, &ct, false )) ) {
       printf("\tParsing error : fail to get '%s'\n",label.c_str());
       return false;
     }
@@ -203,30 +234,49 @@ bool Staging::ReadInfo()
     }
 
     //VoxelSize
-    label = label_leaf + "/VoxelSize";
+    label = "VoxelSize";
     for (int n=0; n<3; n++) v[n]=0.0;
-    if ( !(tp_stg.GetVector(label, v, 3 )) ) {
+    if ( !(tp_stg.GetVector(label, v, 3, false )) ) {
       printf("\tParsing error : fail to get '%s'\n",label.c_str());
       return false;
     }
     for (int n=0; n<3; n++) rank.VoxelSize[n]=v[n];
 
-    //HeadIndex
-    label = label_leaf + "/HeadIndex";
-    for (int n=0; n<3; n++) v[n]=0.0;
-    tp_stg.GetVector(label, v, 3 ); 
-    for (int n=0; n<3; n++) rank.HeadIndex[n]=v[n];
+    //HeadIndex&TailIndexの初期化
+    for(int n=0; n<3; n++) {
+      rank.HeadIndex[n]=0;
+      rank.TailIndex[n]=0;
+    }
 
-    //TailIndex
-    label = label_leaf + "/TailIndex";
-    for (int n=0; n<3; n++) v[n]=0.0;
-    tp_stg.GetVector(label, v, 3 ); 
-    for (int n=0; n<3; n++) rank.TailIndex[n]=v[n];
+    //HeadIndex
+    label = "HeadIndex";
+    if( tp_stg.GetVector(label, v, 3, false ) ) {
+      for (int n=0; n<3; n++) rank.HeadIndex[n]=v[n];
+      //TailIndex
+      label = "TailIndex";
+      if( tp_stg.GetVector(label, v, 3, false ) ) {
+        for (int n=0; n<3; n++) rank.TailIndex[n]=v[n];
+      } else {
+        //TailIndexがないとき自動セット
+        for (int n=0; n<3; n++) {
+          rank.TailIndex[n]=rank.HeadIndex[n]+rank.VoxelSize[n]-1;
+        }
+      }
+    //HeadIndexがなしでTailIndexがあるとき
+    } else {
+      label = "TailIndex";
+      if( tp_stg.GetVector(label, v, 3, false ) ) {
+        for (int n=0; n<3; n++) {
+          rank.TailIndex[n]=v[n];
+          rank.HeadIndex[n]=rank.TailIndex[n]-rank.VoxelSize[n]+1;
+        }
+      }
+    }
 
     //RankPosition
-    label = label_leaf + "/RankPosition";
+    label = "RankPosition";
     for (int n=0; n<3; n++) v[n]=-1.0;
-    tp_stg.GetVector(label, v, 3 ); 
+    tp_stg.GetVector(label, v, 3, false ); 
     for (int n=0; n<3; n++) rank.RankPosition[n]=v[n]; 
 
     m_GRankInfo.push_back(rank);
@@ -502,8 +552,8 @@ void Staging::makeRankList(int myID)
     m_StepRankList[i].stepEnd=TSlice->SliceList.size()-1;
 
   }
-  printf("myID : %d nRank : %d sta : %d end : %d m_StepRankList.size : %d\n",
-          myID,nRank,sta,end,(int)m_StepRankList.size());
+  //printf("myID : %d nRank : %d sta : %d end : %d m_StepRankList.size : %d\n",
+  //        myID,nRank,sta,end,(int)m_StepRankList.size());
 
 }
 

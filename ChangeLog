@@ -11,6 +11,13 @@ REVISION HISTORY
 ================
 
 ------------------
+2014-02-18
+ r42 Performance improvement for reading information in DFI file [ver 1.5.4]
+  - change implementation of search label from TextParser::chkLabel() to TextParser::getLabels()
+    Since a chkLabel() method searchs all labels in a file, therefore it takes much time in the case of many labels.
+  - Modify cio_Process.C, cio_TextParser.C, cio_TimeSlice.C and Staging.C.
+
+------------------
 2014-02-11
  r41 add compiler environment CC [ver 1.5.3]
 

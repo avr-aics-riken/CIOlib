@@ -11,6 +11,10 @@ RELEASE
 =======
 
 -------------
+Version 1.5.4   2014-02-18
+ - Performance improvement to read labels
+
+-------------
 Version 1.5.3   2014-02-11
  - add compile environment CC
 

@@ -45,7 +45,7 @@ CIO::E_CIO_ERRORCODE
 cio_Rank::Read(cio_TextParser tpCntl,
                std::string label_leaf)
 {
-
+#if 0
   std::string str;
   std::string label;
   int ct;
@@ -105,6 +105,71 @@ cio_Rank::Read(cio_TextParser tpCntl,
   TailIndex[1]=iv[1];
   TailIndex[2]=iv[2];
 
+#else
+  std::string str;
+  std::string label;
+  int ct;
+  int iv[3];
+
+  // TextParser
+  TextParser *tp = tpCntl.getTPPtr();
+  tp->changeNode(label_leaf);
+
+  //ID
+  label = "ID";
+  if ( !(tpCntl.GetValue(label, &ct, false )) ) {
+    printf("\tCIO Parsing error : fail to get '%s/%s'\n",label_leaf.c_str(),label.c_str());
+    return CIO::E_CIO_ERROR_READ_DFI_ID;
+  }
+  else {
+    RankID= ct;
+  }
+
+  //HostName
+  label = "HostName";
+  if ( !(tpCntl.GetValue(label, &str, false )) ) {
+    printf("\tCIO Parsing error : fail to get '%s/%s'\n",label_leaf.c_str(),label.c_str());
+    return CIO::E_CIO_ERROR_READ_DFI_HOSTNAME;
+  }
+  HostName= str;
+
+  //VoxelSize
+  label = "VoxelSize";
+  for (int n=0; n<3; n++) iv[n]=0.0;
+  if ( !(tpCntl.GetVector(label, iv, 3, false )) ) 
+  {
+    printf("\tCIO Parsing error : fail to get '%s/%s'\n",label_leaf.c_str(),label.c_str());
+    return CIO::E_CIO_ERROR_READ_DFI_VOXELSIZE;
+  }
+  VoxelSize[0]=iv[0];
+  VoxelSize[1]=iv[1];
+  VoxelSize[2]=iv[2];
+
+  //HeadIndex
+  label = "HeadIndex";
+  for (int n=0; n<3; n++) iv[n]=0.0;
+  if ( !(tpCntl.GetVector(label, iv, 3, false )) ) 
+  {
+    printf("\tCIO Parsing error : fail to get '%s/%s'\n",label_leaf.c_str(),label.c_str());
+    return CIO::E_CIO_ERROR_READ_DFI_HEADINDEX;
+  }
+  HeadIndex[0]=iv[0];
+  HeadIndex[1]=iv[1];
+  HeadIndex[2]=iv[2];
+
+  //TailIndex
+  label = "TailIndex";
+  for (int n=0; n<3; n++) iv[n]=0.0;
+  if ( !(tpCntl.GetVector(label, iv, 3, false )) ) 
+  {
+    printf("\tCIO Parsing error : fail to get '%s/%s'\n",label_leaf.c_str(),label.c_str());
+    return CIO::E_CIO_ERROR_READ_DFI_TAILINDEX;
+  }
+  TailIndex[0]=iv[0];
+  TailIndex[1]=iv[1];
+  TailIndex[2]=iv[2];
+#endif
+
   return CIO::E_CIO_SUCCESS;
 }
 
@@ -161,7 +226,7 @@ cio_Process::~cio_Process()
 CIO::E_CIO_ERRORCODE
 cio_Process::Read(cio_TextParser tpCntl)
 {
-
+#if 0
   std::string str;
   std::string label_base,label_leaf;
   int nnode=0;
@@ -194,9 +259,53 @@ cio_Process::Read(cio_TextParser tpCntl)
     } else  return iret;
 
   }
+#else
+  CIO::E_CIO_ERRORCODE iret;
+
+  // TP
+  TextParser *tp = tpCntl.getTPPtr();
+  if( !tp )
+  {
+    return CIO::E_CIO_ERROR_TEXTPARSER;
+  }
+
+  // Process要素の存在チェック
+  std::string label_base = "/Process";
+  if( !tpCntl.chkNode(label_base) )
+  {
+    printf("\tCIO Parsing error : No Elem name [%s]\n", label_base.c_str());
+    return CIO::E_CIO_ERROR_READ_PROCESS;
+  }
+
+  // /Processに移動
+  tp->changeNode(label_base);
+
+  // 子のラベルを取得
+  vector<std::string> labels;
+  tp->getNodes(labels,1);
+
+  // 子のRankを読み込み
+  for( size_t i=0;i<labels.size();i++ )
+  {
+    // Rank要素かどうか確認
+    std::string label = labels[i];
+    if( strcasecmp(label.substr(0,4).c_str(), "Rank") ) continue;
+
+    // Rank要素の読込み
+    cio_Rank rank;
+    std::string leaf = label_base + "/" + label;
+    if( (iret = rank.Read(tpCntl,leaf)) == CIO::E_CIO_SUCCESS )
+    {
+      RankList.push_back(rank);
+    }
+    else
+    {
+      return iret;
+    }
+  }
+#endif
 
   return CIO::E_CIO_SUCCESS;
-
 }
 
 // #################################################################
