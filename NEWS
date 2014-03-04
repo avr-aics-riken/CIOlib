@@ -11,6 +11,10 @@ RELEASE
 =======
 
 -------------
+Version 1.5.5   2014-03-04
+ - change output format for cio-config --version
+ 
+-------------
 Version 1.5.4   2014-02-18
  - Performance improvement to read labels
 

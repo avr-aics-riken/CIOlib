@@ -11,6 +11,11 @@ REVISION HISTORY
 ================
 
 ------------------
+2014-03-04
+ r43 version format [ver 1.5.5]
+  - change output format for cio-config --version
+
+------------------
 2014-02-18
  r42 Performance improvement for reading information in DFI file [ver 1.5.4]
   - change implementation of search label from TextParser::chkLabel() to TextParser::getLabels()
