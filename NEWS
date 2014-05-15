@@ -11,6 +11,10 @@ RELEASE
 =======
 
 -------------
+Version 1.5.6   2014-05-15
+ - bug fix of fconv
+
+-------------
 Version 1.5.5   2014-03-04
  - change output format for cio-config --version
  

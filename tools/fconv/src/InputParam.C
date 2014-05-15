@@ -40,6 +40,7 @@ InputParam::InputParam(cpm_ParaManager* paraMngr)
 
   m_cropIndexStart_on=false;
   m_cropIndexEnd_on  =false;
+  m_multiFileCasting = E_CONV_OUTPUT_CAST_UNKNOWN;
 
 }
 
