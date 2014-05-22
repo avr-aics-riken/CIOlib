@@ -11,22 +11,30 @@ REVISION HISTORY
 ================
 
 ------------------
+2014-05-22
+
+r45 update user guide [ver 1.5.7]
+
+------------------
 2014-05-15
- r44 bug fix of fconv [ver 1.5.6]
-  - tools/fconv/src/InputParam.C
-  - Initialization >> m_multiFileCasting = E_CONV_OUTPUT_CAST_UNKNOWN;
+
+r44 bug fix of fconv [ver 1.5.6]
+ - tools/fconv/src/InputParam.C
+ - Initialization >> m_multiFileCasting = E_CONV_OUTPUT_CAST_UNKNOWN;
 
 ------------------
 2014-03-04
- r43 version format [ver 1.5.5]
-  - change output format for cio-config --version
+
+r43 version format [ver 1.5.5]
+ - change output format for cio-config --version
 
 ------------------
 2014-02-18
- r42 Performance improvement for reading information in DFI file [ver 1.5.4]
-  - change implementation of search label from TextParser::chkLabel() to TextParser::getLabels()
-    Since a chkLabel() method searchs all labels in a file, therefore it takes much time in the case of many labels.
-  - Modify cio_Process.C, cio_TextParser.C, cio_TimeSlice.C and Staging.C.
+
+r42 Performance improvement for reading information in DFI file [ver 1.5.4]
+ - change implementation of search label from TextParser::chkLabel() to TextParser::getLabels()
+   Since a chkLabel() method searchs all labels in a file, therefore it takes much time in the case of many labels.
+ - Modify cio_Process.C, cio_TextParser.C, cio_TimeSlice.C and Staging.C.
 
 ------------------
 2014-02-11
@@ -38,152 +46,155 @@ REVISION HISTORY
 
 ------------------
 2014-02-08
- r39 update Fconv tool [ver 1.5.1]
+r39 update Fconv tool [ver 1.5.1]
 
 
 ------------------
 2014-01-31
 
- r38 FCONV tool [ver 1.5.0]
-  - add FCONV tool
-  - modify CIOlib(FCONV tool)
-  - add DFItype (Cartesian, HC,...)
+r38 FCONV tool [ver 1.5.0]
+ - add FCONV tool
+ - modify CIOlib(FCONV tool)
+ - add DFItype (Cartesian, HC,...)
 
 ------------------
 2014-01-21
 
- r37 stop to install doxygen file [ver 1.4.4]
-  - comment out 'dist_data_DATA' in doc/Makefile.am
-  - increment year to 2014 in copyright 
+r37 stop to install doxygen file [ver 1.4.4]
+ - comment out 'dist_data_DATA' in doc/Makefile.am
+ - increment year to 2014 in copyright
 
 
 ------------------
 2013-11-06
 
- r36 update Makefile.am [ver 1.4.3]
-  - add include/mpi_stubs.h to EXTRA_DIST
-  - add dist_include_HEADERS = include/mpi_stubs.h
-  - add mpi_stub.h
+r36 update Makefile.am [ver 1.4.3]
+ - add include/mpi_stubs.h to EXTRA_DIST
+ - add dist_include_HEADERS = include/mpi_stubs.h
+ - add mpi_stub.h
 
 ------------------
 2013-11-02
 
- r35 add MPI check
+r35 add MPI check
 
- r34 change default Fortran compiler from FC/FCFLAGS to F90/F90FLAGS [ver 1.4.2]
+r34 change default Fortran compiler from FC/FCFLAGS to F90/F90FLAGS [ver 1.4.2]
 
 ------------------
 2013-11-01
 
- r33 clean configure.ac
+r33 clean configure.ac
 
- r32 modify merge [ver 1.4.1]
+r32 modify merge [ver 1.4.1]
 
- r31 merge commit
+r31 merge commit
 
- r30 add [if test "$host" != "sparc*" ; then] to switch K/FX cross-compile [ver 1.4.1]
+r30 add [if test "$host" != "sparc*" ; then] to switch K/FX cross-compile [ver 1.4.1]
 
- r29 expire MPICH version
+r29 expire MPICH version
 
- r28 Compilation on K/FX
+r28 Compilation on K/FX
 
 ------------------
 2013-10-29
 
- r27 update NEWS
+r27 update NEWS
 
- r26 change compilation of tools manulally [ver 1.4.0]
-  - bug fix : cio_DFI.C L.888 DFI_Finfo.TimeSliceDirFlag == ONOFF >> = ONOFF
-  - Since frm(tools) works on a login node for K/FX10, separate from autotools
+r26 change compilation of tools manulally [ver 1.4.0]
+ - bug fix : cio_DFI.C L.888 DFI_Finfo.TimeSliceDirFlag == ONOFF >> = ONOFF
+ - Since frm(tools) works on a login node for K/FX10, separate from autotools
 
 ------------------
 2013-10-12
  
- r25 update ciolib_ug.pdf
+r25 update ciolib_ug.pdf
 
- r24 describe copyright [ver 1.3.9]
+r24 describe copyright [ver 1.3.9]
 
- r23 separates cio_Interval_Mngr class from cio_DFI class
-  - remove cio_Interval_Mngr's methods from cio_DFI class 
-  - change to protected >> normalizeBaseTime(), normalizeIntervalTime(), normalizeStartTime(), normalizeLastTime(), normalizeDelteT()
-  - remove force option >> when WriteData() is called, the data is immediately written into a file
-  - delete cio_Interval_Mngr.h
+r23 separates cio_Interval_Mngr class from cio_DFI class
+ - remove cio_Interval_Mngr's methods from cio_DFI class
+ - change to protected >> normalizeBaseTime(), normalizeIntervalTime(), normalizeStartTime(), normalizeLastTime(), normalizeDelteT()
+ - remove force option >> when WriteData() is called, the data is immediately written into a file
+ - delete cio_Interval_Mngr.h
  
  
 ------------------
 2013-10-10
 
- r22 update userguide
+r22 update userguide
  
- r21 update UnitList [ver 1.3.8]
-  - change format of UnitList
+r21 update UnitList [ver 1.3.8]
+ - change format of UnitList
 
 ------------------
 2013-10-02
- r20 modify for intel mpi [ver 1.3.7]
-   - include mpi.h before stdio.h to suppress error message #error "SEEK_SET is #defined but must not be for the C++ binding of MPI"
+
+r20 modify for intel mpi [ver 1.3.7]
+  - include mpi.h before stdio.h to suppress error message #error "SEEK_SET is #defined but must not be for the C++ binding of MPI"
 
 ------------------
 2013-09-29
- r19 update REDME file
 
- r18 update frm & combSPH [ver 1.3.6]
+r19 update REDME file
+
+r18 update frm & combSPH [ver 1.3.6]
 
 ------------------
 2013-09-22
- r17 update ChangeLog [ver 1.3.5]
-   - Function update
+
+r17 update ChangeLog [ver 1.3.5]
+  - Function update
 
 ------------------
 2013-07-20
 
- r16 update ChangeLog [ver 1.3.4]
+r16 update ChangeLog [ver 1.3.4]
 
- r15 update src/Makefile.am and include EXTRA_DIST = Makefile_spec
+r15 update src/Makefile.am and include EXTRA_DIST = Makefile_spec
 
- r14 VersionInfo() >> getVersionInfo()
-   - add cio_Version.h.in
+r14 VersionInfo() >> getVersionInfo()
+  - add cio_Version.h.in
 
- r13 change version info again
+r13 change version info again
 
- r12 change version info, and style of ChangeLog and NEWS
+r12 change version info, and style of ChangeLog and NEWS
 
 ------------------
 2013-07-04
 
- r11 update ChangeLog
+r11 update ChangeLog
 
- r10 update INSTALL, NEWS, README
+r10 update INSTALL, NEWS, README
 
 ------------------
 2013-06-27
 
- r9 update ChangeLog & NEWS [ver 1.3.3]
+r9 update ChangeLog & NEWS [ver 1.3.3]
 
- r8 v 1.3.3 configure.ac    
-
-------------------
-2013-06-26
-
- r7 ver 1.3.2
+r8 v 1.3.3 configure.ac
 
 ------------------
 2013-06-26
 
- r6 ver 1.3.1
+r7 ver 1.3.2
 
- r5 ver 1.3
+------------------
+2013-06-26
+
+r6 ver 1.3.1
+
+r5 ver 1.3
 
 ------------------
 2013-06-22
 
- r4 bugfix & add activesubdomain ver. 1.2
+r4 bugfix & add activesubdomain ver. 1.2
 
- r3 change packaging ver. 1.1
+r3 change packaging ver. 1.1
 
- r2 ver. 1.0
+r2 ver. 1.0
 
 ------------------
 2013-06-21
 
- Initial commit
+Initial commit
